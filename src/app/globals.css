@@ -17,19 +17,82 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding-top: 100px; /* Ajusta al alto de tu header */
 }
 
+/* Encabezado estilo UNAM (ejemplo) */
+header-unam {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000; /* para asegurar que esté por encima de otros elementos */
+  width: 100%;
+  height: 50px;
+  background-color: #003B5C; /* Azul UNAM  #003d79;*/
+  color: #fff;
+  display: flex;
+  align-items: center;  /* Centra verticalmente el contenido */
+  justify-content: space-between; /* separa los logos a los extremos */
+  font-size: 18px;
+  font-weight: bold;
+  /* Sin borde redondeado, sin margen */
+  border-radius: 0;
+  margin: 0;
+  padding: 0  30px; /* espacio horizontal */
+}
+/* Contenedor que agrupa los logos */
+ header-container {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Espacio horizontal entre los logos */
+}
 * {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
 }
+.nav-bar {
+  position: fixed;
+  top: 50px; /* justo debajo del header de 50px */
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background-color: #000;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 999;
+  font-size: 14px;
+}
 
+/* Contenedores izquierdo y derecho */
+.nav-left, .nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Botones básicos */
+.nav-bar button {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+}
+
+.nav-bar button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+/* Nombre del usuario */
+.nombre-usuario {
+  font-weight: bold;
+}
 a {
   color: inherit;
   text-decoration: none;
@@ -40,3 +103,15 @@ a {
     color-scheme: dark;
   }
 }
+
+ProgPresNumNom {
+  width: 100px;
+  height: 100px;
+  background-color: #cceeff;
+  border: 2px solid #333;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
