@@ -1,0 +1,110 @@
+.indicadores-panel {
+    font-family: Arial, sans-serif;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #333;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+  }
+  
+  .universidad h1 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+  
+  .universidad h2 {
+    font-size: 1.2rem;
+    margin: 0;
+    font-weight: normal;
+  }
+  
+  .programa p {
+    font-size: 0.9rem;
+    margin: 5px 0;
+  }
+  
+  .navegacion button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    cursor: pointer;
+  }
+  
+  .titulo-principal {
+    text-align: center;
+    margin: 20px 0;
+  }
+  
+  .titulo-principal h2 {
+    font-size: 2.5rem;
+    margin: 0;
+    color: #1a356e;
+  }
+  
+  .titulo-principal h3 {
+    font-size: 1.5rem;
+    margin: 5px 0 0;
+    color: #1a356e;
+  }
+  
+  .tabla-indicadores {
+    margin: 30px 0;
+  }
+  
+  .tabla-indicadores table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .tabla-indicadores th, .tabla-indicadores td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .tabla-indicadores th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  .tabla-indicadores tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .causas-accion {
+    margin-top: 30px;
+  }
+  
+  .causas-accion h4 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: #1a356e;
+  }
+  
+  .contenido-causas {
+    display: flex;
+  }
+  
+  .causas, .planes {
+    flex: 1;
+    padding: 10px;
+  }
+  
+  .causas {
+    border-right: 1px solid #ddd;
+  }
+  
+  .causas h5, .planes h5 {
+    font-size: 1rem;
+    margin: 0 0 10px;
+    color: #1a356e;
+  }

@@ -1,13 +1,27 @@
 'use client'
- 
 import { useRouter } from 'next/navigation'
- 
-export default function Page() {
+import Link from 'next/link'
+
+export default function HomePage() {
   const router = useRouter()
- 
+
   return (
-    <button type="button" onClick={() => router.push('/indicadores')}>
-      Indicadores
-    </button>
+    <div className="home-container">
+      <h1>Bienvenido al Sistema de Indicadores</h1>
+      
+      <div className="navigation-buttons">
+        <button 
+          className="primary-button"
+          onClick={() => router.push('/Logros')}>
+          Ver Logros
+        </button>
+        
+        <button 
+          className="primary-button"
+          onClick={() => router.push('/indicadores')}>
+          Ver Indicadores
+        </button>
+      </div>
+    </div>
   )
 }

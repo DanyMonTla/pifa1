@@ -2,6 +2,9 @@ import '../src/app/globals.css';
 import '../public/logo-fesa-blanco.png';
 import { Geist, Geist_Mono } from "next/font/google";
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -37,13 +40,13 @@ export default function RootLayout({
           />
         </header-unam>
         <nav className="nav-bar">
-  <div className="menu-izquierda">
-    <button>Inicio</button>
-    <button>Directorio</button>
-    <button>Salir</button>
-  </div>
-  <div className="usuario">Nombre del Usuario</div>
-</nav>
+          <div className="menu-izquierda">
+            <button>Inicio</button>
+            <button>Directorio</button>
+            <button>Salir</button>
+          </div>
+          <div className="usuario">Nombre del Usuario</div>
+        </nav>
 
 
         {/* Aquí se renderizan todas las páginas */}

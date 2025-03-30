@@ -3,6 +3,7 @@
 import React from "react";
 import ProgPresNumNom from "../components/progPresNumNom";
 import IndicadorCard from "../components/Buton";
+
 interface ProgPresNumNom {
   content: string;
 }
