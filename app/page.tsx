@@ -21,6 +21,12 @@ export default function HomePage() {
           onClick={() => router.push('/indicadores')}>
           Ver Indicadores
         </button>
+
+        <button 
+          className="primary-button"
+          onClick={() => router.push('/Fechas')}>
+          Fechas
+        </button>
       </div>
     </div>
   )

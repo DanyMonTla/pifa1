@@ -15,6 +15,7 @@ interface Indicador {
   porcentaje: string;
 }
 
+
 export default function IndicadoresPage() {
   // Datos de los indicadores
   const indicadores: Indicador[] = [
