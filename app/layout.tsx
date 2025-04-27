@@ -23,6 +23,9 @@ const TITULOS_POR_RUTA: Record<string, string> = {
   '/Fuente': 'ABC Fuente de indicadores',
   '/TipoCalculo': 'ABC Tipo Cálculo de indicadores',
   '/TipoIndicador': 'ABC Tipo Indicadores',
+  '/Usuarios': 'ABC Usuarios',
+  '/ProgramaPresupuestal': 'ABC de Programa presupuestal',
+  '/AreasResponsables': 'ABC de areas responsables',
 };
 
 
