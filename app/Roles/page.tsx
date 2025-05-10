@@ -2,25 +2,23 @@
 
 import React, { useState, ChangeEvent } from 'react';
 
-type Programa = {
-  id_programa: string;
-  nombre_programa: string;
-  id_tipo_programa: string;
-  objetivo_pp: string;
-  activo: boolean; // 🔥 nuevo campo para controlar visibilidad
+type Rol = {
+  id_rol: string;
+  rol: string;
+  anio: string;
+  activo: boolean; // 🔥 nuevo campo
 };
 
-export default function ProgramasPresupuestalesCrud() {
-  const [form, setForm] = useState<Programa>({
-    id_programa: '',
-    nombre_programa: '',
-    id_tipo_programa: '',
-    objetivo_pp: '',
+export default function RolesCrud() {
+  const [form, setForm] = useState<Rol>({
+    id_rol: '',
+    rol: '',
+    anio: '',
     activo: true,
   });
 
   const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
-  const [programas, setProgramas] = useState<Programa[]>([]);
+  const [roles, setRoles] = useState<Rol[]>([]);
   const [busquedaId, setBusquedaId] = useState('');
   const [verInactivos, setVerInactivos] = useState(false);
 
@@ -30,40 +28,40 @@ export default function ProgramasPresupuestalesCrud() {
   };
 
   const handleBuscarPorId = () => {
-    const programaSeleccionado = programas.find(p => p.id_programa === busquedaId.trim());
-    if (programaSeleccionado) {
-      setForm(programaSeleccionado);
+    const encontrado = roles.find(r => r.id_rol === busquedaId.trim());
+    if (encontrado) {
+      setForm(encontrado);
     } else {
-      alert('No se encontró un programa con ese ID');
+      alert('No se encontró un rol con ese ID');
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const camposVacios = [form.id_programa, form.nombre_programa, form.id_tipo_programa, form.objetivo_pp].some(val => val.trim() === '');
+    const camposVacios = [form.id_rol, form.rol, form.anio].some(val => val.trim() === '');
     if (camposVacios) return alert('Por favor, completa todos los campos.');
 
     if (modo === 'modificar') {
-      const confirmar = confirm('¿Deseas actualizar este programa?');
+      const confirmar = confirm('¿Deseas actualizar este rol?');
       if (!confirmar) return;
-      setProgramas(prev => prev.map(p => p.id_programa === form.id_programa ? { ...form, activo: p.activo } : p));
+      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...form, activo: r.activo } : r));
     } else if (modo === 'eliminar') {
-      const confirmar = confirm('¿Deseas inactivar este programa?');
+      const confirmar = confirm('¿Deseas inactivar este rol?');
       if (!confirmar) return;
-      setProgramas(prev => prev.map(p => p.id_programa === form.id_programa ? { ...p, activo: false } : p));
+      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...r, activo: false } : r));
     } else if (modo === 'agregar') {
-      setProgramas(prev => [...prev, { ...form, activo: true }]);
+      setRoles(prev => [...prev, { ...form, activo: true }]);
     }
 
-    setForm({ id_programa: '', nombre_programa: '', id_tipo_programa: '', objetivo_pp: '', activo: true });
+    setForm({ id_rol: '', rol: '', anio: '', activo: true });
     setModo(null);
   };
 
   const obtenerTitulo = () => {
-    if (modo === 'agregar') return 'Agregar nuevo programa';
-    if (modo === 'modificar') return 'Modificar programa';
-    if (modo === 'eliminar') return 'Inactivar programa';
-    return 'Catálogo de Programas Presupuestales';
+    if (modo === 'agregar') return 'Agregar nuevo rol';
+    if (modo === 'modificar') return 'Modificar rol';
+    if (modo === 'eliminar') return 'Inactivar rol';
+    return 'Catálogo de Roles';
   };
 
   return (
@@ -89,17 +87,17 @@ export default function ProgramasPresupuestalesCrud() {
       {modo && (
         <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
           <input
-            name="id_programa"
-            placeholder="ID PROGRAMA"
-            value={form.id_programa}
+            name="id_rol"
+            placeholder="ID ROL"
+            value={form.id_rol}
             onChange={handleChange}
             style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem' }}
           />
-          {['nombre_programa', 'id_tipo_programa', 'objetivo_pp'].map(field => (
+          {['rol', 'anio'].map(field => (
             <input
               key={field}
               name={field}
-              placeholder={field.replace(/_/g, ' ').toUpperCase()}
+              placeholder={field.toUpperCase()}
               value={(form as any)[field]}
               onChange={handleChange}
               style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem' }}
@@ -116,20 +114,18 @@ export default function ProgramasPresupuestalesCrud() {
         <thead>
           <tr>
             <th style={thStyle}>ID</th>
-            <th style={thStyle}>Programa</th>
-            <th style={thStyle}>ID Tipo</th>
-            <th style={thStyle}>Objetivo</th>
+            <th style={thStyle}>Rol</th>
+            <th style={thStyle}>Año</th>
             <th style={thStyle}>Estado</th>
           </tr>
         </thead>
         <tbody>
-          {programas.filter(p => verInactivos || p.activo).map(p => (
-            <tr key={p.id_programa} style={{ opacity: p.activo ? 1 : 0.5 }}>
-              <td style={tdStyle}>{p.id_programa}</td>
-              <td style={tdStyle}>{p.nombre_programa}</td>
-              <td style={tdStyle}>{p.id_tipo_programa}</td>
-              <td style={tdStyle}>{p.objetivo_pp}</td>
-              <td style={tdStyle}>{p.activo ? 'Activo' : 'Inactivo'}</td>
+          {roles.filter(r => verInactivos || r.activo).map(r => (
+            <tr key={r.id_rol} style={{ opacity: r.activo ? 1 : 0.5 }}>
+              <td style={tdStyle}>{r.id_rol}</td>
+              <td style={tdStyle}>{r.rol}</td>
+              <td style={tdStyle}>{r.anio}</td>
+              <td style={tdStyle}>{r.activo ? 'Activo' : 'Inactivo'}</td>
             </tr>
           ))}
         </tbody>
