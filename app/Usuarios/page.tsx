@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 
 type Usuario = {
   id_usuario: string;
@@ -73,11 +73,11 @@ export default function UsuariosCrud() {
     if (!confirmar) return;
 
     if (modo === "modificar") {
-      setUsuarios(prev => prev.map(u => u.id_usuario === form.id_usuario ? form : u));
+      actualizarUsuario();
     } else if (modo === "eliminar") {
-      setUsuarios(prev => prev.map(u => u.id_usuario === form.id_usuario ? { ...u, estado: "inactivo" } : u));
+      eliminarUsuario();
     } else if (modo === "agregar") {
-      setUsuarios(prev => [...prev, form]);
+      crearUsuario();
     }
 
     setForm({
@@ -95,10 +95,65 @@ export default function UsuariosCrud() {
     });
     setModo(null);
 
-    // Mostrar notificación de éxito
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 2000);
   };
+
+  // 🔹 Llamadas al backend
+  const fetchUsuarios = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/usuarios");
+      const data = await response.json();
+      setUsuarios(data);
+    } catch (error) {
+      console.error("Error al obtener usuarios:", error);
+    }
+  };
+
+  const crearUsuario = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/usuarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!response.ok) throw new Error("Error al crear usuario");
+      fetchUsuarios();
+    } catch (error) {
+      console.error("Error al agregar:", error);
+    }
+  };
+
+  const actualizarUsuario = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/usuarios/${form.id_usuario}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!response.ok) throw new Error("Error al actualizar");
+      fetchUsuarios();
+    } catch (error) {
+      console.error("Error al modificar:", error);
+    }
+  };
+
+  const eliminarUsuario = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/usuarios/${form.id_usuario}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Error al eliminar");
+      fetchUsuarios();
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+    }
+  };
+
+  // Cargar usuarios al iniciar
+  useEffect(() => {
+    fetchUsuarios();
+  }, []);
 
   return (
     <div style={{ backgroundColor: "#222", color: "white", padding: "2rem" }}>
@@ -146,7 +201,6 @@ export default function UsuariosCrud() {
             />
           ))}
 
-          {/* Select Área */}
           <select
             name="id_area"
             value={form.id_area}
@@ -161,7 +215,6 @@ export default function UsuariosCrud() {
             ))}
           </select>
 
-          {/* Select Rol */}
           <select
             name="id_rol"
             value={form.id_rol}
@@ -217,7 +270,6 @@ export default function UsuariosCrud() {
         </tbody>
       </table>
 
-      {/* ✅ Notificación de éxito */}
       {showSuccess && (
         <div style={{
           position: "fixed",

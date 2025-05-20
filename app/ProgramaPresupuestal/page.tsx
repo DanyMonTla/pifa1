@@ -2,27 +2,19 @@
 
 import React, { useState, ChangeEvent } from 'react';
 
-type Programa = {
-  id_programa: string;
-  nombre_programa: string;
-  id_tipo_programa: string;
-  objetivo_pp: string;
-  activo: boolean; // 🔥 nuevo campo para controlar visibilidad
+type TipoProgramaPres = {
+  id_tipo_proPres: string;
+  tipo_programaPres: string;
+  estado: 'activo' | 'inactivo';
 };
 
-export default function ProgramasPresupuestalesCrud() {
-  const [form, setForm] = useState<Programa>({
-    id_programa: '',
-    nombre_programa: '',
-    id_tipo_programa: '',
-    objetivo_pp: '',
-    activo: true,
-  });
-
+export default function TipoProgramaPresCrud() {
+  const [form, setForm] = useState<TipoProgramaPres>({ id_tipo_proPres: '', tipo_programaPres: '', estado: 'activo' });
   const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
-  const [programas, setProgramas] = useState<Programa[]>([]);
+  const [programas, setProgramas] = useState<TipoProgramaPres[]>([]);
   const [busquedaId, setBusquedaId] = useState('');
-  const [verInactivos, setVerInactivos] = useState(false);
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [mensaje, setMensaje] = useState('');
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -30,83 +22,116 @@ export default function ProgramasPresupuestalesCrud() {
   };
 
   const handleBuscarPorId = () => {
-    const programaSeleccionado = programas.find(p => p.id_programa === busquedaId.trim());
-    if (programaSeleccionado) {
-      setForm(programaSeleccionado);
+    const encontrado = programas.find(p => p.id_tipo_proPres === busquedaId.trim() || p.id_tipo_proPres === form.id_tipo_proPres);
+    if (encontrado) {
+      setForm(encontrado);
     } else {
-      alert('No se encontró un programa con ese ID');
+      alert('No se encontró un tipo de programa con ese ID');
     }
+  };
+
+  const mostrarMensaje = (texto: string) => {
+    setMensaje(texto);
+    setTimeout(() => setMensaje(''), 3000);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const camposVacios = [form.id_programa, form.nombre_programa, form.id_tipo_programa, form.objetivo_pp].some(val => val.trim() === '');
+    const camposVacios = Object.values(form).some(val => val.trim() === '');
     if (camposVacios) return alert('Por favor, completa todos los campos.');
 
     if (modo === 'modificar') {
-      const confirmar = confirm('¿Deseas actualizar este programa?');
-      if (!confirmar) return;
-      setProgramas(prev => prev.map(p => p.id_programa === form.id_programa ? { ...form, activo: p.activo } : p));
+      if (!confirm('¿Estás seguro de que deseas actualizar este tipo de programa?')) return;
+      setProgramas(prev => prev.map(p => p.id_tipo_proPres === form.id_tipo_proPres ? { ...form, estado: 'activo' } : p));
+      mostrarMensaje('Operación exitosa');
     } else if (modo === 'eliminar') {
-      const confirmar = confirm('¿Deseas inactivar este programa?');
-      if (!confirmar) return;
-      setProgramas(prev => prev.map(p => p.id_programa === form.id_programa ? { ...p, activo: false } : p));
+      if (!confirm('¿Estás seguro de que deseas inactivar este tipo de programa?')) return;
+      setProgramas(prev => prev.map(p => p.id_tipo_proPres === form.id_tipo_proPres ? { ...p, estado: 'inactivo' } : p));
+      mostrarMensaje('Operación exitosa');
     } else if (modo === 'agregar') {
-      setProgramas(prev => [...prev, { ...form, activo: true }]);
+      if (!confirm('¿Estás seguro de que deseas agregar este nuevo tipo de programa?')) return;
+      setProgramas(prev => [...prev, { ...form, estado: 'activo' }]);
+      mostrarMensaje('Operación exitosa');
     }
 
-    setForm({ id_programa: '', nombre_programa: '', id_tipo_programa: '', objetivo_pp: '', activo: true });
+    setForm({ id_tipo_proPres: '', tipo_programaPres: '', estado: 'activo' });
     setModo(null);
   };
 
   const obtenerTitulo = () => {
-    if (modo === 'agregar') return 'Agregar nuevo programa';
-    if (modo === 'modificar') return 'Modificar programa';
-    if (modo === 'eliminar') return 'Inactivar programa';
-    return 'Catálogo de Programas Presupuestales';
+    if (modo === 'agregar') return 'Agregar nuevo Tipo de Programa';
+    if (modo === 'modificar') return 'Modificar Tipo de Programa';
+    if (modo === 'eliminar') return 'Eliminar Tipo de Programa';
+    return 'Catálogo de Tipo Programa Presupuestal';
   };
 
   return (
-    <div style={{ backgroundColor: '#222', color: 'white', padding: '2rem' }}>
+    <div style={{ backgroundColor: '#222', color: 'white', padding: '2rem', position: 'relative' }}>
       <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>{obtenerTitulo()}</h2>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+      {mensaje && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'green',
+          color: 'white',
+          padding: '1rem 2rem',
+          borderRadius: '8px',
+          zIndex: 1000,
+        }}>
+          ✅ {mensaje}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
         <input
           placeholder="Buscar por ID"
           value={busquedaId}
           onChange={(e) => setBusquedaId(e.target.value)}
           style={{ flex: 1, padding: '0.5rem' }}
         />
-        <button onClick={handleBuscarPorId} style={{ backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' }}>Buscar</button>
-        <button onClick={() => setModo('agregar')} style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}>Agregar</button>
-        <button onClick={() => setModo('modificar')} style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}>Modificar</button>
-        <button onClick={() => setModo('eliminar')} style={{ backgroundColor: '#8B0000', color: 'white', padding: '0.5rem 1rem' }}>Eliminar</button>
+        <button onClick={handleBuscarPorId} style={btnBuscar}>Buscar</button>
+        <button onClick={() => setModo('agregar')} style={btnAgregar}>Agregar</button>
+        <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
+        <button onClick={() => setModo('eliminar')} style={btnEliminar}>Eliminar</button>
+
+        {/* Checkbox Ver Inactivos */}
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
-          <input type="checkbox" checked={verInactivos} onChange={() => setVerInactivos(prev => !prev)} /> Ver inactivos
+          <input 
+            type="checkbox" 
+            checked={mostrarInactivos} 
+            onChange={() => setMostrarInactivos(prev => !prev)} 
+          /> Ver inactivos
         </label>
       </div>
 
       {modo && (
         <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
           <input
-            name="id_programa"
-            placeholder="ID PROGRAMA"
-            value={form.id_programa}
+            name="id_tipo_proPres"
+            placeholder="ID Tipo Programa Pres"
+            value={form.id_tipo_proPres}
             onChange={handleChange}
-            style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem' }}
+            style={inputStyle}
+            readOnly={modo === 'eliminar'}
           />
-          {['nombre_programa', 'id_tipo_programa', 'objetivo_pp'].map(field => (
-            <input
-              key={field}
-              name={field}
-              placeholder={field.replace(/_/g, ' ').toUpperCase()}
-              value={(form as any)[field]}
-              onChange={handleChange}
-              style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem' }}
-              readOnly={modo === 'eliminar'}
-            />
-          ))}
-          <button type="submit" style={{ marginTop: '1rem', padding: '0.75rem 2rem', backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6', color: 'white', border: 'none' }}>
+          <input
+            name="tipo_programaPres"
+            placeholder="Tipo Programa Pres"
+            value={form.tipo_programaPres}
+            onChange={handleChange}
+            style={inputStyle}
+            readOnly={modo === 'eliminar'}
+          />
+          <button type="submit" style={{
+            marginTop: '1rem',
+            padding: '0.75rem 2rem',
+            backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6',
+            color: 'white',
+            border: 'none'
+          }}>
             {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Inactivar' : 'Guardar'}
           </button>
         </form>
@@ -115,29 +140,30 @@ export default function ProgramasPresupuestalesCrud() {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            <th style={thStyle}>ID</th>
-            <th style={thStyle}>Programa</th>
-            <th style={thStyle}>ID Tipo</th>
-            <th style={thStyle}>Objetivo</th>
+            <th style={thStyle}>ID Tipo Programa Pres</th>
+            <th style={thStyle}>Tipo Programa Pres</th>
             <th style={thStyle}>Estado</th>
           </tr>
         </thead>
         <tbody>
-          {programas.filter(p => verInactivos || p.activo).map(p => (
-            <tr key={p.id_programa} style={{ opacity: p.activo ? 1 : 0.5 }}>
-              <td style={tdStyle}>{p.id_programa}</td>
-              <td style={tdStyle}>{p.nombre_programa}</td>
-              <td style={tdStyle}>{p.id_tipo_programa}</td>
-              <td style={tdStyle}>{p.objetivo_pp}</td>
-              <td style={tdStyle}>{p.activo ? 'Activo' : 'Inactivo'}</td>
-            </tr>
-          ))}
+          {programas
+            .filter(p => mostrarInactivos || p.estado === 'activo')
+            .map(p => (
+              <tr key={p.id_tipo_proPres} style={{ opacity: p.estado === 'activo' ? 1 : 0.5 }}>
+                <td style={tdStyle}>{p.id_tipo_proPres}</td>
+                <td style={tdStyle}>{p.tipo_programaPres}</td>
+                <td style={{ ...tdStyle, color: p.estado === 'activo' ? 'green' : 'red' }}>
+                  {p.estado}
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>
   );
 }
 
+// Estilos reutilizables
 const thStyle: React.CSSProperties = {
   border: '1px solid #ccc',
   padding: '8px',
@@ -151,3 +177,14 @@ const tdStyle: React.CSSProperties = {
   backgroundColor: '#fff',
   color: '#000',
 };
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  marginBottom: '0.5rem',
+  padding: '0.5rem',
+};
+
+const btnBuscar = { backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' };
+const btnAgregar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
+const btnModificar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
+const btnEliminar = { backgroundColor: '#8B0000', color: 'white', padding: '0.5rem 1rem' };
