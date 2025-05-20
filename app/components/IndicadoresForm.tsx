@@ -13,7 +13,7 @@ export default function IndicadoresForm() {
     id_act_programa: '',
     id_act_cedetec: '',
     id_act_cultural: '',
-  });
+  }) 
 
   const camposOpcionales = [
     'id_proyecto_inves',
@@ -48,7 +48,7 @@ export default function IndicadoresForm() {
     flex: 1,
     padding: '0.4rem',
     backgroundColor: '#A57E22',
-    color: '#000000',
+    color: '#FFFFFFFF',
     border: '1px solid #555',
     borderRadius: '4px',
     fontSize: '0.95rem'

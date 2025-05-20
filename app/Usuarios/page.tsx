@@ -3,18 +3,22 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 
 type Usuario = {
-  id_usuario: string;
+  idUsuario: string;
   usuario: string;
-  nombre_usuario: string;
-  apellidoP: string;
-  apellidoM: string;
+  nombreUsuario: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
   cargoUsuario: string;
-  hashed_password: string;
-  id_area: string;
-  id_rol: string;
-  correo_usuario: string;
-  estado?: "activo" | "inactivo";
+  hashedPassword: string;
+  idArea: number;
+  idRol: number;
+  correoUsuario: string;
+  habilitado: boolean;
+  tituloUsuario?: string;
+  fechaAlta: string;
+  fechaBaja?: string;
 };
+
 
 type Area = {
   idArea: string;
@@ -27,19 +31,23 @@ type Rol = {
 };
 
 export default function UsuariosCrud() {
-  const [form, setForm] = useState<Usuario>({
-    id_usuario: "",
-    usuario: "",
-    nombre_usuario: "",
-    apellidoP: "",
-    apellidoM: "",
-    cargoUsuario: "",
-    hashed_password: "",
-    id_area: "",
-    id_rol: "",
-    correo_usuario: "",
-    estado: "activo",
-  });
+const [form, setForm] = useState<Usuario>({
+  idUsuario: "",
+  usuario: "",
+  nombreUsuario: "",
+  apellidoPaterno: "",
+  apellidoMaterno: "",
+  cargoUsuario: "",
+  hashedPassword: "",
+  idArea: 0,
+  idRol: 0,
+  correoUsuario: "",
+  habilitado: true,
+  tituloUsuario: "",
+  fechaAlta: new Date().toISOString(),
+});
+
+
 
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [areas] = useState<Area[]>([
@@ -102,7 +110,7 @@ export default function UsuariosCrud() {
   // 🔹 Llamadas al backend
   const fetchUsuarios = async () => {
     try {
-      const response = await fetch("http://localhost:3000/usuarios");
+      const response = await fetch("http://localhost:3001/usuarios");
       const data = await response.json();
       setUsuarios(data);
     } catch (error) {
@@ -112,7 +120,7 @@ export default function UsuariosCrud() {
 
   const crearUsuario = async () => {
     try {
-      const response = await fetch("http://localhost:3000/usuarios", {
+      const response = await fetch("http://localhost:3001/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -126,7 +134,7 @@ export default function UsuariosCrud() {
 
   const actualizarUsuario = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/usuarios/${form.id_usuario}`, {
+      const response = await fetch(`http://localhost:3001/usuarios/${form.id_usuario}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -140,7 +148,7 @@ export default function UsuariosCrud() {
 
   const eliminarUsuario = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/usuarios/${form.id_usuario}`, {
+      const response = await fetch(`http://localhost:3001/usuarios/${form.id_usuario}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Error al eliminar");
