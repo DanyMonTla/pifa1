@@ -15,6 +15,13 @@ export default function ABCGeneralesPage() {
         margin: '0 auto'
       }}>
         <button
+          onClick={() => router.push('/Usuarios')}
+          style={boton}
+        >
+          Usuarios
+        </button>
+
+        <button
           onClick={() => router.push('/indicadores')}
           style={boton}
         >
@@ -47,6 +54,28 @@ export default function ABCGeneralesPage() {
           style={boton}
         >
           Tipo Indicador
+        </button>
+
+        <button
+          onClick={() => router.push('/AreasResponsables')}
+          style={boton}
+        >
+          Areas Responsables
+          </button>
+          
+        <button
+          onClick={() => router.push('/ProgramaPresupuestal')}
+          style={boton}
+        >
+          Programa Presupuestal
+        </button>
+
+        
+        <button
+          onClick={() => router.push('/Roles')}
+          style={boton}
+        >
+          Roles
         </button>
       </div>
     </div>

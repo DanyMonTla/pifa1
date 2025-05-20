@@ -1,4 +1,4 @@
-'use client';
+'use client'; 
 import '../src/app/globals.css';
 import { Geist, Geist_Mono } from "next/font/google";
 import { usePathname } from 'next/navigation';
@@ -14,17 +14,18 @@ const geistMono = Geist_Mono({
 });
 
 const TITULOS_POR_RUTA: Record<string, string> = {
-  '/': 'Inicio',
   '/indicadores': 'Listado de Indicadores',
   '/usuarios': 'Gestión de Usuarios',
-  // Módulos ABC:
   '/ABC': 'Módulos ABC Generales',
   '/Frecuencia': 'ABC Frecuencia de indicadores',
   '/Fuente': 'ABC Fuente de indicadores',
   '/TipoCalculo': 'ABC Tipo Cálculo de indicadores',
   '/TipoIndicador': 'ABC Tipo Indicadores',
+  '/Usuarios': 'ABC Usuarios',
+  '/ProgramaPresupuestal': 'ABC de Programa presupuestal',
+  '/AreasResponsables': 'ABC de areas responsables',
+  '/Roles': 'ABC de roles',
 };
-
 
 export default function RootLayout({
   children,
@@ -33,6 +34,8 @@ export default function RootLayout({
 }) {
   const pathname = usePathname();
   const titulo = TITULOS_POR_RUTA[pathname] || '';
+
+  const isLoginPage = pathname === '/' || pathname === '/login'; // ajusta según tu ruta real
 
   return (
     <html lang="es">
@@ -52,15 +55,17 @@ export default function RootLayout({
           </div>
         </header>
 
-        {/* NAV NEGRO */}
-        <nav className="nav-bar">
-          <div className="menu-izquierda">
-            <button>Inicio</button>
-            <button>Directorio</button>
-            <button>Salir</button>
-          </div>
-          <div className="usuario">Nombre del Usuario</div>
-        </nav>
+        {/* NAV NEGRO solo si NO es login */}
+        {!isLoginPage && (
+          <nav className="nav-bar">
+            <div className="menu-izquierda">
+              <button>Inicio</button>
+              <button>Directorio</button>
+              <button>Salir</button>
+            </div>
+            <div className="usuario">Nombre del Usuario</div>
+          </nav>
+        )}
 
         {/* CONTENIDO PRINCIPAL */}
         <main className="contenido">
@@ -70,4 +75,3 @@ export default function RootLayout({
     </html>
   );
 }
-
