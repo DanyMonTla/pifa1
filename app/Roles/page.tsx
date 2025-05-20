@@ -6,21 +6,16 @@ type Rol = {
   id_rol: string;
   rol: string;
   anio: string;
-  activo: boolean; // 🔥 nuevo campo
+  estado: 'activo' | 'inactivo';
 };
 
 export default function RolesCrud() {
-  const [form, setForm] = useState<Rol>({
-    id_rol: '',
-    rol: '',
-    anio: '',
-    activo: true,
-  });
-
+  const [form, setForm] = useState<Rol>({ id_rol: '', rol: '', anio: '', estado: 'activo' });
   const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
   const [roles, setRoles] = useState<Rol[]>([]);
   const [busquedaId, setBusquedaId] = useState('');
-  const [verInactivos, setVerInactivos] = useState(false);
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [mensaje, setMensaje] = useState('');
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,12 +23,17 @@ export default function RolesCrud() {
   };
 
   const handleBuscarPorId = () => {
-    const encontrado = roles.find(r => r.id_rol === busquedaId.trim());
+    const encontrado = roles.find(r => r.id_rol === busquedaId.trim() || r.id_rol === form.id_rol);
     if (encontrado) {
       setForm(encontrado);
     } else {
       alert('No se encontró un rol con ese ID');
     }
+  };
+
+  const mostrarMensaje = (texto: string) => {
+    setMensaje(texto);
+    setTimeout(() => setMensaje(''), 3000);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -42,45 +42,69 @@ export default function RolesCrud() {
     if (camposVacios) return alert('Por favor, completa todos los campos.');
 
     if (modo === 'modificar') {
-      const confirmar = confirm('¿Deseas actualizar este rol?');
-      if (!confirmar) return;
-      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...form, activo: r.activo } : r));
+      if (!confirm('¿Estás seguro de que deseas actualizar este rol?')) return;
+      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...form, estado: 'activo' } : r));
+      mostrarMensaje('Operación exitosa');
     } else if (modo === 'eliminar') {
-      const confirmar = confirm('¿Deseas inactivar este rol?');
-      if (!confirmar) return;
-      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...r, activo: false } : r));
+      if (!confirm('¿Estás seguro de que deseas inactivar este rol?')) return;
+      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...r, estado: 'inactivo' } : r));
+      mostrarMensaje('Operación exitosa');
     } else if (modo === 'agregar') {
-      setRoles(prev => [...prev, { ...form, activo: true }]);
+      if (!confirm('¿Estás seguro de que deseas agregar este nuevo rol?')) return;
+      setRoles(prev => [...prev, { ...form, estado: 'activo' }]);
+      mostrarMensaje('Operación exitosa');
     }
 
-    setForm({ id_rol: '', rol: '', anio: '', activo: true });
+    setForm({ id_rol: '', rol: '', anio: '', estado: 'activo' });
     setModo(null);
   };
 
   const obtenerTitulo = () => {
     if (modo === 'agregar') return 'Agregar nuevo rol';
     if (modo === 'modificar') return 'Modificar rol';
-    if (modo === 'eliminar') return 'Inactivar rol';
+    if (modo === 'eliminar') return 'Eliminar rol';
     return 'Catálogo de Roles';
   };
 
   return (
-    <div style={{ backgroundColor: '#222', color: 'white', padding: '2rem' }}>
+    <div style={{ backgroundColor: '#222', color: 'white', padding: '2rem', position: 'relative' }}>
       <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>{obtenerTitulo()}</h2>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+      {mensaje && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'green',
+          color: 'white',
+          padding: '1rem 2rem',
+          borderRadius: '8px',
+          zIndex: 1000,
+        }}>
+          ✅ {mensaje}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
         <input
           placeholder="Buscar por ID"
           value={busquedaId}
           onChange={(e) => setBusquedaId(e.target.value)}
           style={{ flex: 1, padding: '0.5rem' }}
         />
-        <button onClick={handleBuscarPorId} style={{ backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' }}>Buscar</button>
-        <button onClick={() => setModo('agregar')} style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}>Agregar</button>
-        <button onClick={() => setModo('modificar')} style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}>Modificar</button>
-        <button onClick={() => setModo('eliminar')} style={{ backgroundColor: '#8B0000', color: 'white', padding: '0.5rem 1rem' }}>Eliminar</button>
+        <button onClick={handleBuscarPorId} style={btnBuscar}>Buscar</button>
+        <button onClick={() => setModo('agregar')} style={btnAgregar}>Agregar</button>
+        <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
+        <button onClick={() => setModo('eliminar')} style={btnEliminar}>Eliminar</button>
+
+        {/* Checkbox Ver Inactivos */}
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
-          <input type="checkbox" checked={verInactivos} onChange={() => setVerInactivos(prev => !prev)} /> Ver inactivos
+          <input 
+            type="checkbox" 
+            checked={mostrarInactivos} 
+            onChange={() => setMostrarInactivos(prev => !prev)} 
+          /> Ver inactivos
         </label>
       </div>
 
@@ -91,20 +115,32 @@ export default function RolesCrud() {
             placeholder="ID ROL"
             value={form.id_rol}
             onChange={handleChange}
-            style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem' }}
+            style={inputStyle}
+            readOnly={modo === 'eliminar'}
           />
-          {['rol', 'anio'].map(field => (
-            <input
-              key={field}
-              name={field}
-              placeholder={field.toUpperCase()}
-              value={(form as any)[field]}
-              onChange={handleChange}
-              style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem' }}
-              readOnly={modo === 'eliminar'}
-            />
-          ))}
-          <button type="submit" style={{ marginTop: '1rem', padding: '0.75rem 2rem', backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6', color: 'white', border: 'none' }}>
+          <input
+            name="rol"
+            placeholder="ROL"
+            value={form.rol}
+            onChange={handleChange}
+            style={inputStyle}
+            readOnly={modo === 'eliminar'}
+          />
+          <input
+            name="anio"
+            placeholder="AÑO"
+            value={form.anio}
+            onChange={handleChange}
+            style={inputStyle}
+            readOnly={modo === 'eliminar'}
+          />
+          <button type="submit" style={{
+            marginTop: '1rem',
+            padding: '0.75rem 2rem',
+            backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6',
+            color: 'white',
+            border: 'none'
+          }}>
             {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Inactivar' : 'Guardar'}
           </button>
         </form>
@@ -113,27 +149,32 @@ export default function RolesCrud() {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            <th style={thStyle}>ID</th>
+            <th style={thStyle}>ID Rol</th>
             <th style={thStyle}>Rol</th>
             <th style={thStyle}>Año</th>
             <th style={thStyle}>Estado</th>
           </tr>
         </thead>
         <tbody>
-          {roles.filter(r => verInactivos || r.activo).map(r => (
-            <tr key={r.id_rol} style={{ opacity: r.activo ? 1 : 0.5 }}>
-              <td style={tdStyle}>{r.id_rol}</td>
-              <td style={tdStyle}>{r.rol}</td>
-              <td style={tdStyle}>{r.anio}</td>
-              <td style={tdStyle}>{r.activo ? 'Activo' : 'Inactivo'}</td>
-            </tr>
-          ))}
+          {roles
+            .filter(r => mostrarInactivos || r.estado === 'activo')
+            .map(r => (
+              <tr key={r.id_rol} style={{ opacity: r.estado === 'activo' ? 1 : 0.5 }}>
+                <td style={tdStyle}>{r.id_rol}</td>
+                <td style={tdStyle}>{r.rol}</td>
+                <td style={tdStyle}>{r.anio}</td>
+                <td style={{ ...tdStyle, color: r.estado === 'activo' ? 'green' : 'red' }}>
+                  {r.estado}
+                </td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>
   );
 }
 
+// Estilos reutilizables
 const thStyle: React.CSSProperties = {
   border: '1px solid #ccc',
   padding: '8px',
@@ -147,3 +188,14 @@ const tdStyle: React.CSSProperties = {
   backgroundColor: '#fff',
   color: '#000',
 };
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  marginBottom: '0.5rem',
+  padding: '0.5rem',
+};
+
+const btnBuscar = { backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' };
+const btnAgregar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
+const btnModificar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
+const btnEliminar = { backgroundColor: '#8B0000', color: 'white', padding: '0.5rem 1rem' };
