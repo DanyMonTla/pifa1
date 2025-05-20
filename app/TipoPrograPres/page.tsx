@@ -2,17 +2,16 @@
 
 import React, { useState, ChangeEvent } from 'react';
 
-type Rol = {
-  id_rol: string;
-  rol: string;
-  anio: string;
+type TipoProgramaPres = {
+  id_tipo_proPres: string;
+  tipo_programaPres: string;
   estado: 'activo' | 'inactivo';
 };
 
-export default function RolesCrud() {
-  const [form, setForm] = useState<Rol>({ id_rol: '', rol: '', anio: '', estado: 'activo' });
+export default function TipoProgramaPresCrud() {
+  const [form, setForm] = useState<TipoProgramaPres>({ id_tipo_proPres: '', tipo_programaPres: '', estado: 'activo' });
   const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
-  const [roles, setRoles] = useState<Rol[]>([]);
+  const [programas, setProgramas] = useState<TipoProgramaPres[]>([]);
   const [busquedaId, setBusquedaId] = useState('');
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [mensaje, setMensaje] = useState('');
@@ -23,11 +22,11 @@ export default function RolesCrud() {
   };
 
   const handleBuscarPorId = () => {
-    const encontrado = roles.find(r => r.id_rol === busquedaId.trim() || r.id_rol === form.id_rol);
+    const encontrado = programas.find(p => p.id_tipo_proPres === busquedaId.trim() || p.id_tipo_proPres === form.id_tipo_proPres);
     if (encontrado) {
       setForm(encontrado);
     } else {
-      alert('No se encontró un rol con ese ID');
+      alert('No se encontró un tipo de programa con ese ID');
     }
   };
 
@@ -38,32 +37,32 @@ export default function RolesCrud() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const camposVacios = [form.id_rol, form.rol, form.anio].some(val => val.trim() === '');
+    const camposVacios = [form.id_tipo_proPres, form.tipo_programaPres].some(val => val.trim() === '');
     if (camposVacios) return alert('Por favor, completa todos los campos.');
 
     if (modo === 'modificar') {
-      if (!confirm('¿Estás seguro de que deseas actualizar este rol?')) return;
-      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...form, estado: 'activo' } : r));
+      if (!confirm('¿Estás seguro de que deseas actualizar este tipo de programa?')) return;
+      setProgramas(prev => prev.map(p => p.id_tipo_proPres === form.id_tipo_proPres ? { ...form, estado: 'activo' } : p));
       mostrarMensaje('Operación exitosa');
     } else if (modo === 'eliminar') {
-      if (!confirm('¿Estás seguro de que deseas inactivar este rol?')) return;
-      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...r, estado: 'inactivo' } : r));
+      if (!confirm('¿Estás seguro de que deseas inactivar este tipo de programa?')) return;
+      setProgramas(prev => prev.map(p => p.id_tipo_proPres === form.id_tipo_proPres ? { ...p, estado: 'inactivo' } : p));
       mostrarMensaje('Operación exitosa');
     } else if (modo === 'agregar') {
-      if (!confirm('¿Estás seguro de que deseas agregar este nuevo rol?')) return;
-      setRoles(prev => [...prev, { ...form, estado: 'activo' }]);
+      if (!confirm('¿Estás seguro de que deseas agregar este nuevo tipo de programa?')) return;
+      setProgramas(prev => [...prev, { ...form, estado: 'activo' }]);
       mostrarMensaje('Operación exitosa');
     }
 
-    setForm({ id_rol: '', rol: '', anio: '', estado: 'activo' });
+    setForm({ id_tipo_proPres: '', tipo_programaPres: '', estado: 'activo' });
     setModo(null);
   };
 
   const obtenerTitulo = () => {
-    if (modo === 'agregar') return 'Agregar nuevo rol';
-    if (modo === 'modificar') return 'Modificar rol';
-    if (modo === 'eliminar') return 'Eliminar rol';
-    return 'Catálogo de Roles';
+    if (modo === 'agregar') return 'Agregar nuevo Tipo de Programa';
+    if (modo === 'modificar') return 'Modificar Tipo de Programa';
+    if (modo === 'eliminar') return 'Eliminar Tipo de Programa';
+    return 'Catálogo de Tipo Programa Presupuestal';
   };
 
   return (
@@ -104,32 +103,26 @@ export default function RolesCrud() {
             type="checkbox" 
             checked={mostrarInactivos} 
             onChange={() => setMostrarInactivos(prev => !prev)} 
-          /> Ver inactivos
+            style={{ width: '20px', height: '20px', accentColor: '#003B5C', cursor: 'pointer' }} 
+          /> 
+          Ver inactivos
         </label>
       </div>
 
       {modo && (
         <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
           <input
-            name="id_rol"
-            placeholder="ID ROL"
-            value={form.id_rol}
+            name="id_tipo_proPres"
+            placeholder="ID Tipo Programa Pres"
+            value={form.id_tipo_proPres}
             onChange={handleChange}
             style={inputStyle}
             readOnly={modo === 'eliminar'}
           />
           <input
-            name="rol"
-            placeholder="ROL"
-            value={form.rol}
-            onChange={handleChange}
-            style={inputStyle}
-            readOnly={modo === 'eliminar'}
-          />
-          <input
-            name="anio"
-            placeholder="AÑO"
-            value={form.anio}
+            name="tipo_programaPres"
+            placeholder="Tipo Programa Pres"
+            value={form.tipo_programaPres}
             onChange={handleChange}
             style={inputStyle}
             readOnly={modo === 'eliminar'}
@@ -149,22 +142,20 @@ export default function RolesCrud() {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            <th style={thStyle}>ID Rol</th>
-            <th style={thStyle}>Rol</th>
-            <th style={thStyle}>Año</th>
+            <th style={thStyle}>ID Tipo Programa Pres</th>
+            <th style={thStyle}>Tipo Programa Pres</th>
             <th style={thStyle}>Estado</th>
           </tr>
         </thead>
         <tbody>
-          {roles
-            .filter(r => mostrarInactivos || r.estado === 'activo')
-            .map(r => (
-              <tr key={r.id_rol} style={{ opacity: r.estado === 'activo' ? 1 : 0.5 }}>
-                <td style={tdStyle}>{r.id_rol}</td>
-                <td style={tdStyle}>{r.rol}</td>
-                <td style={tdStyle}>{r.anio}</td>
-                <td style={{ ...tdStyle, color: r.estado === 'activo' ? 'green' : 'red' }}>
-                  {r.estado}
+          {programas
+            .filter(p => mostrarInactivos || p.estado === 'activo')
+            .map(p => (
+              <tr key={p.id_tipo_proPres} style={{ opacity: p.estado === 'activo' ? 1 : 0.5 }}>
+                <td style={tdStyle}>{p.id_tipo_proPres}</td>
+                <td style={tdStyle}>{p.tipo_programaPres}</td>
+                <td style={{ ...tdStyle, color: p.estado === 'activo' ? 'green' : 'red' }}>
+                  {p.estado}
                 </td>
               </tr>
             ))}

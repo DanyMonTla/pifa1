@@ -25,6 +25,7 @@ const TITULOS_POR_RUTA: Record<string, string> = {
   '/ProgramaPresupuestal': 'ABC de Programa presupuestal',
   '/AreasResponsables': 'ABC de areas responsables',
   '/Roles': 'ABC de roles',
+  '/TipoPrograPres': 'ABC de Tipo Programa',
 };
 
 export default function RootLayout({
