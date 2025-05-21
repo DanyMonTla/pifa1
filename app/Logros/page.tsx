@@ -1,10 +1,9 @@
 
-"use client";
+'use client';
 import React from "react";
 //import ProgPresNumNom from "../components/progPresNumNom";
 import IndicadorCard from "../components/Buton";
 import './logros.css';
-
 
 interface Indicador {
   clave: string;
@@ -15,9 +14,7 @@ interface Indicador {
   porcentaje: string;
 }
 
-
 export default function IndicadoresPage() {
-  // Datos de los indicadores
   const indicadores: Indicador[] = [
     {
       clave: 'A 1.1',
@@ -32,6 +29,23 @@ export default function IndicadoresPage() {
 
   return (
     <div className="indicadores-container">
+
+      {/* 🚧 Módulo en mantenimiento (bloque superior) */}
+      <div style={{
+        backgroundColor: '#f5f5f5',
+        color: '#222',
+        padding: '1.5rem',
+        marginBottom: '2rem',
+        textAlign: 'center',
+        borderRadius: '8px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ margin: 0, fontSize: '1.8rem' }}>🚧 Página en mantenimiento</h2>
+        <p style={{ marginTop: '0.5rem', fontSize: '1.1rem' }}>
+          Estamos actualizando este módulo. Puedes consultar los datos actuales, pero algunas funciones podrían no estar disponibles.
+        </p>
+      </div>
+
       <div className="titulo-principal">
         <h2>32</h2>
         <h3>Investigación en Ciencias y Desarrollo Tecnológico</h3>
