@@ -54,7 +54,7 @@ export default function UsuariosCrud() {
 
   const [busquedaId, setBusquedaId] = useState("");
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
-  const [modo, setModo] = useState<"agregar" | "modificar" | "eliminar" | null>(null);
+  const [modo, setModo] = useState<"agregar" | "modificar" | "eliminar" | "ver" | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -96,8 +96,9 @@ export default function UsuariosCrud() {
       crearUsuario();
     }
 
-    setForm({
-      id_usuario: "",
+    setForm((prev) => ({
+      ...prev,
+      id_usuario: modo === "agregar" ? "" : prev.id_usuario,
       usuario: "",
       nombre_usuario: "",
       apellidoP: "",
@@ -108,9 +109,9 @@ export default function UsuariosCrud() {
       id_rol: "",
       correo_usuario: "",
       estado: "activo",
-    });
-    setModo(null);
+    }));
 
+    setModo(null);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 2000);
   };
@@ -120,54 +121,50 @@ export default function UsuariosCrud() {
       const response = await fetch("http://localhost:3001/usuarios");
       const data = await response.json();
 
-    if (!Array.isArray(data)) {
-      console.error("La respuesta no es un arreglo:", data);
-      return;
-    }
+      if (!Array.isArray(data)) {
+        console.error("La respuesta no es un arreglo:", data);
+        return;
+      }
 
-    const usuariosMapeados = data.map((u: any) => ({
-      id_usuario: u.idUsuario.toString(),
-      usuario: u.usuario ?? "",
-      nombre_usuario: u.nombreUsuario,
-      apellidoP: u.apellidoPaterno,
-      apellidoM: u.apellidoMaterno,
-      cargoUsuario: u.cargoUsuario,
-      hashed_password: u.hashedPassword,
-      id_area: u.idArea?.toString() ?? "",
-      id_rol: u.idRol?.toString() ?? "",
-      correo_usuario: u.correoUsuario ?? "",
-      estado: u.estado === "activo" || u.estado === "inactivo" ? u.estado : "activo",
-    }));
+      const usuariosMapeados = data.map((u: any) => ({
+        id_usuario: u.idUsuario.toString(),
+        usuario: u.usuario ?? "",
+        nombre_usuario: u.nombreUsuario,
+        apellidoP: u.apellidoPaterno,
+        apellidoM: u.apellidoMaterno,
+        cargoUsuario: u.cargoUsuario,
+        hashed_password: u.hashedPassword,
+        id_area: u.idArea?.toString() ?? "",
+        id_rol: u.idRol?.toString() ?? "",
+        correo_usuario: u.correoUsuario ?? "",
+        estado: u.estado === "activo" || u.estado === "inactivo" ? u.estado : "activo",
+      }));
 
-      setUsuarios(
-  usuariosMapeados.filter((u: { estado: string }) => mostrarInactivos || u.estado === "activo")
-    );
-
+      setUsuarios(usuariosMapeados);
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
     }
   };
 
   const crearUsuario = async () => {
-  try {
-    const usuarioParaApi = mapUsuarioFormToApi(form);
-    const response = await fetch("http://localhost:3001/usuarios", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(usuarioParaApi),
-    });
+    try {
+      const usuarioParaApi = mapUsuarioFormToApi(form);
+      const response = await fetch("http://localhost:3001/usuarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(usuarioParaApi),
+      });
 
-    if (!response.ok) {
-      const mensaje = await response.text();
-      throw new Error("Error al crear usuario: " + mensaje);
+      if (!response.ok) {
+        const mensaje = await response.text();
+        throw new Error("Error al crear usuario: " + mensaje);
+      }
+
+      await fetchUsuarios();
+    } catch (error) {
+      console.error("Error al agregar:", error);
     }
-
-    fetchUsuarios();
-  } catch (error) {
-    console.error("Error al agregar:", error);
-  }
-};
-
+  };
 
   const actualizarUsuario = async () => {
     try {
@@ -185,26 +182,23 @@ export default function UsuariosCrud() {
   };
 
   const eliminarUsuario = async () => {
-  try {
-    const response = await fetch(`http://localhost:3001/usuarios/estado/${form.id_usuario}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ estado: "inactivo" }),
-    });
+    try {
+      const response = await fetch(`http://localhost:3001/usuarios/estado/${form.id_usuario}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: "inactivo" }),
+      });
 
-    const result = await response.json();
-    console.log("Respuesta del backend al eliminar:", result);
+      const result = await response.json();
+      console.log("Respuesta del backend al eliminar:", result);
 
-    if (!response.ok || !result?.mensaje) throw new Error("Error al desactivar usuario");
+      if (!response.ok || !result?.mensaje) throw new Error("Error al desactivar usuario");
 
-    fetchUsuarios(); // solo si fue exitoso
-  } catch (error) {
-    console.error("Error al desactivar:", error);
-  }
-};
-
-
-
+      fetchUsuarios();
+    } catch (error) {
+      console.error("Error al desactivar:", error);
+    }
+  };
 
   useEffect(() => {
     fetchUsuarios();
@@ -233,7 +227,7 @@ export default function UsuariosCrud() {
 
           if (user) {
             setForm(user);
-            // No forzamos modo, solo llenamos el formulario
+            setModo("ver");
           } else {
             alert("No se encontró un usuario con ese ID");
           }
@@ -242,7 +236,6 @@ export default function UsuariosCrud() {
       >
         Buscar
       </button>
-
 
         <button onClick={() => setModo("agregar")} style={btnStyle("#004c75")}>Agregar</button>
         <button
