@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, ChangeEvent } from "react";
-import FormularioUsuario from "../components/FormularioUsuario"; // ruta correcta
+import FormularioUsuario from "../components/FormularioUsuario";
 
 type Usuario = {
   id_usuario: string;
@@ -62,9 +62,9 @@ export default function UsuariosCrud() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // --- NUEVO: FUNCIÓN DE MAPEADO ---
   function mapUsuarioFormToApi(usuarioForm: Usuario) {
     return {
+      usuario: usuarioForm.usuario,
       nombreUsuario: usuarioForm.nombre_usuario,
       apellidoPaterno: usuarioForm.apellidoP,
       apellidoMaterno: usuarioForm.apellidoM,
@@ -72,6 +72,8 @@ export default function UsuariosCrud() {
       hashedPassword: usuarioForm.hashed_password,
       idArea: Number(usuarioForm.id_area),
       idRol: Number(usuarioForm.id_rol),
+      correoUsuario: usuarioForm.correo_usuario,
+      estado: usuarioForm.estado ?? "activo",
     };
   }
 
@@ -117,29 +119,56 @@ export default function UsuariosCrud() {
     try {
       const response = await fetch("http://localhost:3001/usuarios");
       const data = await response.json();
-      setUsuarios(data);
+
+    if (!Array.isArray(data)) {
+      console.error("La respuesta no es un arreglo:", data);
+      return;
+    }
+
+    const usuariosMapeados = data.map((u: any) => ({
+      id_usuario: u.idUsuario.toString(),
+      usuario: u.usuario ?? "",
+      nombre_usuario: u.nombreUsuario,
+      apellidoP: u.apellidoPaterno,
+      apellidoM: u.apellidoMaterno,
+      cargoUsuario: u.cargoUsuario,
+      hashed_password: u.hashedPassword,
+      id_area: u.idArea?.toString() ?? "",
+      id_rol: u.idRol?.toString() ?? "",
+      correo_usuario: u.correoUsuario ?? "",
+      estado: u.estado === "activo" || u.estado === "inactivo" ? u.estado : "activo",
+    }));
+
+      setUsuarios(
+  usuariosMapeados.filter((u: { estado: string }) => mostrarInactivos || u.estado === "activo")
+    );
+
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
     }
   };
 
-  // --- CORRIGE AQUÍ: usa el objeto mapeado ---
   const crearUsuario = async () => {
-    try {
-      const usuarioParaApi = mapUsuarioFormToApi(form);
-      const response = await fetch("http://localhost:3001/usuarios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(usuarioParaApi),
-      });
-      if (!response.ok) throw new Error("Error al crear usuario");
-      fetchUsuarios();
-    } catch (error) {
-      console.error("Error al agregar:", error);
-    }
-  };
+  try {
+    const usuarioParaApi = mapUsuarioFormToApi(form);
+    const response = await fetch("http://localhost:3001/usuarios", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(usuarioParaApi),
+    });
 
-  // --- También aquí para actualizar ---
+    if (!response.ok) {
+      const mensaje = await response.text();
+      throw new Error("Error al crear usuario: " + mensaje);
+    }
+
+    fetchUsuarios();
+  } catch (error) {
+    console.error("Error al agregar:", error);
+  }
+};
+
+
   const actualizarUsuario = async () => {
     try {
       const usuarioParaApi = mapUsuarioFormToApi(form);
@@ -156,16 +185,26 @@ export default function UsuariosCrud() {
   };
 
   const eliminarUsuario = async () => {
-    try {
-      const response = await fetch(`http://localhost:3001/usuarios/${form.id_usuario}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Error al eliminar");
-      fetchUsuarios();
-    } catch (error) {
-      console.error("Error al eliminar:", error);
-    }
-  };
+  try {
+    const response = await fetch(`http://localhost:3001/usuarios/estado/${form.id_usuario}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ estado: "inactivo" }),
+    });
+
+    const result = await response.json();
+    console.log("Respuesta del backend al eliminar:", result);
+
+    if (!response.ok || !result?.mensaje) throw new Error("Error al desactivar usuario");
+
+    fetchUsuarios(); // solo si fue exitoso
+  } catch (error) {
+    console.error("Error al desactivar:", error);
+  }
+};
+
+
+
 
   useEffect(() => {
     fetchUsuarios();
@@ -187,13 +226,37 @@ export default function UsuariosCrud() {
           onChange={(e) => setBusquedaId(e.target.value)}
           style={{ flex: 1, padding: "0.5rem" }}
         />
-        <button onClick={() => {
-          const user = usuarios.find(u => u.id_usuario === busquedaId.trim());
-          if (user) setForm(user);
-          else alert("No se encontró un usuario con ese ID");
-        }} style={btnStyle("#0077b6")}>Buscar</button>
+       <button
+        onClick={() => {
+          const idBuscado = busquedaId.trim();
+          const user = usuarios.find(u => u.id_usuario.trim() === idBuscado);
+
+          if (user) {
+            setForm(user);
+            // No forzamos modo, solo llenamos el formulario
+          } else {
+            alert("No se encontró un usuario con ese ID");
+          }
+        }}
+        style={btnStyle("#0077b6")}
+      >
+        Buscar
+      </button>
+
+
         <button onClick={() => setModo("agregar")} style={btnStyle("#004c75")}>Agregar</button>
-        <button onClick={() => setModo("modificar")} style={btnStyle("#004c75")}>Modificar</button>
+        <button
+          onClick={() => {
+            if (!form.id_usuario) {
+              alert("Primero busca un usuario válido para modificar.");
+              return;
+            }
+            setModo("modificar");
+          }}
+          style={btnStyle("#004c75")}
+        >
+          Modificar
+        </button>
         <button onClick={() => setModo("eliminar")} style={btnStyle("#8B0000")}>Eliminar</button>
         <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <input
@@ -232,22 +295,22 @@ export default function UsuariosCrud() {
         </thead>
         <tbody>
           {usuarios
-           .filter(u => mostrarInactivos || u.estado !== "inactivo")
-.map((u, i) => (
-  <tr key={u.id_usuario || i} style={u.estado === "inactivo" ? { opacity: 0.5 } : {}}>
-    <td style={tdStyle}>{u.id_usuario}</td>
-    <td style={tdStyle}>{u.usuario}</td>
-    <td style={tdStyle}>{u.nombre_usuario}</td>
-    <td style={tdStyle}>{u.apellidoP}</td>
-    <td style={tdStyle}>{u.apellidoM}</td>
-    <td style={tdStyle}>{u.cargoUsuario}</td>
-    <td style={tdStyle}>{u.id_area}</td>
-    <td style={tdStyle}>{u.id_rol}</td>
-    <td style={tdStyle}>{u.correo_usuario}</td>
-    <td style={tdStyle}>{u.estado}</td>
-  </tr>
-))}
-</tbody>
+            .filter(u => mostrarInactivos || u.estado !== "inactivo")
+            .map((u, i) => (
+              <tr key={u.id_usuario || i} style={u.estado === "inactivo" ? { opacity: 0.5 } : {}}>
+                <td style={tdStyle}>{u.id_usuario}</td>
+                <td style={tdStyle}>{u.usuario}</td>
+                <td style={tdStyle}>{u.nombre_usuario}</td>
+                <td style={tdStyle}>{u.apellidoP}</td>
+                <td style={tdStyle}>{u.apellidoM}</td>
+                <td style={tdStyle}>{u.cargoUsuario}</td>
+                <td style={tdStyle}>{u.id_area}</td>
+                <td style={tdStyle}>{u.id_rol}</td>
+                <td style={tdStyle}>{u.correo_usuario}</td>
+                <td style={tdStyle}>{u.estado}</td>
+              </tr>
+            ))}
+        </tbody>
       </table>
 
       {showSuccess && (
