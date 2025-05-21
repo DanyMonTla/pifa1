@@ -3,7 +3,6 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import FormularioUsuario from "../components/FormularioUsuario"; // ruta correcta
 
-
 type Usuario = {
   id_usuario: string;
   usuario: string;
@@ -45,12 +44,12 @@ export default function UsuariosCrud() {
 
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [areas] = useState<Area[]>([
-    { idArea: "A1", unidad: "Recursos Humanos" },
-    { idArea: "A2", unidad: "Finanzas" },
+    { idArea: "1", unidad: "Recursos Humanos" },
+    { idArea: "2", unidad: "Finanzas" },
   ]);
   const [roles] = useState<Rol[]>([
-    { id_rol: "R1", rol: "Admin" },
-    { id_rol: "R2", rol: "User" },
+    { id_rol: "1", rol: "Admin" },
+    { id_rol: "2", rol: "User" },
   ]);
 
   const [busquedaId, setBusquedaId] = useState("");
@@ -62,6 +61,19 @@ export default function UsuariosCrud() {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
+
+  // --- NUEVO: FUNCIÓN DE MAPEADO ---
+  function mapUsuarioFormToApi(usuarioForm: Usuario) {
+    return {
+      nombreUsuario: usuarioForm.nombre_usuario,
+      apellidoPaterno: usuarioForm.apellidoP,
+      apellidoMaterno: usuarioForm.apellidoM,
+      cargoUsuario: usuarioForm.cargoUsuario,
+      hashedPassword: usuarioForm.hashed_password,
+      idArea: Number(usuarioForm.id_area),
+      idRol: Number(usuarioForm.id_rol),
+    };
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,12 +123,14 @@ export default function UsuariosCrud() {
     }
   };
 
+  // --- CORRIGE AQUÍ: usa el objeto mapeado ---
   const crearUsuario = async () => {
     try {
+      const usuarioParaApi = mapUsuarioFormToApi(form);
       const response = await fetch("http://localhost:3001/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(usuarioParaApi),
       });
       if (!response.ok) throw new Error("Error al crear usuario");
       fetchUsuarios();
@@ -125,12 +139,14 @@ export default function UsuariosCrud() {
     }
   };
 
+  // --- También aquí para actualizar ---
   const actualizarUsuario = async () => {
     try {
+      const usuarioParaApi = mapUsuarioFormToApi(form);
       const response = await fetch(`http://localhost:3001/usuarios/${form.id_usuario}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(usuarioParaApi),
       });
       if (!response.ok) throw new Error("Error al actualizar");
       fetchUsuarios();
@@ -216,22 +232,22 @@ export default function UsuariosCrud() {
         </thead>
         <tbody>
           {usuarios
-            .filter(u => mostrarInactivos || u.estado !== "inactivo")
-            .map(u => (
-              <tr key={u.id_usuario} style={u.estado === "inactivo" ? { opacity: 0.5 } : {}}>
-                <td style={tdStyle}>{u.id_usuario}</td>
-                <td style={tdStyle}>{u.usuario}</td>
-                <td style={tdStyle}>{u.nombre_usuario}</td>
-                <td style={tdStyle}>{u.apellidoP}</td>
-                <td style={tdStyle}>{u.apellidoM}</td>
-                <td style={tdStyle}>{u.cargoUsuario}</td>
-                <td style={tdStyle}>{u.id_area}</td>
-                <td style={tdStyle}>{u.id_rol}</td>
-                <td style={tdStyle}>{u.correo_usuario}</td>
-                <td style={tdStyle}>{u.estado}</td>
-              </tr>
-            ))}
-        </tbody>
+           .filter(u => mostrarInactivos || u.estado !== "inactivo")
+.map((u, i) => (
+  <tr key={u.id_usuario || i} style={u.estado === "inactivo" ? { opacity: 0.5 } : {}}>
+    <td style={tdStyle}>{u.id_usuario}</td>
+    <td style={tdStyle}>{u.usuario}</td>
+    <td style={tdStyle}>{u.nombre_usuario}</td>
+    <td style={tdStyle}>{u.apellidoP}</td>
+    <td style={tdStyle}>{u.apellidoM}</td>
+    <td style={tdStyle}>{u.cargoUsuario}</td>
+    <td style={tdStyle}>{u.id_area}</td>
+    <td style={tdStyle}>{u.id_rol}</td>
+    <td style={tdStyle}>{u.correo_usuario}</td>
+    <td style={tdStyle}>{u.estado}</td>
+  </tr>
+))}
+</tbody>
       </table>
 
       {showSuccess && (
