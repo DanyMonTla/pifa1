@@ -1,0 +1,324 @@
+"use client";
+
+import React, { useState, useEffect, ChangeEvent } from "react";
+
+type Usuario = {
+  idUsuario: string;
+  usuario: string;
+  nombreUsuario: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  cargoUsuario: string;
+  hashedPassword: string;
+  idArea: number;
+  idRol: number;
+  correoUsuario: string;
+  habilitado: boolean;
+  tituloUsuario?: string;
+  fechaAlta: string;
+  fechaBaja?: string;
+};
+
+
+type Area = {
+  idArea: string;
+  unidad: string;
+};
+
+type Rol = {
+  id_rol: string;
+  rol: string;
+};
+
+export default function UsuariosCrud() {
+const [form, setForm] = useState<Usuario>({
+  idUsuario: "",
+  usuario: "",
+  nombreUsuario: "",
+  apellidoPaterno: "",
+  apellidoMaterno: "",
+  cargoUsuario: "",
+  hashedPassword: "",
+  idArea: 0,
+  idRol: 0,
+  correoUsuario: "",
+  habilitado: true,
+  tituloUsuario: "",
+  fechaAlta: new Date().toISOString(),
+});
+
+
+
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [areas] = useState<Area[]>([
+    { idArea: "A1", unidad: "Recursos Humanos" },
+    { idArea: "A2", unidad: "Finanzas" },
+  ]);
+  const [roles] = useState<Rol[]>([
+    { id_rol: "R1", rol: "Admin" },
+    { id_rol: "R2", rol: "User" },
+  ]);
+
+  const [busquedaId, setBusquedaId] = useState("");
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [modo, setModo] = useState<"agregar" | "modificar" | "eliminar" | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    let mensajeConfirmacion = "";
+    if (modo === "agregar") mensajeConfirmacion = "¿Estás seguro de que deseas agregar este usuario?";
+    if (modo === "modificar") mensajeConfirmacion = "¿Deseas realmente actualizar este usuario?";
+    if (modo === "eliminar") mensajeConfirmacion = "¿Estás seguro de que deseas desactivar este usuario?";
+
+    const confirmar = confirm(mensajeConfirmacion);
+    if (!confirmar) return;
+
+    if (modo === "modificar") {
+      actualizarUsuario();
+    } else if (modo === "eliminar") {
+      eliminarUsuario();
+    } else if (modo === "agregar") {
+      crearUsuario();
+    }
+
+    setForm({
+      id_usuario: "",
+      usuario: "",
+      nombre_usuario: "",
+      apellidoP: "",
+      apellidoM: "",
+      cargoUsuario: "",
+      hashed_password: "",
+      id_area: "",
+      id_rol: "",
+      correo_usuario: "",
+      estado: "activo",
+    });
+    setModo(null);
+
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 2000);
+  };
+
+  // 🔹 Llamadas al backend
+  const fetchUsuarios = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/usuarios");
+      const data = await response.json();
+      setUsuarios(data);
+    } catch (error) {
+      console.error("Error al obtener usuarios:", error);
+    }
+  };
+
+  const crearUsuario = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/usuarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!response.ok) throw new Error("Error al crear usuario");
+      fetchUsuarios();
+    } catch (error) {
+      console.error("Error al agregar:", error);
+    }
+  };
+
+  const actualizarUsuario = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/usuarios/${form.id_usuario}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!response.ok) throw new Error("Error al actualizar");
+      fetchUsuarios();
+    } catch (error) {
+      console.error("Error al modificar:", error);
+    }
+  };
+
+  const eliminarUsuario = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/usuarios/${form.id_usuario}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Error al eliminar");
+      fetchUsuarios();
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+    }
+  };
+
+  // Cargar usuarios al iniciar
+  useEffect(() => {
+    fetchUsuarios();
+  }, []);
+
+  return (
+    <div style={{ backgroundColor: "#222", color: "white", padding: "2rem" }}>
+      <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>
+        {modo === "agregar" ? "Agregar nuevo usuario" :
+         modo === "modificar" ? "Modificar usuario" :
+         modo === "eliminar" ? "Eliminar usuario" : 
+         "Catálogo de Usuarios"}
+      </h2>
+
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+        <input
+          placeholder="Buscar por ID"
+          value={busquedaId}
+          onChange={(e) => setBusquedaId(e.target.value)}
+          style={{ flex: 1, padding: "0.5rem" }}
+        />
+        <button onClick={() => {
+          const user = usuarios.find(u => u.id_usuario === busquedaId.trim());
+          if (user) setForm(user);
+          else alert("No se encontró un usuario con ese ID");
+        }} style={btnStyle("#0077b6")}>Buscar</button>
+        <button onClick={() => setModo("agregar")} style={btnStyle("#004c75")}>Agregar</button>
+        <button onClick={() => setModo("modificar")} style={btnStyle("#004c75")}>Modificar</button>
+        <button onClick={() => setModo("eliminar")} style={btnStyle("#8B0000")}>Eliminar</button>
+        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <input
+            type="checkbox"
+            checked={mostrarInactivos}
+            onChange={() => setMostrarInactivos(prev => !prev)}
+          /> Ver inactivos
+        </label>
+      </div>
+
+      {modo && (
+        <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
+          {["id_usuario", "usuario", "nombre_usuario", "apellidoP", "apellidoM", "cargoUsuario", "hashed_password", "correo_usuario"].map((field) => (
+            <input
+              key={field}
+              name={field}
+              placeholder={field.replace("_", " ").toUpperCase()}
+              value={(form as any)[field]}
+              onChange={handleChange}
+              style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
+            />
+          ))}
+
+          <select
+            name="id_area"
+            value={form.id_area}
+            onChange={handleChange}
+            style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
+          >
+            <option value="">Seleccione un área</option>
+            {areas.map(area => (
+              <option key={area.idArea} value={area.idArea}>
+                {area.idArea}
+              </option>
+            ))}
+          </select>
+
+          <select
+            name="id_rol"
+            value={form.id_rol}
+            onChange={handleChange}
+            style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
+          >
+            <option value="">Seleccione un rol</option>
+            {roles.map(rol => (
+              <option key={rol.id_rol} value={rol.id_rol}>
+                {rol.id_rol}
+              </option>
+            ))}
+          </select>
+
+          <button type="submit" style={btnStyle("#0077b6", true)}>
+            {modo === "modificar" ? "Actualizar" : modo === "eliminar" ? "Inactivar" : "Guardar"}
+          </button>
+        </form>
+      )}
+
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th style={thStyle}>ID</th>
+            <th style={thStyle}>Usuario</th>
+            <th style={thStyle}>Nombre</th>
+            <th style={thStyle}>Apellido P</th>
+            <th style={thStyle}>Apellido M</th>
+            <th style={thStyle}>Cargo</th>
+            <th style={thStyle}>ID Área</th>
+            <th style={thStyle}>ID Rol</th>
+            <th style={thStyle}>Correo</th>
+            <th style={thStyle}>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {usuarios
+            .filter(u => mostrarInactivos || u.estado !== "inactivo")
+            .map(u => (
+              <tr key={u.id_usuario} style={u.estado === "inactivo" ? { opacity: 0.5 } : {}}>
+                <td style={tdStyle}>{u.id_usuario}</td>
+                <td style={tdStyle}>{u.usuario}</td>
+                <td style={tdStyle}>{u.nombre_usuario}</td>
+                <td style={tdStyle}>{u.apellidoP}</td>
+                <td style={tdStyle}>{u.apellidoM}</td>
+                <td style={tdStyle}>{u.cargoUsuario}</td>
+                <td style={tdStyle}>{u.id_area}</td>
+                <td style={tdStyle}>{u.id_rol}</td>
+                <td style={tdStyle}>{u.correo_usuario}</td>
+                <td style={tdStyle}>{u.estado}</td>
+              </tr>
+            ))}
+        </tbody>
+      </table>
+
+      {showSuccess && (
+        <div style={{
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          backgroundColor: "#28a745",
+          color: "white",
+          padding: "1rem 2rem",
+          borderRadius: "8px",
+          zIndex: 1000,
+          fontSize: "1.2rem",
+          boxShadow: "0 0 10px rgba(0,0,0,0.5)"
+        }}>
+          Operación exitosa
+        </div>
+      )}
+    </div>
+  );
+}
+
+const thStyle: React.CSSProperties = {
+  border: "1px solid #ccc",
+  padding: "8px",
+  backgroundColor: "#003B5C",
+  color: "white",
+};
+
+const tdStyle: React.CSSProperties = {
+  border: "1px solid #ccc",
+  padding: "8px",
+  backgroundColor: "#fff",
+  color: "#000",
+};
+
+const btnStyle = (color: string, fullWidth = false): React.CSSProperties => ({
+  backgroundColor: color,
+  color: "white",
+  padding: "0.5rem 1rem",
+  border: "none",
+  cursor: "pointer",
+  width: fullWidth ? "100%" : undefined,
+  marginTop: fullWidth ? "1rem" : undefined,
+});
