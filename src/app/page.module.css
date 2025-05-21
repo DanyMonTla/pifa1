@@ -166,6 +166,7 @@ a.secondary {
     filter: invert();
   }
 }
+<<<<<<< HEAD
 .buton {
   /* Para que sea una sola “tarjeta” con bordes redondeados */
   display: inline-flex;
@@ -193,3 +194,5 @@ a.secondary {
   align-items: center;
   font-size: 1rem;
 }
+=======
+>>>>>>> 08a6da0 (Initial commit from Create Next App)
