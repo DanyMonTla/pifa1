@@ -1,24 +1,22 @@
 "use client";
 
 import React, { useState, useEffect, ChangeEvent } from "react";
+import FormularioUsuario from "../components/FormularioUsuario"; // ruta correcta
+
 
 type Usuario = {
-  idUsuario: string;
+  id_usuario: string;
   usuario: string;
-  nombreUsuario: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
+  nombre_usuario: string;
+  apellidoP: string;
+  apellidoM: string;
   cargoUsuario: string;
-  hashedPassword: string;
-  idArea: number;
-  idRol: number;
-  correoUsuario: string;
-  habilitado: boolean;
-  tituloUsuario?: string;
-  fechaAlta: string;
-  fechaBaja?: string;
+  hashed_password: string;
+  id_area: string;
+  id_rol: string;
+  correo_usuario: string;
+  estado?: "activo" | "inactivo";
 };
-
 
 type Area = {
   idArea: string;
@@ -31,23 +29,19 @@ type Rol = {
 };
 
 export default function UsuariosCrud() {
-const [form, setForm] = useState<Usuario>({
-  idUsuario: "",
-  usuario: "",
-  nombreUsuario: "",
-  apellidoPaterno: "",
-  apellidoMaterno: "",
-  cargoUsuario: "",
-  hashedPassword: "",
-  idArea: 0,
-  idRol: 0,
-  correoUsuario: "",
-  habilitado: true,
-  tituloUsuario: "",
-  fechaAlta: new Date().toISOString(),
-});
-
-
+  const [form, setForm] = useState<Usuario>({
+    id_usuario: "",
+    usuario: "",
+    nombre_usuario: "",
+    apellidoP: "",
+    apellidoM: "",
+    cargoUsuario: "",
+    hashed_password: "",
+    id_area: "",
+    id_rol: "",
+    correo_usuario: "",
+    estado: "activo",
+  });
 
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [areas] = useState<Area[]>([
@@ -66,7 +60,7 @@ const [form, setForm] = useState<Usuario>({
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -107,7 +101,6 @@ const [form, setForm] = useState<Usuario>({
     setTimeout(() => setShowSuccess(false), 2000);
   };
 
-  // 🔹 Llamadas al backend
   const fetchUsuarios = async () => {
     try {
       const response = await fetch("http://localhost:3001/usuarios");
@@ -158,7 +151,6 @@ const [form, setForm] = useState<Usuario>({
     }
   };
 
-  // Cargar usuarios al iniciar
   useEffect(() => {
     fetchUsuarios();
   }, []);
@@ -168,7 +160,7 @@ const [form, setForm] = useState<Usuario>({
       <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>
         {modo === "agregar" ? "Agregar nuevo usuario" :
          modo === "modificar" ? "Modificar usuario" :
-         modo === "eliminar" ? "Eliminar usuario" : 
+         modo === "eliminar" ? "Eliminar usuario" :
          "Catálogo de Usuarios"}
       </h2>
 
@@ -197,50 +189,14 @@ const [form, setForm] = useState<Usuario>({
       </div>
 
       {modo && (
-        <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
-          {["id_usuario", "usuario", "nombre_usuario", "apellidoP", "apellidoM", "cargoUsuario", "hashed_password", "correo_usuario"].map((field) => (
-            <input
-              key={field}
-              name={field}
-              placeholder={field.replace("_", " ").toUpperCase()}
-              value={(form as any)[field]}
-              onChange={handleChange}
-              style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
-            />
-          ))}
-
-          <select
-            name="id_area"
-            value={form.id_area}
-            onChange={handleChange}
-            style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
-          >
-            <option value="">Seleccione un área</option>
-            {areas.map(area => (
-              <option key={area.idArea} value={area.idArea}>
-                {area.idArea}
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="id_rol"
-            value={form.id_rol}
-            onChange={handleChange}
-            style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
-          >
-            <option value="">Seleccione un rol</option>
-            {roles.map(rol => (
-              <option key={rol.id_rol} value={rol.id_rol}>
-                {rol.id_rol}
-              </option>
-            ))}
-          </select>
-
-          <button type="submit" style={btnStyle("#0077b6", true)}>
-            {modo === "modificar" ? "Actualizar" : modo === "eliminar" ? "Inactivar" : "Guardar"}
-          </button>
-        </form>
+        <FormularioUsuario
+          form={form}
+          modo={modo}
+          areas={areas}
+          roles={roles}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+        />
       )}
 
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
