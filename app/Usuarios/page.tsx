@@ -3,17 +3,18 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 
 type Usuario = {
-  id_usuario: string;
-  usuario: string;
-  nombre_usuario: string;
-  apellidoP: string;
-  apellidoM: string;
-  cargoUsuario: string;
-  hashed_password: string;
-  id_area: string;
-  id_rol: string;
-  correo_usuario: string;
-  estado?: "activo" | "inactivo";
+  cid_usuario: string;
+  cnombre_usuario: string;
+  capellido_p_usuario: string;
+  capellido_m_usuario: string;
+  ccargo_usuario: string;
+  chashed_password: string;
+  nid_area: string;
+  nid_rol: string;
+  btitulo_usuario: string;
+  bhabilitado: boolean;
+  dfecha_alta: string;
+  dfecha_baja: string;
 };
 
 type Area = {
@@ -28,17 +29,18 @@ type Rol = {
 
 export default function UsuariosCrud() {
   const [form, setForm] = useState<Usuario>({
-    id_usuario: "",
-    usuario: "",
-    nombre_usuario: "",
-    apellidoP: "",
-    apellidoM: "",
-    cargoUsuario: "",
-    hashed_password: "",
-    id_area: "",
-    id_rol: "",
-    correo_usuario: "",
-    estado: "activo",
+    cid_usuario: "",
+    cnombre_usuario: "",
+    capellido_p_usuario: "",
+    capellido_m_usuario: "",
+    ccargo_usuario: "",
+    chashed_password: "",
+    nid_area: "",
+    nid_rol: "",
+    btitulo_usuario: "",
+    bhabilitado: true,
+    dfecha_alta: "",
+    dfecha_baja: "",
   });
 
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -55,10 +57,16 @@ export default function UsuariosCrud() {
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [modo, setModo] = useState<"agregar" | "modificar" | "eliminar" | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    const parsedValue = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    setForm(prev => ({ ...prev, [name]: parsedValue }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -73,25 +81,26 @@ export default function UsuariosCrud() {
     if (!confirmar) return;
 
     if (modo === "modificar") {
-      actualizarUsuario();
+      setUsuarios(prev => prev.map(u => u.cid_usuario === form.cid_usuario ? form : u));
     } else if (modo === "eliminar") {
-      eliminarUsuario();
+      setUsuarios(prev => prev.map(u => u.cid_usuario === form.cid_usuario ? { ...u, bhabilitado: false, dfecha_baja: new Date().toISOString() } : u));
     } else if (modo === "agregar") {
-      crearUsuario();
+      setUsuarios(prev => [...prev, form]);
     }
 
     setForm({
-      id_usuario: "",
-      usuario: "",
-      nombre_usuario: "",
-      apellidoP: "",
-      apellidoM: "",
-      cargoUsuario: "",
-      hashed_password: "",
-      id_area: "",
-      id_rol: "",
-      correo_usuario: "",
-      estado: "activo",
+      cid_usuario: "",
+      cnombre_usuario: "",
+      capellido_p_usuario: "",
+      capellido_m_usuario: "",
+      ccargo_usuario: "",
+      chashed_password: "",
+      nid_area: "",
+      nid_rol: "",
+      btitulo_usuario: "",
+      bhabilitado: true,
+      dfecha_alta: "",
+      dfecha_baja: "",
     });
     setModo(null);
 
@@ -99,68 +108,12 @@ export default function UsuariosCrud() {
     setTimeout(() => setShowSuccess(false), 2000);
   };
 
-  // 🔹 Llamadas al backend
-  const fetchUsuarios = async () => {
-    try {
-      const response = await fetch("http://localhost:3000/usuarios");
-      const data = await response.json();
-      setUsuarios(data);
-    } catch (error) {
-      console.error("Error al obtener usuarios:", error);
-    }
-  };
-
-  const crearUsuario = async () => {
-    try {
-      const response = await fetch("http://localhost:3000/usuarios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!response.ok) throw new Error("Error al crear usuario");
-      fetchUsuarios();
-    } catch (error) {
-      console.error("Error al agregar:", error);
-    }
-  };
-
-  const actualizarUsuario = async () => {
-    try {
-      const response = await fetch(`http://localhost:3000/usuarios/${form.id_usuario}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!response.ok) throw new Error("Error al actualizar");
-      fetchUsuarios();
-    } catch (error) {
-      console.error("Error al modificar:", error);
-    }
-  };
-
-  const eliminarUsuario = async () => {
-    try {
-      const response = await fetch(`http://localhost:3000/usuarios/${form.id_usuario}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Error al eliminar");
-      fetchUsuarios();
-    } catch (error) {
-      console.error("Error al eliminar:", error);
-    }
-  };
-
-  // Cargar usuarios al iniciar
-  useEffect(() => {
-    fetchUsuarios();
-  }, []);
-
   return (
     <div style={{ backgroundColor: "#222", color: "white", padding: "2rem" }}>
       <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>
         {modo === "agregar" ? "Agregar nuevo usuario" :
          modo === "modificar" ? "Modificar usuario" :
-         modo === "eliminar" ? "Eliminar usuario" : 
+         modo === "eliminar" ? "Eliminar usuario" :
          "Catálogo de Usuarios"}
       </h2>
 
@@ -172,7 +125,7 @@ export default function UsuariosCrud() {
           style={{ flex: 1, padding: "0.5rem" }}
         />
         <button onClick={() => {
-          const user = usuarios.find(u => u.id_usuario === busquedaId.trim());
+          const user = usuarios.find(u => u.cid_usuario === busquedaId.trim());
           if (user) setForm(user);
           else alert("No se encontró un usuario con ese ID");
         }} style={btnStyle("#0077b6")}>Buscar</button>
@@ -190,20 +143,25 @@ export default function UsuariosCrud() {
 
       {modo && (
         <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
-          {["id_usuario", "usuario", "nombre_usuario", "apellidoP", "apellidoM", "cargoUsuario", "hashed_password", "correo_usuario"].map((field) => (
+          {[
+            "cid_usuario", "cnombre_usuario", "capellido_p_usuario", "capellido_m_usuario",
+            "ccargo_usuario", "chashed_password", "dfecha_alta"
+          ].map((field) => (
             <input
               key={field}
               name={field}
-              placeholder={field.replace("_", " ").toUpperCase()}
+              placeholder={field.replace(/_/g, " ").toUpperCase()}
               value={(form as any)[field]}
               onChange={handleChange}
               style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
+              type={field.includes("fecha") ? "datetime-local" : "text"}
             />
           ))}
 
+          {/* Select Área */}
           <select
-            name="id_area"
-            value={form.id_area}
+            name="nid_area"
+            value={form.nid_area}
             onChange={handleChange}
             style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
           >
@@ -215,9 +173,10 @@ export default function UsuariosCrud() {
             ))}
           </select>
 
+          {/* Select Rol */}
           <select
-            name="id_rol"
-            value={form.id_rol}
+            name="nid_rol"
+            value={form.nid_rol}
             onChange={handleChange}
             style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
           >
@@ -229,46 +188,59 @@ export default function UsuariosCrud() {
             ))}
           </select>
 
+          {/* Campo Título después del rol */}
+          <input
+            name="btitulo_usuario"
+            placeholder="TÍTULO USUARIO"
+            value={form.btitulo_usuario}
+            onChange={handleChange}
+            style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
+          />
+
           <button type="submit" style={btnStyle("#0077b6", true)}>
             {modo === "modificar" ? "Actualizar" : modo === "eliminar" ? "Inactivar" : "Guardar"}
           </button>
         </form>
       )}
 
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th style={thStyle}>ID</th>
-            <th style={thStyle}>Usuario</th>
-            <th style={thStyle}>Nombre</th>
-            <th style={thStyle}>Apellido P</th>
-            <th style={thStyle}>Apellido M</th>
-            <th style={thStyle}>Cargo</th>
-            <th style={thStyle}>ID Área</th>
-            <th style={thStyle}>ID Rol</th>
-            <th style={thStyle}>Correo</th>
-            <th style={thStyle}>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios
-            .filter(u => mostrarInactivos || u.estado !== "inactivo")
-            .map(u => (
-              <tr key={u.id_usuario} style={u.estado === "inactivo" ? { opacity: 0.5 } : {}}>
-                <td style={tdStyle}>{u.id_usuario}</td>
-                <td style={tdStyle}>{u.usuario}</td>
-                <td style={tdStyle}>{u.nombre_usuario}</td>
-                <td style={tdStyle}>{u.apellidoP}</td>
-                <td style={tdStyle}>{u.apellidoM}</td>
-                <td style={tdStyle}>{u.cargoUsuario}</td>
-                <td style={tdStyle}>{u.id_area}</td>
-                <td style={tdStyle}>{u.id_rol}</td>
-                <td style={tdStyle}>{u.correo_usuario}</td>
-                <td style={tdStyle}>{u.estado}</td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+      {isClient && (
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th style={thStyle}>ID</th>
+              <th style={thStyle}>Nombre</th>
+              <th style={thStyle}>Apellido P</th>
+              <th style={thStyle}>Apellido M</th>
+              <th style={thStyle}>Cargo</th>
+              <th style={thStyle}>Área</th>
+              <th style={thStyle}>Rol</th>
+              <th style={thStyle}>Título</th>
+              <th style={thStyle}>Alta</th>
+              <th style={thStyle}>Baja</th>
+              <th style={thStyle}>Habilitado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {usuarios
+              .filter(u => mostrarInactivos || u.bhabilitado)
+              .map(u => (
+                <tr key={u.cid_usuario} style={!u.bhabilitado ? { opacity: 0.5 } : {}}>
+                  <td style={tdStyle}>{u.cid_usuario}</td>
+                  <td style={tdStyle}>{u.cnombre_usuario}</td>
+                  <td style={tdStyle}>{u.capellido_p_usuario}</td>
+                  <td style={tdStyle}>{u.capellido_m_usuario}</td>
+                  <td style={tdStyle}>{u.ccargo_usuario}</td>
+                  <td style={tdStyle}>{u.nid_area}</td>
+                  <td style={tdStyle}>{u.nid_rol}</td>
+                  <td style={tdStyle}>{u.btitulo_usuario}</td>
+                  <td style={tdStyle}>{u.dfecha_alta}</td>
+                  <td style={tdStyle}>{u.dfecha_baja}</td>
+                  <td style={tdStyle}>{u.bhabilitado ? "Sí" : "No"}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      )}
 
       {showSuccess && (
         <div style={{

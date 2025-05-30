@@ -3,40 +3,24 @@
 import React, { useState, ChangeEvent } from "react";
 
 type AreaResponsable = {
-  idArea: string;
-  unidad: string;
-  reportaA: string;
-  correo: string;
-  titulo: string;
-  nombre_responsable: string;
-  apellidoP_responsable: string;
-  apellidoM_responsable: string;
-  cargo_responsable: string;
-  idPrograma: string;
-  activo: boolean;
-};
-
-type Programa = {
-  id_programa: string;
-  nombre_programa: string;
-  id_tipo_programa: string;
-  objetivo_pp: string;
-  activo: boolean;
+  nid_area: string;
+  cunidad_responsable: string;
+  creporta_a: string;
+  ccorreo_electronico_ur: string;
+  bhabilitado: boolean;
+  dfecha_alta: string;
+  dfecha_baja: string;
 };
 
 export default function AreasResponsablesCrud() {
   const [form, setForm] = useState<AreaResponsable>({
-    idArea: "",
-    unidad: "",
-    reportaA: "",
-    correo: "",
-    titulo: "",
-    nombre_responsable: "",
-    apellidoP_responsable: "",
-    apellidoM_responsable: "",
-    cargo_responsable: "",
-    idPrograma: "",
-    activo: true,
+    nid_area: "",
+    cunidad_responsable: "",
+    creporta_a: "",
+    ccorreo_electronico_ur: "",
+    bhabilitado: true,
+    dfecha_alta: "",
+    dfecha_baja: "",
   });
 
   const [modo, setModo] = useState<"agregar" | "modificar" | "eliminar" | null>(null);
@@ -44,20 +28,25 @@ export default function AreasResponsablesCrud() {
   const [busquedaId, setBusquedaId] = useState("");
   const [verInactivos, setVerInactivos] = useState(false);
 
-  const [programas] = useState<Programa[]>([
-    { id_programa: "P1", nombre_programa: "Programa A", id_tipo_programa: "1", objetivo_pp: "Objetivo A", activo: true },
-    { id_programa: "P2", nombre_programa: "Programa B", id_tipo_programa: "2", objetivo_pp: "Objetivo B", activo: true },
-  ]);
+  const encabezados: { [key: string]: string } = {
+    nid_area: "ID Área",
+    cunidad_responsable: "Unidad Responsable",
+    creporta_a: "Reporta A",
+    ccorreo_electronico_ur: "Correo Electrónico",
+    dfecha_alta: "Fecha Alta",
+    dfecha_baja: "Fecha Baja",
+  };
 
-  const [asignaciones, setAsignaciones] = useState<{ [areaId: string]: string[] }>({});
-  const [showModal, setShowModal] = useState(false);
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleBuscarPorId = () => {
-    const areaSeleccionada = areas.find(a => a.idArea === busquedaId.trim());
+    const areaSeleccionada = areas.find(a => a.nid_area === busquedaId.trim());
     if (areaSeleccionada) {
       setForm(areaSeleccionada);
     } else {
@@ -67,52 +56,37 @@ export default function AreasResponsablesCrud() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const camposVacios = Object.entries(form).filter(([key, val]) => key !== "activo")
+    const camposVacios = Object.entries(form)
+      .filter(([key]) => key !== "bhabilitado" && key !== "dfecha_baja")
       .some(([, val]) => typeof val === "string" && val.trim() === "");
     if (camposVacios) return alert("Por favor, completa todos los campos.");
 
     if (modo === "modificar") {
       const confirmar = confirm("¿Deseas actualizar esta área responsable?");
       if (!confirmar) return;
-      setAreas(prev => prev.map(a => a.idArea === form.idArea ? { ...form } : a));
+      setAreas(prev => prev.map(a => a.nid_area === form.nid_area ? { ...form } : a));
     } else if (modo === "eliminar") {
       const confirmar = confirm("¿Deseas marcar como inactiva esta área responsable?");
       if (!confirmar) return;
-      setAreas(prev => prev.map(a => a.idArea === form.idArea ? { ...a, activo: false } : a));
+      setAreas(prev => prev.map(a =>
+        a.nid_area === form.nid_area
+          ? { ...a, bhabilitado: false, dfecha_baja: new Date().toISOString().slice(0, 10) }
+          : a
+      ));
     } else if (modo === "agregar") {
-      setAreas(prev => [...prev, { ...form, activo: true }]);
+      setAreas(prev => [...prev, { ...form, bhabilitado: true }]);
     }
 
     setForm({
-      idArea: "",
-      unidad: "",
-      reportaA: "",
-      correo: "",
-      titulo: "",
-      nombre_responsable: "",
-      apellidoP_responsable: "",
-      apellidoM_responsable: "",
-      cargo_responsable: "",
-      idPrograma: "",
-      activo: true,
+      nid_area: "",
+      cunidad_responsable: "",
+      creporta_a: "",
+      ccorreo_electronico_ur: "",
+      bhabilitado: true,
+      dfecha_alta: "",
+      dfecha_baja: "",
     });
     setModo(null);
-  };
-
-  const handleCheckboxChange = (areaId: string, programaId: string) => {
-    setAsignaciones(prev => {
-      const current = prev[areaId] || [];
-      if (current.includes(programaId)) {
-        return { ...prev, [areaId]: current.filter(id => id !== programaId) };
-      } else {
-        return { ...prev, [areaId]: [...current, programaId] };
-      }
-    });
-  };
-
-  const handleGuardarAsignaciones = () => {
-    console.log("Asignaciones guardadas:", asignaciones);
-    setShowModal(false);
   };
 
   const obtenerTitulo = () => {
@@ -122,18 +96,6 @@ export default function AreasResponsablesCrud() {
     return "Catálogo de Áreas Responsables";
   };
 
-  const encabezados: { [key: string]: string } = {
-    idArea: "ID Área",
-    unidad: "Unidad",
-    reportaA: "Reporta A",
-    correo: "Correo Electrónico",
-    titulo: "Título",
-    nombre_responsable: "Nombre Responsable",
-    apellidoP_responsable: "Apellido P Responsable",
-    apellidoM_responsable: "Apellido M Responsable",
-    cargo_responsable: "Cargo Responsable",
-    idPrograma: "ID Programa",
-  };
   return (
     <div style={{ backgroundColor: "#222", color: "white", padding: "2rem" }}>
       <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>{obtenerTitulo()}</h2>
@@ -148,7 +110,6 @@ export default function AreasResponsablesCrud() {
         <button onClick={handleBuscarPorId} style={btnStyle("#0077b6")}>Buscar</button>
         <button onClick={() => setModo("agregar")} style={btnStyle("#004c75")}>Agregar</button>
         <button onClick={() => setModo("modificar")} style={btnStyle("#004c75")}>Modificar</button>
-        <button onClick={() => setShowModal(true)} style={btnStyle("#006400")}>AresResp_ProgramaPresu</button>
         <button onClick={() => setModo("eliminar")} style={btnStyle("#8B0000")}>Eliminar</button>
         <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <input
@@ -162,19 +123,22 @@ export default function AreasResponsablesCrud() {
 
       {modo && (
         <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
-          {Object.entries(form).map(([key, value]) => (
-            key !== "activo" && (
+          {Object.entries(form).map(([key, value]) => {
+            if (key === "bhabilitado") return null;
+            const isDateField = key === "dfecha_alta";
+            return (
               <input
                 key={key}
                 name={key}
+                type={isDateField ? "date" : "text"}
                 placeholder={(encabezados[key] || key).toUpperCase()}
-                value={typeof value === 'string' ? value : ''}
+                value={typeof value === 'string' ? (isDateField ? value.slice(0, 10) : value) : ''}
                 onChange={handleChange}
                 style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
-                readOnly={modo === "eliminar" && key !== "idArea"}
+                readOnly={modo === "eliminar" || key === "dfecha_baja" || (modo !== "agregar" && key === "nid_area")}
               />
-            )
-          ))}
+            );
+          })}
           <button type="submit" style={btnStyle(modo === "eliminar" ? "#8B0000" : "#0077b6", true)}>
             {modo === "modificar" ? "Actualizar" : modo === "eliminar" ? "Marcar inactivo" : "Guardar"}
           </button>
@@ -184,59 +148,25 @@ export default function AreasResponsablesCrud() {
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
-            {Object.keys(form).filter(k => k !== "activo").map((key) => (
+            {Object.keys(form).filter(k => k !== "bhabilitado").map((key) => (
               <th key={key} style={thStyle}>{encabezados[key] || key.toUpperCase()}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {areas.filter(a => verInactivos || a.activo).map((a) => (
-            <tr key={a.idArea} style={{ opacity: a.activo ? 1 : 0.5 }}>
-              {Object.entries(a).filter(([k]) => k !== "activo").map(([key, val]) => (
+          {areas.filter(a => verInactivos || a.bhabilitado).map((a) => (
+            <tr key={a.nid_area} style={{ opacity: a.bhabilitado ? 1 : 0.5 }}>
+              {Object.entries(a).filter(([k]) => k !== "bhabilitado").map(([key, val]) => (
                 <td key={key} style={tdStyle}>{val}</td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
-
-      {/* Modal de Asignaciones */}
-      {showModal && (
-        <div style={modalOverlayStyle}>
-          <div style={modalContentStyle}>
-  <h3 style={{ textAlign: "center", marginBottom: "1rem" }}>Asignar Programas a Áreas</h3>
-  <div style={{ maxHeight: "300px", overflowY: "auto", marginBottom: "1rem" }}>
-    {areas.length === 0 ? (
-      <p>No hay áreas registradas.</p>
-    ) : (
-      areas.map(area => (
-        <div key={area.idArea} style={{ marginBottom: "1rem", borderBottom: "1px solid #ccc" }}>
-          <strong style={{ color: "#003B5C" }}>{area.unidad}</strong>
-          {programas.map(prog => (
-            <div key={prog.id_programa}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={asignaciones[area.idArea]?.includes(prog.id_programa) || false}
-                  onChange={() => handleCheckboxChange(area.idArea, prog.id_programa)}
-                />
-                {prog.nombre_programa}
-              </label>
-            </div>
-          ))}
-        </div>
-      ))
-    )}
-  </div>
-  <button onClick={handleGuardarAsignaciones} style={btnStyle("#0077b6")}>Guardar Cambios</button>
-  <button onClick={() => setShowModal(false)} style={btnStyle("#8B0000")}>Cancelar</button>
-</div>
-
-        </div>
-      )}
     </div>
   );
 }
+
 const thStyle: React.CSSProperties = {
   border: "1px solid #ccc",
   padding: "8px",
@@ -249,29 +179,6 @@ const tdStyle: React.CSSProperties = {
   padding: "8px",
   backgroundColor: "#fff",
   color: "#000",
-};
-
-const modalOverlayStyle: React.CSSProperties = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  width: "100vw",
-  height: "100vh",
-  backgroundColor: "rgba(0,0,0,0.7)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 1000,
-};
-
-const modalContentStyle: React.CSSProperties = {
-  backgroundColor: "white",
-  color: "black",
-  padding: "2rem",
-  borderRadius: "8px",
-  width: "400px",
-  maxHeight: "80vh",
-  overflowY: "auto",
 };
 
 const btnStyle = (color: string, fullWidth = false): React.CSSProperties => ({
