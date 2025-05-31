@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, ChangeEvent } from "react";
 
@@ -46,7 +46,7 @@ export default function UsuariosCrud() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [busquedaId, setBusquedaId] = useState("");
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
-  const [modo, setModo] = useState<"agregar" | "modificar" | "eliminar" | null>(null);
+  const [modo, setModo] = useState<"agregar" | "modificar" | "eliminar" | "visualizar" | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
@@ -84,78 +84,15 @@ export default function UsuariosCrud() {
     setForm((prev) => ({ ...prev, [name]: parsedValue }));
   };
 
-  const agregarUsuario = async () => {
-    try {
-      const datos = {
-        ...form,
-        nid_area: parseInt(form.nid_area),
-        nid_rol: parseInt(form.nid_rol),
-      };
-
-      console.log("🚀 Enviando al backend:", datos); // <-- AGREGA ESTO
-
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(datos),
-      });
-
-      const responseText = await res.text();
-      if (!res.ok) throw new Error(`Error al agregar: ${res.status} ${responseText}`);
-
-      await fetchUsuarios();
-    } catch (err) {
-      console.error("❌ Error al agregar:", err);
+  const handleBuscar = () => {
+    const user = usuarios.find(u => u.cid_usuario === busquedaId.trim());
+    if (user) {
+      setForm(user);
+      setModo("visualizar");
+    } else {
+      alert("No se encontró un usuario con ese ID");
     }
-  };
-
-
-  const modificarUsuario = async () => {
-  try {
-    const datos = {
-      cnombre_usuario: form.cnombre_usuario,
-      capellido_p_usuario: form.capellido_p_usuario,
-      capellido_m_usuario: form.capellido_m_usuario,
-      ccargo_usuario: form.ccargo_usuario,
-      chashed_password: form.chashed_password,
-      nid_area: parseInt(form.nid_area),
-      nid_rol: parseInt(form.nid_rol),
-      btitulo_usuario: form.btitulo_usuario,
-      bhabilitado: form.bhabilitado,
-      dfecha_alta: form.dfecha_alta || null,
-      dfecha_baja: form.dfecha_baja || null,
-    };
-
-    const res = await fetch(`${API_URL}/${form.cid_usuario}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(datos),
-    });
-
-    const responseText = await res.text();
-    if (!res.ok) throw new Error(`Error al modificar: ${res.status} ${responseText}`);
-
-    await fetchUsuarios(); // recarga usuarios con los datos actualizados
-  } catch (err) {
-    console.error("❌ Error al modificar:", err);
   }
-};
-
-
-  const desactivarUsuario = async () => {
-    try {
-      const res = await fetch(`${API_URL}/estado/${form.cid_usuario}`, {
-        method: "PATCH",
-      });
-
-      const responseText = await res.text();
-      if (!res.ok) throw new Error(`Error al desactivar: ${res.status} ${responseText}`);
-
-      await fetchUsuarios();
-    } catch (err) {
-      console.error("Error al desactivar:", err);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,27 +105,55 @@ export default function UsuariosCrud() {
         : "¿Estás seguro de que deseas desactivar este usuario?";
     if (!confirm(confirmMsg)) return;
 
-    if (modo === "agregar") await agregarUsuario();
-    if (modo === "modificar") await modificarUsuario();
-    if (modo === "eliminar") await desactivarUsuario();
+    try {
+      const datos = {
+        ...form,
+        nid_area: parseInt(form.nid_area),
+        nid_rol: parseInt(form.nid_rol),
+        dfecha_baja: form.dfecha_baja || null
+      };
 
-    setForm({
-      cid_usuario: "",
-      cnombre_usuario: "",
-      capellido_p_usuario: "",
-      capellido_m_usuario: "",
-      ccargo_usuario: "",
-      chashed_password: "",
-      nid_area: "",
-      nid_rol: "",
-      btitulo_usuario: "",
-      bhabilitado: true,
-      dfecha_alta: "",
-      dfecha_baja: "",
-    });
-    setModo(null);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
+      if (modo === "agregar") {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(datos),
+        });
+      }
+
+      if (modo === "modificar") {
+        await fetch(`${API_URL}/${form.cid_usuario}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(datos),
+        });
+      }
+
+      if (modo === "eliminar") {
+        await fetch(`${API_URL}/estado/${form.cid_usuario}`, { method: "PATCH" });
+      }
+
+      await fetchUsuarios();
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+      setForm({
+        cid_usuario: "",
+        cnombre_usuario: "",
+        capellido_p_usuario: "",
+        capellido_m_usuario: "",
+        ccargo_usuario: "",
+        chashed_password: "",
+        nid_area: "",
+        nid_rol: "",
+        btitulo_usuario: "",
+        bhabilitado: true,
+        dfecha_alta: "",
+        dfecha_baja: "",
+      });
+      setModo(null);
+    } catch (err) {
+      console.error("Error en la operación:", err);
+    }
   };
 
   return (
@@ -200,6 +165,8 @@ export default function UsuariosCrud() {
           ? "Modificar usuario"
           : modo === "eliminar"
           ? "Eliminar usuario"
+          : modo === "visualizar"
+          ? "Detalle de usuario"
           : "Catálogo de Usuarios"}
       </h2>
 
@@ -210,80 +177,86 @@ export default function UsuariosCrud() {
           onChange={(e) => setBusquedaId(e.target.value)}
           style={{ flex: 1, padding: "0.5rem" }}
         />
-        <button onClick={() => {
-          const user = usuarios.find(u => u.cid_usuario === busquedaId.trim());
-          if (user) setForm(user);
-          else alert("No se encontró un usuario con ese ID");
-        }} style={btnStyle("#0077b6")}>Buscar</button>
+        <button onClick={handleBuscar} style={btnStyle("#0077b6")}>Buscar</button>
         <button onClick={() => setModo("agregar")} style={btnStyle("#004c75")}>Agregar</button>
         <button onClick={() => setModo("modificar")} style={btnStyle("#004c75")}>Modificar</button>
         <button onClick={() => setModo("eliminar")} style={btnStyle("#8B0000")}>Eliminar</button>
         <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-        <input
-          type="checkbox"
-          checked={mostrarInactivos}
-          onChange={() => setMostrarInactivos(prev => !prev)}
-        /> Ver inhabilitados
-      </label>
-
-
+          <input
+            type="checkbox"
+            checked={mostrarInactivos}
+            onChange={() => setMostrarInactivos(prev => !prev)}
+          /> Ver inhabilitados
+        </label>
       </div>
 
       {modo && (
-        <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
-          <div style={{display: "grid", gridTemplateColumns: "180px 300px", gap: "0.5rem 1rem", alignItems: "center", justifyContent: "center", }}> 
-            <label>ID Usuario</label>
-            <input name="cid_usuario" value={form.cid_usuario} onChange={handleChange} style={inputStyle} />
+        <form onSubmit={handleSubmit} style={{ marginBottom: "2rem", maxWidth: "600px", marginInline: "auto" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {[
+              ["ID Usuario", "cid_usuario"],
+              ["Nombre", "cnombre_usuario"],
+              ["Apellido Paterno", "capellido_p_usuario"],
+              ["Apellido Materno", "capellido_m_usuario"],
+              ["Cargo", "ccargo_usuario"],
+              ["Contraseña (hash)", "chashed_password"],
+              ["Fecha de Alta", "dfecha_alta", "datetime-local"],
+              ["Título", "btitulo_usuario"]
+            ].map(([label, name, type = "text"]) => (
+              <div key={name} style={{ display: "flex", alignItems: "center" }}>
+                <label style={{ width: "200px" }}>{label}</label>
+                <input
+                  type={type}
+                  name={name}
+                  value={form[name as keyof Usuario] as string}
+                  onChange={handleChange}
+                  style={inputStyle}
+                  readOnly={modo === "visualizar" || (modo === "eliminar" && name !== "cid_usuario")}
+                />
+              </div>
+            ))}
 
-            <label>Nombre</label>
-            <input name="cnombre_usuario" value={form.cnombre_usuario} onChange={handleChange} style={inputStyle} />
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <label style={{ width: "200px" }}>Área</label>
+              <select
+                name="nid_area"
+                value={form.nid_area}
+                onChange={handleChange}
+                style={inputStyle}
+                disabled={modo === "visualizar" || modo === "eliminar"}
+              >
+                <option value="">Seleccione un área</option>
+                {areas.map(a => (
+                  <option key={a.idArea} value={a.idArea}>{a.unidad}</option>
+                ))}
+              </select>
+            </div>
 
-            <label>Apellido Paterno</label>
-            <input name="capellido_p_usuario" value={form.capellido_p_usuario} onChange={handleChange} style={inputStyle} />
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <label style={{ width: "200px" }}>Rol</label>
+              <select
+                name="nid_rol"
+                value={form.nid_rol}
+                onChange={handleChange}
+                style={inputStyle}
+                disabled={modo === "visualizar" || modo === "eliminar"}
+              >
+                <option value="">Seleccione un rol</option>
+                {roles.map(r => (
+                  <option key={r.id_rol} value={r.id_rol}>{r.rol}</option>
+                ))}
+              </select>
+            </div>
 
-            <label>Apellido Materno</label>
-            <input name="capellido_m_usuario" value={form.capellido_m_usuario} onChange={handleChange} style={inputStyle} />
-
-            <label>Cargo</label>
-            <input name="ccargo_usuario" value={form.ccargo_usuario} onChange={handleChange} style={inputStyle} />
-
-            <label>Contraseña (hash)</label>
-            <input name="chashed_password" value={form.chashed_password} onChange={handleChange} style={inputStyle} />
-
-            <label>Fecha de Alta</label>
-            <input
-              name="dfecha_alta"
-              type="datetime-local"
-              value={form.dfecha_alta}
-              onChange={handleChange}
-              style={inputStyle}
-            />
-
-            <label>Área</label>
-            <select name="nid_area" value={form.nid_area} onChange={handleChange} style={inputStyle}>
-              <option value="">Seleccione un área</option>
-              {areas.map(a => (
-                <option key={a.idArea} value={a.idArea}>{a.unidad}</option>
-              ))}
-            </select>
-
-            <label>Rol</label>
-            <select name="nid_rol" value={form.nid_rol} onChange={handleChange} style={inputStyle}>
-              <option value="">Seleccione un rol</option>
-              {roles.map(r => (
-                <option key={r.id_rol} value={r.id_rol}>{r.rol}</option>
-              ))}
-            </select>
-
-            <label>Título</label>
-            <input name="btitulo_usuario" value={form.btitulo_usuario} onChange={handleChange} style={inputStyle} />
+            {modo !== "visualizar" && (
+              <div style={{ textAlign: "center" }}>
+                <button type="submit" style={btnStyle(modo === "eliminar" ? "#8B0000" : "#0077b6", true)}>
+                  {modo === "modificar" ? "Actualizar" : modo === "eliminar" ? "Inactivar" : "Guardar"}
+                </button>
+              </div>
+            )}
           </div>
-
-          <button type="submit" style={btnStyle("#0077b6", true)}>
-            {modo === "modificar" ? "Actualizar" : modo === "eliminar" ? "Inactivar" : "Guardar"}
-          </button>
         </form>
-
       )}
 
       {isClient && (
@@ -297,7 +270,7 @@ export default function UsuariosCrud() {
           </thead>
           <tbody>
             {usuarios
-              .filter(u => mostrarInactivos ? !u.bhabilitado : u.bhabilitado)
+              .filter(u => mostrarInactivos || u.bhabilitado)
               .map(u => (
                 <tr key={u.cid_usuario} style={!u.bhabilitado ? { opacity: 0.6, backgroundColor: "#444" } : {}}>
                   <td style={tdStyle}>{u.cid_usuario}</td>
@@ -317,7 +290,6 @@ export default function UsuariosCrud() {
         </table>
       )}
 
-
       {showSuccess && (
         <div style={{
           position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
@@ -332,7 +304,8 @@ export default function UsuariosCrud() {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: "100%", marginBottom: "0.5rem", padding: "0.5rem"
+  flex: 1,
+  padding: "0.5rem",
 };
 
 const thStyle: React.CSSProperties = {
@@ -344,7 +317,11 @@ const tdStyle: React.CSSProperties = {
 };
 
 const btnStyle = (color: string, fullWidth = false): React.CSSProperties => ({
-  backgroundColor: color, color: "white", padding: "0.5rem 1rem",
-  border: "none", cursor: "pointer", width: fullWidth ? "100%" : undefined,
+  backgroundColor: color,
+  color: "white",
+  padding: "0.75rem 1rem",
+  border: "none",
+  cursor: "pointer",
+  width: fullWidth ? "100%" : undefined,
   marginTop: fullWidth ? "1rem" : undefined,
 });

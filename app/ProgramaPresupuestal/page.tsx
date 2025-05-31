@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useEffect } from 'react';
 
 type ProgramaPresupuestal = {
   nid_programa_presupuestal: string;
@@ -21,11 +21,24 @@ export default function ProgramasPresupuestalesCrud() {
     dfecha_baja: '',
   });
 
-  const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
+  const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | 'visualizar' | null>(null);
   const [programas, setProgramas] = useState<ProgramaPresupuestal[]>([]);
   const [busquedaId, setBusquedaId] = useState('');
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [mensaje, setMensaje] = useState('');
+
+  useEffect(() => {
+    const obtenerProgramas = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/programa-presupuestal');
+        const data = await res.json();
+        setProgramas(data);
+      } catch (error) {
+        alert('Error al obtener los programas presupuestales');
+      }
+    };
+    obtenerProgramas();
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -33,12 +46,15 @@ export default function ProgramasPresupuestalesCrud() {
   };
 
   const handleBuscarPorId = () => {
-    const encontrado = programas.find(p =>
-      p.nid_programa_presupuestal === busquedaId.trim() ||
-      p.nid_programa_presupuestal === form.nid_programa_presupuestal
-    );
+    const idBuscado = Number(busquedaId.trim());
+    if (isNaN(idBuscado)) {
+      alert('Por favor, ingresa un ID válido');
+      return;
+    }
+    const encontrado = programas.find(p => Number(p.nid_programa_presupuestal) === idBuscado);
     if (encontrado) {
       setForm(encontrado);
+      setModo('visualizar');
     } else {
       alert('No se encontró un programa con ese ID');
     }
@@ -49,35 +65,45 @@ export default function ProgramasPresupuestalesCrud() {
     setTimeout(() => setMensaje(''), 3000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const camposVacios = [form.nid_programa_presupuestal, form.cprograma_presupuestal, form.cdefinicion_programa_presupuestal, form.dfecha_alta].some(val => val.trim() === '');
+    const camposVacios = [
+      form.nid_programa_presupuestal,
+      form.cprograma_presupuestal,
+      form.cdefinicion_programa_presupuestal,
+      form.dfecha_alta
+    ].some(val => typeof val === 'string' && val.trim() === '');
+
     if (camposVacios) return alert('Por favor, completa todos los campos obligatorios.');
 
-    if (modo === 'modificar') {
-      if (!confirm('¿Deseas actualizar este programa presupuestal?')) return;
-      setProgramas(prev =>
-        prev.map(p =>
-          p.nid_programa_presupuestal === form.nid_programa_presupuestal
-            ? { ...form, bhabilitado: true }
-            : p
-        )
-      );
+    try {
+      if (modo === 'modificar') {
+        if (!confirm('¿Deseas actualizar este programa presupuestal?')) return;
+        await fetch(`http://localhost:3001/programa-presupuestal/${form.nid_programa_presupuestal}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
+      } else if (modo === 'eliminar') {
+        if (!confirm('¿Deseas desactivar este programa presupuestal?')) return;
+        await fetch(`http://localhost:3001/programa-presupuestal/estado/${form.nid_programa_presupuestal}`, {
+          method: 'PATCH',
+        });
+      } else if (modo === 'agregar') {
+        if (!confirm('¿Deseas agregar este nuevo programa presupuestal?')) return;
+        await fetch('http://localhost:3001/programa-presupuestal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
+      }
+
+      const res = await fetch('http://localhost:3001/programa-presupuestal');
+      const data = await res.json();
+      setProgramas(data);
       mostrarMensaje('Operación exitosa');
-    } else if (modo === 'eliminar') {
-      if (!confirm('¿Deseas desactivar este programa presupuestal?')) return;
-      setProgramas(prev =>
-        prev.map(p =>
-          p.nid_programa_presupuestal === form.nid_programa_presupuestal
-            ? { ...p, bhabilitado: false, dfecha_baja: new Date().toISOString().split('T')[0] }
-            : p
-        )
-      );
-      mostrarMensaje('Operación exitosa');
-    } else if (modo === 'agregar') {
-      if (!confirm('¿Deseas agregar este nuevo programa presupuestal?')) return;
-      setProgramas(prev => [...prev, { ...form, bhabilitado: true, dfecha_baja: '' }]);
-      mostrarMensaje('Operación exitosa');
+    } catch (error) {
+      alert('Error en la operación. Verifica la conexión al servidor.');
     }
 
     setForm({
@@ -94,7 +120,8 @@ export default function ProgramasPresupuestalesCrud() {
   const obtenerTitulo = () => {
     if (modo === 'agregar') return 'Agregar nuevo Programa Presupuestal';
     if (modo === 'modificar') return 'Modificar Programa Presupuestal';
-    if (modo === 'eliminar') return 'Eliminar Programa Presupuestal';
+    if (modo === 'eliminar') return 'Desactivar Programa Presupuestal';
+    if (modo === 'visualizar') return 'Detalle de Programa Presupuestal';
     return 'Catálogo de Programas Presupuestales';
   };
 
@@ -103,17 +130,7 @@ export default function ProgramasPresupuestalesCrud() {
       <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>{obtenerTitulo()}</h2>
 
       {mensaje && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: 'green',
-          color: 'white',
-          padding: '1rem 2rem',
-          borderRadius: '8px',
-          zIndex: 1000,
-        }}>
+        <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'green', color: 'white', padding: '1rem 2rem', borderRadius: '8px', zIndex: 1000 }}>
           ✅ {mensaje}
         </div>
       )}
@@ -128,7 +145,7 @@ export default function ProgramasPresupuestalesCrud() {
         <button onClick={handleBuscarPorId} style={btnBuscar}>Buscar</button>
         <button onClick={() => setModo('agregar')} style={btnAgregar}>Agregar</button>
         <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
-        <button onClick={() => setModo('eliminar')} style={btnEliminar}>Eliminar</button>
+        <button onClick={() => setModo('eliminar')} style={btnEliminar}>Desactivar</button>
 
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <input
@@ -136,55 +153,61 @@ export default function ProgramasPresupuestalesCrud() {
             checked={mostrarInactivos}
             onChange={() => setMostrarInactivos(prev => !prev)}
           />
-          Ver inactivos
+          Ver inhabilitados
         </label>
       </div>
 
       {modo && (
-        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
-          <input
-            name="nid_programa_presupuestal"
-            placeholder="ID Programa"
-            value={form.nid_programa_presupuestal}
-            onChange={handleChange}
-            style={inputStyle}
-            readOnly={modo === 'eliminar'}
-          />
-          <input
-            name="cprograma_presupuestal"
-            placeholder="Nombre del Programa"
-            value={form.cprograma_presupuestal}
-            onChange={handleChange}
-            style={inputStyle}
-            readOnly={modo === 'eliminar'}
-          />
-          <textarea
-            name="cdefinicion_programa_presupuestal"
-            placeholder="Definición del Programa"
-            value={form.cdefinicion_programa_presupuestal}
-            onChange={handleChange}
-            style={{ ...inputStyle, height: '80px' }}
-            readOnly={modo === 'eliminar'}
-          />
-          <input
-            type="date"
-            name="dfecha_alta"
-            placeholder="Fecha de Alta"
-            value={form.dfecha_alta}
-            onChange={handleChange}
-            style={inputStyle}
-            readOnly={modo === 'eliminar'}
-          />
+        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem', maxWidth: '600px', marginInline: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <label style={{ width: '200px' }}>ID Programa</label>
+            <input
+              name="nid_programa_presupuestal"
+              value={form.nid_programa_presupuestal}
+              onChange={handleChange}
+              style={inputStyle}
+              readOnly={modo !== 'agregar'}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <label style={{ width: '200px' }}>Nombre del Programa</label>
+            <input
+              name="cprograma_presupuestal"
+              value={form.cprograma_presupuestal}
+              onChange={handleChange}
+              style={inputStyle}
+              readOnly={modo === 'eliminar' || modo === 'visualizar'}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <label style={{ width: '200px' }}>Definición del Programa</label>
+            <textarea
+              name="cdefinicion_programa_presupuestal"
+              value={form.cdefinicion_programa_presupuestal}
+              onChange={handleChange}
+              style={{ ...inputStyle, height: '80px' }}
+              readOnly={modo === 'eliminar' || modo === 'visualizar'}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <label style={{ width: '200px' }}>Fecha de Alta</label>
+            <input
+              type="date"
+              name="dfecha_alta"
+              value={form.dfecha_alta}
+              onChange={handleChange}
+              style={inputStyle}
+              readOnly={modo === 'eliminar' || modo === 'visualizar'}
+            />
+          </div>
 
-          <button type="submit" style={{
-            marginTop: '1rem',
-            padding: '0.75rem 2rem',
-            backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6',
-            color: 'white',
-            border: 'none'
-          }}>
-            {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Desactivar' : 'Guardar'}
-          </button>
+          {modo !== 'visualizar' && (
+            <div style={{ textAlign: 'center' }}>
+              <button type="submit" style={{ marginTop: '1rem', padding: '0.75rem 2rem', backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6', color: 'white', border: 'none' }}>
+                {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Desactivar' : 'Guardar'}
+              </button>
+            </div>
+          )}
         </form>
       )}
 
@@ -216,12 +239,10 @@ export default function ProgramasPresupuestalesCrud() {
             ))}
         </tbody>
       </table>
-
     </div>
   );
 }
 
-// Estilos
 const thStyle: React.CSSProperties = {
   border: '1px solid #ccc',
   padding: '8px',
@@ -237,8 +258,7 @@ const tdStyle: React.CSSProperties = {
 };
 
 const inputStyle: React.CSSProperties = {
-  width: '100%',
-  marginBottom: '0.5rem',
+  flex: 1,
   padding: '0.5rem',
 };
 
