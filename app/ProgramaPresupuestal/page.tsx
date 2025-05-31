@@ -3,22 +3,22 @@
 import React, { useState, ChangeEvent } from 'react';
 
 type ProgramaPresupuestal = {
-  id_programa_presupuestal: string;
-  programa_presupuestal: string;
-  id_tipo_progPres: string;
-  habilitado: boolean; // ← este sustituye a "estado"
-  fechaAlta: string;
-  fechaBaja?: string;
+  nid_programa_presupuestal: string;
+  cprograma_presupuestal: string;
+  cdefinicion_programa_presupuestal: string;
+  bhabilitado: boolean;
+  dfecha_alta: string;
+  dfecha_baja?: string;
 };
 
 export default function ProgramasPresupuestalesCrud() {
   const [form, setForm] = useState<ProgramaPresupuestal>({
-    id_programa_presupuestal: '',
-    programa_presupuestal: '',
-    id_tipo_progPres: '',
-    habilitado: true,
-    fechaAlta: '',
-    fechaBaja: '',
+    nid_programa_presupuestal: '',
+    cprograma_presupuestal: '',
+    cdefinicion_programa_presupuestal: '',
+    bhabilitado: true,
+    dfecha_alta: '',
+    dfecha_baja: '',
   });
 
   const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
@@ -27,15 +27,15 @@ export default function ProgramasPresupuestalesCrud() {
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [mensaje, setMensaje] = useState('');
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleBuscarPorId = () => {
     const encontrado = programas.find(p =>
-      p.id_programa_presupuestal === busquedaId.trim() ||
-      p.id_programa_presupuestal === form.id_programa_presupuestal
+      p.nid_programa_presupuestal === busquedaId.trim() ||
+      p.nid_programa_presupuestal === form.nid_programa_presupuestal
     );
     if (encontrado) {
       setForm(encontrado);
@@ -51,15 +51,15 @@ export default function ProgramasPresupuestalesCrud() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const camposVacios = [form.id_programa_presupuestal, form.programa_presupuestal, form.id_tipo_progPres, form.fechaAlta].some(val => val.trim() === '');
+    const camposVacios = [form.nid_programa_presupuestal, form.cprograma_presupuestal, form.cdefinicion_programa_presupuestal, form.dfecha_alta].some(val => val.trim() === '');
     if (camposVacios) return alert('Por favor, completa todos los campos obligatorios.');
 
     if (modo === 'modificar') {
       if (!confirm('¿Deseas actualizar este programa presupuestal?')) return;
       setProgramas(prev =>
         prev.map(p =>
-          p.id_programa_presupuestal === form.id_programa_presupuestal
-            ? { ...form, habilitado: true }
+          p.nid_programa_presupuestal === form.nid_programa_presupuestal
+            ? { ...form, bhabilitado: true }
             : p
         )
       );
@@ -68,25 +68,25 @@ export default function ProgramasPresupuestalesCrud() {
       if (!confirm('¿Deseas desactivar este programa presupuestal?')) return;
       setProgramas(prev =>
         prev.map(p =>
-          p.id_programa_presupuestal === form.id_programa_presupuestal
-            ? { ...p, habilitado: false, fechaBaja: new Date().toISOString().split('T')[0] }
+          p.nid_programa_presupuestal === form.nid_programa_presupuestal
+            ? { ...p, bhabilitado: false, dfecha_baja: new Date().toISOString().split('T')[0] }
             : p
         )
       );
       mostrarMensaje('Operación exitosa');
     } else if (modo === 'agregar') {
       if (!confirm('¿Deseas agregar este nuevo programa presupuestal?')) return;
-      setProgramas(prev => [...prev, { ...form, habilitado: true, fechaBaja: '' }]);
+      setProgramas(prev => [...prev, { ...form, bhabilitado: true, dfecha_baja: '' }]);
       mostrarMensaje('Operación exitosa');
     }
 
     setForm({
-      id_programa_presupuestal: '',
-      programa_presupuestal: '',
-      id_tipo_progPres: '',
-      habilitado: true,
-      fechaAlta: '',
-      fechaBaja: '',
+      nid_programa_presupuestal: '',
+      cprograma_presupuestal: '',
+      cdefinicion_programa_presupuestal: '',
+      bhabilitado: true,
+      dfecha_alta: '',
+      dfecha_baja: '',
     });
     setModo(null);
   };
@@ -143,34 +143,34 @@ export default function ProgramasPresupuestalesCrud() {
       {modo && (
         <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
           <input
-            name="id_programa_presupuestal"
-            placeholder="ID Programa Presupuestal"
-            value={form.id_programa_presupuestal}
+            name="nid_programa_presupuestal"
+            placeholder="ID Programa"
+            value={form.nid_programa_presupuestal}
             onChange={handleChange}
             style={inputStyle}
             readOnly={modo === 'eliminar'}
           />
           <input
-            name="programa_presupuestal"
-            placeholder="Programa Presupuestal"
-            value={form.programa_presupuestal}
+            name="cprograma_presupuestal"
+            placeholder="Nombre del Programa"
+            value={form.cprograma_presupuestal}
             onChange={handleChange}
             style={inputStyle}
             readOnly={modo === 'eliminar'}
           />
-          <input
-            name="id_tipo_progPres"
-            placeholder="ID Tipo Programa"
-            value={form.id_tipo_progPres}
+          <textarea
+            name="cdefinicion_programa_presupuestal"
+            placeholder="Definición del Programa"
+            value={form.cdefinicion_programa_presupuestal}
             onChange={handleChange}
-            style={inputStyle}
+            style={{ ...inputStyle, height: '80px' }}
             readOnly={modo === 'eliminar'}
           />
           <input
             type="date"
-            name="fechaAlta"
+            name="dfecha_alta"
             placeholder="Fecha de Alta"
-            value={form.fechaAlta}
+            value={form.dfecha_alta}
             onChange={handleChange}
             style={inputStyle}
             readOnly={modo === 'eliminar'}
@@ -193,7 +193,7 @@ export default function ProgramasPresupuestalesCrud() {
           <tr>
             <th style={thStyle}>ID</th>
             <th style={thStyle}>Programa Presupuestal</th>
-            <th style={thStyle}>Tipo Programa</th>
+            <th style={thStyle}>Definición</th>
             <th style={thStyle}>Alta</th>
             <th style={thStyle}>Baja</th>
             <th style={thStyle}>Habilitado</th>
@@ -201,21 +201,22 @@ export default function ProgramasPresupuestalesCrud() {
         </thead>
         <tbody>
           {programas
-            .filter(p => mostrarInactivos || p.habilitado)
+            .filter(p => mostrarInactivos || p.bhabilitado)
             .map(p => (
-              <tr key={p.id_programa_presupuestal} style={{ opacity: p.habilitado ? 1 : 0.5 }}>
-                <td style={tdStyle}>{p.id_programa_presupuestal}</td>
-                <td style={tdStyle}>{p.programa_presupuestal}</td>
-                <td style={tdStyle}>{p.id_tipo_progPres}</td>
-                <td style={tdStyle}>{p.fechaAlta}</td>
-                <td style={tdStyle}>{p.fechaBaja || ''}</td>
-                <td style={{ ...tdStyle, color: p.habilitado ? 'green' : 'red' }}>
-                  {p.habilitado ? 'activo' : 'inactivo'}
+              <tr key={p.nid_programa_presupuestal} style={{ opacity: p.bhabilitado ? 1 : 0.5 }}>
+                <td style={tdStyle}>{p.nid_programa_presupuestal}</td>
+                <td style={tdStyle}>{p.cprograma_presupuestal}</td>
+                <td style={tdStyle}>{p.cdefinicion_programa_presupuestal}</td>
+                <td style={tdStyle}>{p.dfecha_alta}</td>
+                <td style={tdStyle}>{p.dfecha_baja || ''}</td>
+                <td style={{ ...tdStyle, color: p.bhabilitado ? 'green' : 'red' }}>
+                  {p.bhabilitado ? 'Sí' : 'No'}
                 </td>
               </tr>
             ))}
         </tbody>
       </table>
+
     </div>
   );
 }
