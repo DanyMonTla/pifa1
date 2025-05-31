@@ -2,16 +2,27 @@
 
 import React, { useState, ChangeEvent } from 'react';
 
-type TipoProgramaPres = {
-  id_tipo_proPres: string;
-  tipo_programaPres: string;
-  estado: 'activo' | 'inactivo';
+type ProgramaPresupuestal = {
+  id_programa_presupuestal: string;
+  programa_presupuestal: string;
+  id_tipo_progPres: string;
+  habilitado: boolean; // ← este sustituye a "estado"
+  fechaAlta: string;
+  fechaBaja?: string;
 };
 
-export default function TipoProgramaPresCrud() {
-  const [form, setForm] = useState<TipoProgramaPres>({ id_tipo_proPres: '', tipo_programaPres: '', estado: 'activo' });
+export default function ProgramasPresupuestalesCrud() {
+  const [form, setForm] = useState<ProgramaPresupuestal>({
+    id_programa_presupuestal: '',
+    programa_presupuestal: '',
+    id_tipo_progPres: '',
+    habilitado: true,
+    fechaAlta: '',
+    fechaBaja: '',
+  });
+
   const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
-  const [programas, setProgramas] = useState<TipoProgramaPres[]>([]);
+  const [programas, setProgramas] = useState<ProgramaPresupuestal[]>([]);
   const [busquedaId, setBusquedaId] = useState('');
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [mensaje, setMensaje] = useState('');
@@ -22,11 +33,14 @@ export default function TipoProgramaPresCrud() {
   };
 
   const handleBuscarPorId = () => {
-    const encontrado = programas.find(p => p.id_tipo_proPres === busquedaId.trim() || p.id_tipo_proPres === form.id_tipo_proPres);
+    const encontrado = programas.find(p =>
+      p.id_programa_presupuestal === busquedaId.trim() ||
+      p.id_programa_presupuestal === form.id_programa_presupuestal
+    );
     if (encontrado) {
       setForm(encontrado);
     } else {
-      alert('No se encontró un tipo de programa con ese ID');
+      alert('No se encontró un programa con ese ID');
     }
   };
 
@@ -37,36 +51,55 @@ export default function TipoProgramaPresCrud() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const camposVacios = Object.values(form).some(val => val.trim() === '');
-    if (camposVacios) return alert('Por favor, completa todos los campos.');
+    const camposVacios = [form.id_programa_presupuestal, form.programa_presupuestal, form.id_tipo_progPres, form.fechaAlta].some(val => val.trim() === '');
+    if (camposVacios) return alert('Por favor, completa todos los campos obligatorios.');
 
     if (modo === 'modificar') {
-      if (!confirm('¿Estás seguro de que deseas actualizar este tipo de programa?')) return;
-      setProgramas(prev => prev.map(p => p.id_tipo_proPres === form.id_tipo_proPres ? { ...form, estado: 'activo' } : p));
+      if (!confirm('¿Deseas actualizar este programa presupuestal?')) return;
+      setProgramas(prev =>
+        prev.map(p =>
+          p.id_programa_presupuestal === form.id_programa_presupuestal
+            ? { ...form, habilitado: true }
+            : p
+        )
+      );
       mostrarMensaje('Operación exitosa');
     } else if (modo === 'eliminar') {
-      if (!confirm('¿Estás seguro de que deseas inactivar este tipo de programa?')) return;
-      setProgramas(prev => prev.map(p => p.id_tipo_proPres === form.id_tipo_proPres ? { ...p, estado: 'inactivo' } : p));
+      if (!confirm('¿Deseas desactivar este programa presupuestal?')) return;
+      setProgramas(prev =>
+        prev.map(p =>
+          p.id_programa_presupuestal === form.id_programa_presupuestal
+            ? { ...p, habilitado: false, fechaBaja: new Date().toISOString().split('T')[0] }
+            : p
+        )
+      );
       mostrarMensaje('Operación exitosa');
     } else if (modo === 'agregar') {
-      if (!confirm('¿Estás seguro de que deseas agregar este nuevo tipo de programa?')) return;
-      setProgramas(prev => [...prev, { ...form, estado: 'activo' }]);
+      if (!confirm('¿Deseas agregar este nuevo programa presupuestal?')) return;
+      setProgramas(prev => [...prev, { ...form, habilitado: true, fechaBaja: '' }]);
       mostrarMensaje('Operación exitosa');
     }
 
-    setForm({ id_tipo_proPres: '', tipo_programaPres: '', estado: 'activo' });
+    setForm({
+      id_programa_presupuestal: '',
+      programa_presupuestal: '',
+      id_tipo_progPres: '',
+      habilitado: true,
+      fechaAlta: '',
+      fechaBaja: '',
+    });
     setModo(null);
   };
 
   const obtenerTitulo = () => {
-    if (modo === 'agregar') return 'Agregar nuevo Tipo de Programa';
-    if (modo === 'modificar') return 'Modificar Tipo de Programa';
-    if (modo === 'eliminar') return 'Eliminar Tipo de Programa';
-    return 'Catálogo de Tipo Programa Presupuestal';
+    if (modo === 'agregar') return 'Agregar nuevo Programa Presupuestal';
+    if (modo === 'modificar') return 'Modificar Programa Presupuestal';
+    if (modo === 'eliminar') return 'Eliminar Programa Presupuestal';
+    return 'Catálogo de Programas Presupuestales';
   };
 
   return (
-    <div style={{ backgroundColor: '#222', color: 'white', padding: '2rem', position: 'relative' }}>
+    <div style={{ backgroundColor: '#222', color: 'white', padding: '2rem' }}>
       <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>{obtenerTitulo()}</h2>
 
       {mensaje && (
@@ -97,34 +130,52 @@ export default function TipoProgramaPresCrud() {
         <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
         <button onClick={() => setModo('eliminar')} style={btnEliminar}>Eliminar</button>
 
-        {/* Checkbox Ver Inactivos */}
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
-          <input 
-            type="checkbox" 
-            checked={mostrarInactivos} 
-            onChange={() => setMostrarInactivos(prev => !prev)} 
-          /> Ver inactivos
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input
+            type="checkbox"
+            checked={mostrarInactivos}
+            onChange={() => setMostrarInactivos(prev => !prev)}
+          />
+          Ver inactivos
         </label>
       </div>
 
       {modo && (
         <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
           <input
-            name="id_tipo_proPres"
-            placeholder="ID Tipo Programa Pres"
-            value={form.id_tipo_proPres}
+            name="id_programa_presupuestal"
+            placeholder="ID Programa Presupuestal"
+            value={form.id_programa_presupuestal}
             onChange={handleChange}
             style={inputStyle}
             readOnly={modo === 'eliminar'}
           />
           <input
-            name="tipo_programaPres"
-            placeholder="Tipo Programa Pres"
-            value={form.tipo_programaPres}
+            name="programa_presupuestal"
+            placeholder="Programa Presupuestal"
+            value={form.programa_presupuestal}
             onChange={handleChange}
             style={inputStyle}
             readOnly={modo === 'eliminar'}
           />
+          <input
+            name="id_tipo_progPres"
+            placeholder="ID Tipo Programa"
+            value={form.id_tipo_progPres}
+            onChange={handleChange}
+            style={inputStyle}
+            readOnly={modo === 'eliminar'}
+          />
+          <input
+            type="date"
+            name="fechaAlta"
+            placeholder="Fecha de Alta"
+            value={form.fechaAlta}
+            onChange={handleChange}
+            style={inputStyle}
+            readOnly={modo === 'eliminar'}
+          />
+
           <button type="submit" style={{
             marginTop: '1rem',
             padding: '0.75rem 2rem',
@@ -132,7 +183,7 @@ export default function TipoProgramaPresCrud() {
             color: 'white',
             border: 'none'
           }}>
-            {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Inactivar' : 'Guardar'}
+            {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Desactivar' : 'Guardar'}
           </button>
         </form>
       )}
@@ -140,20 +191,26 @@ export default function TipoProgramaPresCrud() {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            <th style={thStyle}>ID Tipo Programa Pres</th>
-            <th style={thStyle}>Tipo Programa Pres</th>
-            <th style={thStyle}>Estado</th>
+            <th style={thStyle}>ID</th>
+            <th style={thStyle}>Programa Presupuestal</th>
+            <th style={thStyle}>Tipo Programa</th>
+            <th style={thStyle}>Alta</th>
+            <th style={thStyle}>Baja</th>
+            <th style={thStyle}>Habilitado</th>
           </tr>
         </thead>
         <tbody>
           {programas
-            .filter(p => mostrarInactivos || p.estado === 'activo')
+            .filter(p => mostrarInactivos || p.habilitado)
             .map(p => (
-              <tr key={p.id_tipo_proPres} style={{ opacity: p.estado === 'activo' ? 1 : 0.5 }}>
-                <td style={tdStyle}>{p.id_tipo_proPres}</td>
-                <td style={tdStyle}>{p.tipo_programaPres}</td>
-                <td style={{ ...tdStyle, color: p.estado === 'activo' ? 'green' : 'red' }}>
-                  {p.estado}
+              <tr key={p.id_programa_presupuestal} style={{ opacity: p.habilitado ? 1 : 0.5 }}>
+                <td style={tdStyle}>{p.id_programa_presupuestal}</td>
+                <td style={tdStyle}>{p.programa_presupuestal}</td>
+                <td style={tdStyle}>{p.id_tipo_progPres}</td>
+                <td style={tdStyle}>{p.fechaAlta}</td>
+                <td style={tdStyle}>{p.fechaBaja || ''}</td>
+                <td style={{ ...tdStyle, color: p.habilitado ? 'green' : 'red' }}>
+                  {p.habilitado ? 'activo' : 'inactivo'}
                 </td>
               </tr>
             ))}
@@ -163,7 +220,7 @@ export default function TipoProgramaPresCrud() {
   );
 }
 
-// Estilos reutilizables
+// Estilos
 const thStyle: React.CSSProperties = {
   border: '1px solid #ccc',
   padding: '8px',

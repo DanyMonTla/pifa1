@@ -6,11 +6,21 @@ type Rol = {
   id_rol: string;
   rol: string;
   anio: string;
-  estado: 'activo' | 'inactivo';
+  habilitado: boolean;
+  fechaAlta: string;
+  fechaBaja?: string;
 };
 
 export default function RolesCrud() {
-  const [form, setForm] = useState<Rol>({ id_rol: '', rol: '', anio: '', estado: 'activo' });
+  const [form, setForm] = useState<Rol>({
+    id_rol: '',
+    rol: '',
+    anio: '',
+    habilitado: true,
+    fechaAlta: '',
+    fechaBaja: '',
+  });
+
   const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
   const [roles, setRoles] = useState<Rol[]>([]);
   const [busquedaId, setBusquedaId] = useState('');
@@ -38,24 +48,27 @@ export default function RolesCrud() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const camposVacios = [form.id_rol, form.rol, form.anio].some(val => val.trim() === '');
+    const camposVacios = [form.id_rol, form.rol, form.anio, form.fechaAlta].some(val => val.trim() === '');
     if (camposVacios) return alert('Por favor, completa todos los campos.');
 
     if (modo === 'modificar') {
       if (!confirm('¿Estás seguro de que deseas actualizar este rol?')) return;
-      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...form, estado: 'activo' } : r));
+      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...form, habilitado: true } : r));
       mostrarMensaje('Operación exitosa');
     } else if (modo === 'eliminar') {
       if (!confirm('¿Estás seguro de que deseas inactivar este rol?')) return;
-      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...r, estado: 'inactivo' } : r));
+      const fechaActual = new Date().toISOString().split('T')[0];
+      setRoles(prev => prev.map(r =>
+        r.id_rol === form.id_rol ? { ...r, habilitado: false, fechaBaja: fechaActual } : r
+      ));
       mostrarMensaje('Operación exitosa');
     } else if (modo === 'agregar') {
       if (!confirm('¿Estás seguro de que deseas agregar este nuevo rol?')) return;
-      setRoles(prev => [...prev, { ...form, estado: 'activo' }]);
+      setRoles(prev => [...prev, { ...form, habilitado: true }]);
       mostrarMensaje('Operación exitosa');
     }
 
-    setForm({ id_rol: '', rol: '', anio: '', estado: 'activo' });
+    setForm({ id_rol: '', rol: '', anio: '', habilitado: true, fechaAlta: '', fechaBaja: '' });
     setModo(null);
   };
 
@@ -98,12 +111,11 @@ export default function RolesCrud() {
         <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
         <button onClick={() => setModo('eliminar')} style={btnEliminar}>Eliminar</button>
 
-        {/* Checkbox Ver Inactivos */}
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
-          <input 
-            type="checkbox" 
-            checked={mostrarInactivos} 
-            onChange={() => setMostrarInactivos(prev => !prev)} 
+          <input
+            type="checkbox"
+            checked={mostrarInactivos}
+            onChange={() => setMostrarInactivos(prev => !prev)}
           /> Ver inactivos
         </label>
       </div>
@@ -134,6 +146,24 @@ export default function RolesCrud() {
             style={inputStyle}
             readOnly={modo === 'eliminar'}
           />
+          <input
+            name="fechaAlta"
+            type="date"
+            placeholder="Fecha de alta"
+            value={form.fechaAlta}
+            onChange={handleChange}
+            style={inputStyle}
+            readOnly={modo === 'eliminar'}
+          />
+          {modo === 'eliminar' && form.fechaBaja && (
+            <input
+              name="fechaBaja"
+              type="date"
+              value={form.fechaBaja}
+              style={inputStyle}
+              readOnly
+            />
+          )}
           <button type="submit" style={{
             marginTop: '1rem',
             padding: '0.75rem 2rem',
@@ -152,20 +182,24 @@ export default function RolesCrud() {
             <th style={thStyle}>ID Rol</th>
             <th style={thStyle}>Rol</th>
             <th style={thStyle}>Año</th>
-            <th style={thStyle}>Estado</th>
+            <th style={thStyle}>Habilitado</th>
+            <th style={thStyle}>Fecha Alta</th>
+            <th style={thStyle}>Fecha Baja</th>
           </tr>
         </thead>
         <tbody>
           {roles
-            .filter(r => mostrarInactivos || r.estado === 'activo')
+            .filter(r => mostrarInactivos || r.habilitado)
             .map(r => (
-              <tr key={r.id_rol} style={{ opacity: r.estado === 'activo' ? 1 : 0.5 }}>
+              <tr key={r.id_rol} style={{ opacity: r.habilitado ? 1 : 0.5 }}>
                 <td style={tdStyle}>{r.id_rol}</td>
                 <td style={tdStyle}>{r.rol}</td>
                 <td style={tdStyle}>{r.anio}</td>
-                <td style={{ ...tdStyle, color: r.estado === 'activo' ? 'green' : 'red' }}>
-                  {r.estado}
+                <td style={{ ...tdStyle, color: r.habilitado ? 'green' : 'red' }}>
+                  {r.habilitado ? 'Activo' : 'Inactivo'}
                 </td>
+                <td style={tdStyle}>{r.fechaAlta}</td>
+                <td style={tdStyle}>{r.fechaBaja || '-'}</td>
               </tr>
             ))}
         </tbody>

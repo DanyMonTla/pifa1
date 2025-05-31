@@ -77,6 +77,13 @@ export default function ABCGeneralesPage() {
         >
           Roles
         </button>
+
+        <button
+          onClick={() => router.push('/TipoPrograPres')}
+          style={boton}
+        >
+          Tipo Programa Presupuestal
+        </button>
       </div>
     </div>
   );
