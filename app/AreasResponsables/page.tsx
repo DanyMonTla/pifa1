@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 
 type AreaResponsable = {
   nid_area: string;
@@ -28,13 +28,20 @@ export default function AreasResponsablesCrud() {
   const [busquedaId, setBusquedaId] = useState("");
   const [verInactivos, setVerInactivos] = useState(false);
 
-  const encabezados: { [key: string]: string } = {
-    nid_area: "ID Área",
-    cunidad_responsable: "Unidad Responsable",
-    creporta_a: "Reporta A",
-    ccorreo_electronico_ur: "Correo Electrónico",
-    dfecha_alta: "Fecha Alta",
-    dfecha_baja: "Fecha Baja",
+  const API_URL = "http://localhost:3001/areas-responsables";
+
+  useEffect(() => {
+    obtenerAreas();
+  }, []);
+
+  const obtenerAreas = async () => {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      setAreas(data);
+    } catch (error) {
+      alert("No se pudo obtener la lista de áreas.");
+    }
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -54,39 +61,52 @@ export default function AreasResponsablesCrud() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const camposVacios = Object.entries(form)
       .filter(([key]) => key !== "bhabilitado" && key !== "dfecha_baja")
       .some(([, val]) => typeof val === "string" && val.trim() === "");
     if (camposVacios) return alert("Por favor, completa todos los campos.");
 
-    if (modo === "modificar") {
-      const confirmar = confirm("¿Deseas actualizar esta área responsable?");
-      if (!confirmar) return;
-      setAreas(prev => prev.map(a => a.nid_area === form.nid_area ? { ...form } : a));
-    } else if (modo === "eliminar") {
-      const confirmar = confirm("¿Deseas marcar como inactiva esta área responsable?");
-      if (!confirmar) return;
-      setAreas(prev => prev.map(a =>
-        a.nid_area === form.nid_area
-          ? { ...a, bhabilitado: false, dfecha_baja: new Date().toISOString().slice(0, 10) }
-          : a
-      ));
-    } else if (modo === "agregar") {
-      setAreas(prev => [...prev, { ...form, bhabilitado: true }]);
-    }
+    try {
+      if (modo === "modificar") {
+        const confirmar = confirm("¿Deseas actualizar esta área responsable?");
+        if (!confirmar) return;
+        await fetch(`${API_URL}/${form.nid_area}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+      } else if (modo === "eliminar") {
+        const confirmar = confirm("¿Deseas marcar como inactiva esta área responsable?");
+        if (!confirmar) return;
+        await fetch(`${API_URL}/estado/${form.nid_area}`, {
+          method: "PATCH",
+        });
+      } else if (modo === "agregar") {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+      }
 
-    setForm({
-      nid_area: "",
-      cunidad_responsable: "",
-      creporta_a: "",
-      ccorreo_electronico_ur: "",
-      bhabilitado: true,
-      dfecha_alta: "",
-      dfecha_baja: "",
-    });
-    setModo(null);
+      await obtenerAreas();
+      alert("Operación exitosa");
+
+      setForm({
+        nid_area: "",
+        cunidad_responsable: "",
+        creporta_a: "",
+        ccorreo_electronico_ur: "",
+        bhabilitado: true,
+        dfecha_alta: "",
+        dfecha_baja: "",
+      });
+      setModo(null);
+    } catch (error) {
+      alert("Error al realizar la operación.");
+    }
   };
 
   const obtenerTitulo = () => {
@@ -94,6 +114,16 @@ export default function AreasResponsablesCrud() {
     if (modo === "modificar") return "Modificar área responsable";
     if (modo === "eliminar") return "Eliminar área responsable";
     return "Catálogo de Áreas Responsables";
+  };
+
+  const encabezados: { [key: string]: string } = {
+    nid_area: "ID Área",
+    cunidad_responsable: "Unidad Responsable",
+    creporta_a: "Reporta A",
+    ccorreo_electronico_ur: "Correo Electrónico",
+    dfecha_alta: "Fecha Alta",
+    dfecha_baja: "Fecha Baja",
+    bhabilitado: "Habilitado",
   };
 
   return (
@@ -117,7 +147,7 @@ export default function AreasResponsablesCrud() {
             checked={verInactivos}
             onChange={() => setVerInactivos(!verInactivos)}
           />
-          Ver inactivos
+          Ver inhabilitados
         </label>
       </div>
 
@@ -148,19 +178,30 @@ export default function AreasResponsablesCrud() {
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
-            {Object.keys(form).filter(k => k !== "bhabilitado").map((key) => (
-              <th key={key} style={thStyle}>{encabezados[key] || key.toUpperCase()}</th>
+            {["nid_area", "cunidad_responsable", "creporta_a", "ccorreo_electronico_ur", "dfecha_alta", "dfecha_baja", "bhabilitado"].map((key) => (
+              <th key={key} style={thStyle}>
+                {encabezados[key] || key.toUpperCase()}
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {areas.filter(a => verInactivos || a.bhabilitado).map((a) => (
-            <tr key={a.nid_area} style={{ opacity: a.bhabilitado ? 1 : 0.5 }}>
-              {Object.entries(a).filter(([k]) => k !== "bhabilitado").map(([key, val]) => (
-                <td key={key} style={tdStyle}>{val}</td>
+          {Array.isArray(areas) &&
+            areas
+              .filter((a) => verInactivos || a.bhabilitado)
+              .map((a) => (
+                <tr key={a.nid_area} style={{ opacity: a.bhabilitado ? 1 : 0.5 }}>
+                  <td style={tdStyle}>{a.nid_area}</td>
+                  <td style={tdStyle}>{a.cunidad_responsable}</td>
+                  <td style={tdStyle}>{a.creporta_a}</td>
+                  <td style={tdStyle}>{a.ccorreo_electronico_ur}</td>
+                  <td style={tdStyle}>{a.dfecha_alta}</td>
+                  <td style={tdStyle}>{a.dfecha_baja}</td>
+                  <td style={{ ...tdStyle, color: a.bhabilitado ? "green" : "red", fontWeight: "bold" }}>
+                    {a.bhabilitado ? "Sí" : "No"}
+                  </td>
+                </tr>
               ))}
-            </tr>
-          ))}
         </tbody>
       </table>
     </div>

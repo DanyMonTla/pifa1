@@ -1,24 +1,22 @@
 'use client';
 
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 
 type Rol = {
-  id_rol: string;
-  rol: string;
-  anio: string;
-  habilitado: boolean;
-  fechaAlta: string;
-  fechaBaja?: string;
+  nidRol: string;
+  crol: string;
+  bhabilitado: boolean;
+  dfechaAlta: string;
+  dfechaBaja?: string;
 };
 
 export default function RolesCrud() {
   const [form, setForm] = useState<Rol>({
-    id_rol: '',
-    rol: '',
-    anio: '',
-    habilitado: true,
-    fechaAlta: '',
-    fechaBaja: '',
+    nidRol: '',
+    crol: '',
+    bhabilitado: true,
+    dfechaAlta: '',
+    dfechaBaja: '',
   });
 
   const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
@@ -27,18 +25,40 @@ export default function RolesCrud() {
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [mensaje, setMensaje] = useState('');
 
+  const API_URL = 'http://localhost:3001/roles';
+
+  useEffect(() => {
+    obtenerRoles();
+  }, []);
+
+  const obtenerRoles = async () => {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const rolesBool = Array.isArray(data)
+        ? data.map(r => ({
+            ...r,
+            bhabilitado: r.bhabilitado?.data ? r.bhabilitado.data[0] === 1 : Boolean(r.bhabilitado),
+          }))
+        : [];
+      setRoles(rolesBool);
+    } catch (error) {
+      console.error('Error al obtener roles:', error);
+    }
+  };
+
+  const cargarRolEnFormulario = (rol: Rol) => {
+    setForm({
+      ...rol,
+      dfechaAlta: rol.dfechaAlta ? rol.dfechaAlta.substring(0, 10) : '',
+      dfechaBaja: rol.dfechaBaja ? rol.dfechaBaja.substring(0, 10) : '',
+    });
+    setModo(null);
+  };
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleBuscarPorId = () => {
-    const encontrado = roles.find(r => r.id_rol === busquedaId.trim() || r.id_rol === form.id_rol);
-    if (encontrado) {
-      setForm(encontrado);
-    } else {
-      alert('No se encontró un rol con ese ID');
-    }
   };
 
   const mostrarMensaje = (texto: string) => {
@@ -46,30 +66,73 @@ export default function RolesCrud() {
     setTimeout(() => setMensaje(''), 3000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const camposVacios = [form.id_rol, form.rol, form.anio, form.fechaAlta].some(val => val.trim() === '');
-    if (camposVacios) return alert('Por favor, completa todos los campos.');
+    const { nidRol, crol, dfechaAlta } = form;
+    if (!nidRol.trim() || !crol || !dfechaAlta) return alert('Completa todos los campos');
 
-    if (modo === 'modificar') {
-      if (!confirm('¿Estás seguro de que deseas actualizar este rol?')) return;
-      setRoles(prev => prev.map(r => r.id_rol === form.id_rol ? { ...form, habilitado: true } : r));
-      mostrarMensaje('Operación exitosa');
-    } else if (modo === 'eliminar') {
-      if (!confirm('¿Estás seguro de que deseas inactivar este rol?')) return;
-      const fechaActual = new Date().toISOString().split('T')[0];
-      setRoles(prev => prev.map(r =>
-        r.id_rol === form.id_rol ? { ...r, habilitado: false, fechaBaja: fechaActual } : r
-      ));
-      mostrarMensaje('Operación exitosa');
-    } else if (modo === 'agregar') {
-      if (!confirm('¿Estás seguro de que deseas agregar este nuevo rol?')) return;
-      setRoles(prev => [...prev, { ...form, habilitado: true }]);
-      mostrarMensaje('Operación exitosa');
+    try {
+      if (modo === 'modificar') {
+        if (!confirm('¿Actualizar este rol?')) return;
+        const { nidRol, ...resto } = form;
+        await fetch(`${API_URL}/${nidRol}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(resto),
+        });
+        mostrarMensaje('Rol actualizado');
+      } else if (modo === 'eliminar') {
+        if (!confirm('¿Inactivar este rol?')) return;
+        await fetch(`${API_URL}/estado/${form.nidRol}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estado: false }),
+        });
+        mostrarMensaje('Rol inactivado');
+      } else if (modo === 'agregar') {
+        if (!confirm('¿Agregar nuevo rol?')) return;
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
+        mostrarMensaje('Rol agregado');
+      }
+
+      await obtenerRoles();
+      resetForm();
+    } catch (err) {
+      alert('Error en la operación');
+    }
+  };
+
+  const resetForm = () => {
+    setForm({
+      nidRol: '',
+      crol: '',
+      bhabilitado: true,
+      dfechaAlta: '',
+      dfechaBaja: '',
+    });
+    setModo(null);
+    setBusquedaId('');
+  };
+
+  const buscarRol = () => {
+    const id = busquedaId.trim();
+
+    if (!id) {
+      alert('Ingresa un ID para buscar');
+      return;
     }
 
-    setForm({ id_rol: '', rol: '', anio: '', habilitado: true, fechaAlta: '', fechaBaja: '' });
-    setModo(null);
+    const encontrado = roles.find(r => String(r.nidRol) === id);
+
+    if (encontrado) {
+      cargarRolEnFormulario(encontrado);
+    } else {
+      alert('No se encontró un rol con ese ID');
+    }
   };
 
   const obtenerTitulo = () => {
@@ -84,17 +147,19 @@ export default function RolesCrud() {
       <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>{obtenerTitulo()}</h2>
 
       {mensaje && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: 'green',
-          color: 'white',
-          padding: '1rem 2rem',
-          borderRadius: '8px',
-          zIndex: 1000,
-        }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: 'green',
+            color: 'white',
+            padding: '1rem 2rem',
+            borderRadius: '8px',
+            zIndex: 1000,
+          }}
+        >
           ✅ {mensaje}
         </div>
       )}
@@ -103,76 +168,129 @@ export default function RolesCrud() {
         <input
           placeholder="Buscar por ID"
           value={busquedaId}
-          onChange={(e) => setBusquedaId(e.target.value)}
+          onChange={e => setBusquedaId(e.target.value)}
           style={{ flex: 1, padding: '0.5rem' }}
         />
-        <button onClick={handleBuscarPorId} style={btnBuscar}>Buscar</button>
-        <button onClick={() => setModo('agregar')} style={btnAgregar}>Agregar</button>
-        <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
-        <button onClick={() => setModo('eliminar')} style={btnEliminar}>Eliminar</button>
-
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
+        <button onClick={buscarRol} style={btnBuscar}>
+          Buscar
+        </button>
+        <button
+          onClick={() => {
+            resetForm();
+            setModo('agregar');
+          }}
+          style={btnAgregar}
+        >
+          Agregar
+        </button>
+        <button onClick={() => setModo('modificar')} style={btnModificar}>
+          Modificar
+        </button>
+        <button onClick={() => setModo('eliminar')} style={btnEliminar}>
+          Eliminar
+        </button>
+        <label
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}
+        >
           <input
             type="checkbox"
             checked={mostrarInactivos}
             onChange={() => setMostrarInactivos(prev => !prev)}
-          /> Ver inactivos
+          />{' '}
+          Ver inhabilitados
         </label>
       </div>
 
-      {modo && (
-        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
-          <input
-            name="id_rol"
-            placeholder="ID ROL"
-            value={form.id_rol}
-            onChange={handleChange}
-            style={inputStyle}
-            readOnly={modo === 'eliminar'}
-          />
-          <input
-            name="rol"
-            placeholder="ROL"
-            value={form.rol}
-            onChange={handleChange}
-            style={inputStyle}
-            readOnly={modo === 'eliminar'}
-          />
-          <input
-            name="anio"
-            placeholder="AÑO"
-            value={form.anio}
-            onChange={handleChange}
-            style={inputStyle}
-            readOnly={modo === 'eliminar'}
-          />
-          <input
-            name="fechaAlta"
-            type="date"
-            placeholder="Fecha de alta"
-            value={form.fechaAlta}
-            onChange={handleChange}
-            style={inputStyle}
-            readOnly={modo === 'eliminar'}
-          />
-          {modo === 'eliminar' && form.fechaBaja && (
+      {(modo !== null || form.nidRol !== '') && (
+        <form onSubmit={handleSubmit} style={formStyle}>
+          <div style={fieldRow}>
+            <label htmlFor="nidRol" style={labelStyle}>ID Rol:</label>
             <input
-              name="fechaBaja"
-              type="date"
-              value={form.fechaBaja}
+              id="nidRol"
+              name="nidRol"
+              type="text"
+              placeholder="ID Rol"
+              value={form.nidRol}
+              onChange={handleChange}
               style={inputStyle}
-              readOnly
+              readOnly={modo !== 'agregar'}
             />
+          </div>
+
+          <div style={fieldRow}>
+            <label style={labelStyle}>Habilitado:</label>
+            <input
+              type="text"
+              value={form.bhabilitado ? 'Sí' : 'No'}
+              readOnly
+              style={inputStyle}
+            />
+          </div>
+
+          <div style={fieldRow}>
+            <label htmlFor="crol" style={labelStyle}>Rol:</label>
+            <input
+              id="crol"
+              name="crol"
+              placeholder="Rol"
+              value={form.crol}
+              onChange={handleChange}
+              style={inputStyle}
+              readOnly={modo === 'eliminar' || modo === null}
+            />
+          </div>
+
+          <div style={fieldRow}>
+            <label htmlFor="dfechaAlta" style={labelStyle}>Fecha Alta:</label>
+            <input
+              id="dfechaAlta"
+              name="dfechaAlta"
+              type="date"
+              value={form.dfechaAlta}
+              onChange={handleChange}
+              style={inputStyle}
+              readOnly={modo === 'eliminar' || modo === null}
+            />
+          </div>
+
+          {(modo === 'eliminar' || modo === null) && form.dfechaBaja && (
+            <div style={fieldRow}>
+              <label htmlFor="dfechaBaja" style={labelStyle}>Fecha Baja:</label>
+              <input
+                id="dfechaBaja"
+                name="dfechaBaja"
+                type="date"
+                value={form.dfechaBaja}
+                style={inputStyle}
+                readOnly
+              />
+            </div>
           )}
-          <button type="submit" style={{
-            marginTop: '1rem',
-            padding: '0.75rem 2rem',
-            backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6',
-            color: 'white',
-            border: 'none'
-          }}>
-            {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Inactivar' : 'Guardar'}
-          </button>
+
+          {modo && (
+            <div
+              style={{
+                marginLeft: '120px',
+                marginTop: '1rem',
+                width: 'calc(100% - 120px)',
+                display: 'flex',
+                justifyContent: 'center',
+              }}
+            >
+              <button
+                type="submit"
+                style={{
+                  padding: '0.75rem 2rem',
+                  backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6',
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Inactivar' : 'Guardar'}
+              </button>
+            </div>
+          )}
         </form>
       )}
 
@@ -181,25 +299,23 @@ export default function RolesCrud() {
           <tr>
             <th style={thStyle}>ID Rol</th>
             <th style={thStyle}>Rol</th>
-            <th style={thStyle}>Año</th>
-            <th style={thStyle}>Habilitado</th>
             <th style={thStyle}>Fecha Alta</th>
             <th style={thStyle}>Fecha Baja</th>
+            <th style={thStyle}>Habilitado</th>
           </tr>
         </thead>
         <tbody>
           {roles
-            .filter(r => mostrarInactivos || r.habilitado)
+            .filter(r => mostrarInactivos || r.bhabilitado)
             .map(r => (
-              <tr key={r.id_rol} style={{ opacity: r.habilitado ? 1 : 0.5 }}>
-                <td style={tdStyle}>{r.id_rol}</td>
-                <td style={tdStyle}>{r.rol}</td>
-                <td style={tdStyle}>{r.anio}</td>
-                <td style={{ ...tdStyle, color: r.habilitado ? 'green' : 'red' }}>
-                  {r.habilitado ? 'Activo' : 'Inactivo'}
+              <tr key={r.nidRol} style={{ opacity: r.bhabilitado ? 1 : 0.5 }}>
+                <td style={tdStyle}>{r.nidRol}</td>
+                <td style={tdStyle}>{r.crol}</td>
+                <td style={tdStyle}>{r.dfechaAlta?.substring(0, 10)}</td>
+                <td style={tdStyle}>{r.dfechaBaja ? r.dfechaBaja.substring(0, 10) : '-'}</td>
+                <td style={{ ...tdStyle, color: r.bhabilitado ? 'green' : 'red' }}>
+                  {r.bhabilitado ? 'Sí' : 'No'}
                 </td>
-                <td style={tdStyle}>{r.fechaAlta}</td>
-                <td style={tdStyle}>{r.fechaBaja || '-'}</td>
               </tr>
             ))}
         </tbody>
@@ -208,7 +324,33 @@ export default function RolesCrud() {
   );
 }
 
-// Estilos reutilizables
+const formStyle: React.CSSProperties = {
+  maxWidth: '450px',
+  margin: '3rem auto 2rem auto',
+};
+
+const fieldRow: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  marginBottom: '1rem',
+  gap: '1rem',
+};
+
+const labelStyle: React.CSSProperties = {
+  width: '120px',
+  fontWeight: 'bold',
+  color: 'white',
+  textAlign: 'right',
+};
+
+const inputStyle: React.CSSProperties = {
+  flex: 1,
+  padding: '0.5rem',
+  borderRadius: '4px',
+  border: '1px solid #ccc',
+  fontSize: '1rem',
+};
+
 const thStyle: React.CSSProperties = {
   border: '1px solid #ccc',
   padding: '8px',
@@ -221,12 +363,6 @@ const tdStyle: React.CSSProperties = {
   padding: '8px',
   backgroundColor: '#fff',
   color: '#000',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  marginBottom: '0.5rem',
-  padding: '0.5rem',
 };
 
 const btnBuscar = { backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' };
