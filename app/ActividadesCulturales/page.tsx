@@ -1,143 +1,76 @@
 "use client";
-import React from "react";
+import React, { useState, ChangeEvent } from "react";
 
 export default function ActividadesCulturalesPage() {
-  const actividades = [
-    {
-      nombre: "A propósito de las olimpiadas Ciclo de cine",
-      categoria: "Extensión",
-      tipo: "Funciones de obras fílmicas y videos",
-      funcion: "Actividades de difusión, extensión y vinculación",
-      modalidad: "Presencial",
-      genero: "No",
-      realizadas: 4,
-      sesiones: 4,
-      asistentes: 118,
-      inicio: "07/08/2024",
-      fin: "28/08/2024"
-    },
-    {
-      nombre: "Quinteto Tutti Archi",
-      categoria: "Extensión",
-      tipo: "Funciones de conciertos",
-      funcion: "Actividades de difusión, extensión y vinculación",
-      modalidad: "Presencial",
-      genero: "No",
-      realizadas: 1,
-      sesiones: 1,
-      asistentes: 122,
-      inicio: "20/08/2024",
-      fin: "20/08/2024"
-    },
-    {
-      nombre: "Letras y café 'Desde el exilio, Isabel Allende'",
-      categoria: "Extensión",
-      tipo: "Actividades literarias",
-      funcion: "Actividades de difusión, extensión y vinculación",
-      modalidad: "A distancia",
-      genero: "Sí",
-      realizadas: 1,
-      sesiones: 1,
-      asistentes: 728,
-      inicio: "29/08/2024",
-      fin: "29/08/2024"
-    },
-    {
-      nombre: "Talento artístico de la FaM Trio Meraki (Piano, violín y cello)",
-      categoria: "Extensión",
-      tipo: "Funciones de conciertos",
-      funcion: "Actividades de difusión, extensión y vinculación",
-      modalidad: "Mixta",
-      genero: "No",
-      realizadas: 1,
-      sesiones: 1,
-      asistentes: 52,
-      inicio: "03/09/2024",
-      fin: "03/09/2024"
-    },
-    {
-      nombre: "Inauguración expo 'Metamorfosis, Interpretaciones gráficas sobre Franz Kafka'",
-      categoria: "Extensión",
-      tipo: "Exposiciones",
-      funcion: "Actividades de difusión, extensión y vinculación",
-      modalidad: "Mixta",
-      genero: "No",
-      realizadas: 1,
-      sesiones: 1,
-      asistentes: 223,
-      inicio: "04/09/2024",
-      fin: "04/09/2024"
-    },
-    {
-      nombre: "A propósito de las olimpiadas Ciclo de cine (Golpes del destino)",
-      categoria: "Extensión",
-      tipo: "Funciones de obras fílmicas y videos",
-      funcion: "Actividades de difusión, extensión y vinculación",
-      modalidad: "Presencial",
-      genero: "Sí",
-      realizadas: 1,
-      sesiones: 1,
-      asistentes: 62,
-      inicio: "04/09/2024",
-      fin: "04/09/2024"
-    },
-    {
-      nombre: "Río de primavera y noche iluminada por la luna",
-      categoria: "Extensión",
-      tipo: "Funciones de obras de danza",
-      funcion: "Actividades de difusión, extensión y vinculación",
-      modalidad: "Presencial",
-      genero: "No",
-      realizadas: 1,
-      sesiones: 1,
-      asistentes: 450,
-      inicio: "11/09/2024",
-      fin: "11/09/2024"
-    },
-    {
-      nombre: "Letras y café 'Octavio Paz'",
-      categoria: "Extensión",
-      tipo: "Actividades literarias",
-      funcion: "Actividades de difusión, extensión y vinculación",
-      modalidad: "A distancia",
-      genero: "No",
-      realizadas: 1,
-      sesiones: 1,
-      asistentes: 600,
-      inicio: "12/09/2024",
-      fin: "12/09/2024"
-    },
-    {
-      nombre: "Taller Coreográfico de la UNAM 'Tierra y movimiento'",
-      categoria: "Extensión",
-      tipo: "Funciones de obras de danza",
-      funcion: "Actividades de difusión, extensión y vinculación",
-      modalidad: "Presencial",
-      genero: "No",
-      realizadas: 1,
-      sesiones: 1,
-      asistentes: 300,
-      inicio: "13/09/2024",
-      fin: "13/09/2024"
-    },
-    {
-      nombre: "Compañía de Danza México de Colores 'Pura señora católica'",
-      categoria: "Extensión",
-      tipo: "Funciones de obras de danza",
-      funcion: "Actividades de difusión, extensión y vinculación",
-      modalidad: "Presencial",
-      genero: "No",
-      realizadas: 1,
-      sesiones: 1,
-      asistentes: 400,
-      inicio: "14/09/2024",
-      fin: "14/09/2024"
+  const [actividades, setActividades] = useState<any[]>([]);
+  const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
+  const [form, setForm] = useState({
+    nombre: '', categoria: '', tipo: '', funcion: '', modalidad: '', genero: '', realizadas: '', sesiones: '', asistentes: '', inicio: '', fin: ''
+  });
+  const [busquedaNombre, setBusquedaNombre] = useState('');
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleBuscarPorNombre = () => {
+    const actividad = actividades.find(a => a.nombre.toLowerCase() === busquedaNombre.toLowerCase().trim());
+    if (actividad) setForm(actividad);
+    else alert("No se encontró la actividad");
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const vacios = Object.values(form).some(val => val.trim() === '');
+    if (vacios) return alert("Completa todos los campos.");
+
+    if (modo === 'agregar') {
+      setActividades(prev => [...prev, form]);
+    } else if (modo === 'modificar') {
+      setActividades(prev => prev.map(a => a.nombre === form.nombre ? form : a));
+    } else if (modo === 'eliminar') {
+      setActividades(prev => prev.filter(a => a.nombre !== form.nombre));
     }
-  ];
+
+    setForm({ nombre: '', categoria: '', tipo: '', funcion: '', modalidad: '', genero: '', realizadas: '', sesiones: '', asistentes: '', inicio: '', fin: '' });
+    setModo(null);
+  };
 
   return (
     <main style={{ padding: "2rem" }}>
-      <h1>Actividades Culturales – Trimestre 3</h1>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+        <input
+          placeholder="Buscar por NOMBRE"
+          value={busquedaNombre}
+          onChange={(e) => setBusquedaNombre(e.target.value)}
+          style={{ flex: 1, padding: '0.5rem' }}
+        />
+        <button onClick={handleBuscarPorNombre} style={{ backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' }}>Buscar</button>
+        <button onClick={() => setModo('agregar')} style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}>Agregar</button>
+        <button onClick={() => setModo('modificar')} style={{ backgroundColor: '#0d47a1', color: 'white', padding: '0.5rem 1rem' }}>Modificar</button>
+        <button onClick={() => setModo('eliminar')} style={{ backgroundColor: '#8B0000', color: 'white', padding: '0.5rem 1rem' }}>Eliminar</button>
+      </div>
+
+      {modo && (
+        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
+          {Object.keys(form).map((field) => (
+            <input
+              key={field}
+              name={field}
+              placeholder={field.toUpperCase()}
+              value={(form as any)[field]}
+              onChange={handleChange}
+              style={{ width: '100%', marginBottom: '0.5rem', padding: '0.5rem' }}
+              readOnly={modo === 'eliminar'}
+            />
+          ))}
+          <button type="submit" style={{ padding: '0.75rem 2rem', backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6', color: 'white', border: 'none' }}>
+            {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Eliminar' : 'Guardar'}
+          </button>
+        </form>
+      )}
+
       <table border={1} cellPadding={8} style={{ marginTop: "1rem", borderCollapse: "collapse", width: "100%" }}>
         <thead style={{ backgroundColor: "#003366", color: "#fff" }}>
           <tr>
@@ -156,22 +89,30 @@ export default function ActividadesCulturalesPage() {
           </tr>
         </thead>
         <tbody>
-          {actividades.map((a, i) => (
-            <tr key={i}>
-              <td>{i + 1}</td>
-              <td>{a.nombre}</td>
-              <td>{a.categoria}</td>
-              <td>{a.tipo}</td>
-              <td>{a.funcion}</td>
-              <td>{a.modalidad}</td>
-              <td>{a.genero}</td>
-              <td>{a.realizadas}</td>
-              <td>{a.sesiones}</td>
-              <td>{a.asistentes}</td>
-              <td>{a.inicio}</td>
-              <td>{a.fin}</td>
+          {actividades.length === 0 ? (
+            <tr>
+              <td colSpan={12} style={{ textAlign: "center", padding: "1rem", backgroundColor: "#f0f0f0" }}>
+                No hay actividades registradas aún.
+              </td>
             </tr>
-          ))}
+          ) : (
+            actividades.map((a, i) => (
+              <tr key={i}>
+                <td>{i + 1}</td>
+                <td>{a.nombre}</td>
+                <td>{a.categoria}</td>
+                <td>{a.tipo}</td>
+                <td>{a.funcion}</td>
+                <td>{a.modalidad}</td>
+                <td>{a.genero}</td>
+                <td>{a.realizadas}</td>
+                <td>{a.sesiones}</td>
+                <td>{a.asistentes}</td>
+                <td>{a.inicio}</td>
+                <td>{a.fin}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </main>

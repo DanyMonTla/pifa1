@@ -24,6 +24,7 @@ const TITULOS_POR_RUTA: Record<string, string> = {
   '/TipoCalculo': 'ABC Tipo Cálculo de indicadores',
   '/TipoIndicador': 'ABC Tipo Indicadores',
   '/EducacionContinuaCEDETEC': 'Actividades Educación Continua',
+  '/ActividadesCulturales': 'Actividades Culturales',
 };
 
 
