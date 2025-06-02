@@ -15,23 +15,17 @@ export default function HomePage() {
           onClick={() => router.push('/Logros')}>
           Ver Logros
         </button>
-        
+
         <button 
           className="primary-button"
-          onClick={() => router.push('/ActividadesCulturales')}>
-          Ver ActividadesCulturales
+          onClick={() => router.push('/Fechas')}>
+          Fechas
         </button>
 
         <button 
           className="primary-button"
-          onClick={() => router.push('/EducacionContinuaCEDETEC')}>
-          Ver ActividadesEducacionContinuaCEDETEC
-        </button>
-
-        <button 
-          className="primary-button"
-          onClick={() => router.push('/indicadores')}>
-          Ver Indicadores
+          onClick={() => router.push('/ABC')}>
+          CATÁLOGOS
         </button>
       </div>
     </div>

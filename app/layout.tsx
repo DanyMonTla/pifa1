@@ -1,9 +1,7 @@
+'use client';
 import '../src/app/globals.css';
-import '../public/logo-fesa-blanco.png';
 import { Geist, Geist_Mono } from "next/font/google";
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-
+import { usePathname } from 'next/navigation';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,6 +13,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const TITULOS_POR_RUTA: Record<string, string> = {
+  '/': 'Inicio',
+  '/indicadores': 'Listado de Indicadores',
+  '/usuarios': 'Gestión de Usuarios',
+  // Módulos ABC:
+  '/ABC': 'Módulos ABC Generales',
+  '/Frecuencia': 'ABC Frecuencia de indicadores',
+  '/Fuente': 'ABC Fuente de indicadores',
+  '/TipoCalculo': 'ABC Tipo Cálculo de indicadores',
+  '/TipoIndicador': 'ABC Tipo Indicadores',
+};
 
 
 export default function RootLayout({
@@ -22,23 +31,28 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const titulo = TITULOS_POR_RUTA[pathname] || '';
+
   return (
-    <html lang="en">
+    <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <header-unam>
-          <img
-            src="/logo-unam-png-blanco-ok.png"
-            alt="Logo UNAM"
-            className="logo-left"
-            style={{ height: "40px", width: "auto" }}
-          />
-          <img
-            src="/logo-fesa-blanco.png"
-            alt="Logo FES Acatlán"
-            className="logo-right"
-            style={{ height: "40px", width: "auto" }}
-          />
-        </header-unam>
+        {/* HEADER AZUL */}
+        <header className="header-unam">
+          <div className="logo-container">
+            <img src="/logo-unam-png-blanco-ok.png" alt="UNAM" style={{ height: '40px' }} />
+          </div>
+
+          <div className="header-titulo">
+            {titulo}
+          </div>
+
+          <div className="logo-container">
+            <img src="/logo-fesa-blanco.png" alt="FES Acatlán" style={{ height: '40px' }} />
+          </div>
+        </header>
+
+        {/* NAV NEGRO */}
         <nav className="nav-bar">
           <div className="menu-izquierda">
             <button>Inicio</button>
@@ -48,10 +62,12 @@ export default function RootLayout({
           <div className="usuario">Nombre del Usuario</div>
         </nav>
 
-
-        {/* Aquí se renderizan todas las páginas */}
-        {children}
+        {/* CONTENIDO PRINCIPAL */}
+        <main className="contenido">
+          {children}
+        </main>
       </body>
     </html>
   );
 }
+

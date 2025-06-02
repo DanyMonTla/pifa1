@@ -9,6 +9,12 @@
     --foreground: #ededed;
   }
 }
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1a1a1a; /* Gris oscuro para modo oscuro */
+    color: #fff;
+  }
+}
 
 html,
 body {
@@ -18,29 +24,32 @@ body {
 
 body {
   margin: 0;
-  padding-top: 100px; /* Ajusta al alto de tu header */
+  padding-top: 90px; /* 60px (header) + 30px (nav) */
+  background-color: white;
 }
 
+
 /* Encabezado estilo UNAM (ejemplo) */
-header-unam {
-  position: fixed;
+.header-unam {
+  position: static;
   top: 0;
   left: 0;
-  z-index: 1000; /* para asegurar que esté por encima de otros elementos */
+  z-index: 9999;
   width: 100%;
-  height: 50px;
-  background-color: #003B5C; /* Azul UNAM  #003d79;*/
+  height: 60px; /* Puedes subirlo a 60px si quieres más espacio */
+  background-color: #003B5C;
   color: #fff;
   display: flex;
-  align-items: center;  /* Centra verticalmente el contenido */
-  justify-content: space-between; /* separa los logos a los extremos */
+  align-items: center;
+  justify-content: space-between;
   font-size: 18px;
   font-weight: bold;
-  /* Sin borde redondeado, sin margen */
   border-radius: 0;
   margin: 0;
-  padding: 0  30px; /* espacio horizontal */
+  padding: 0 30px; /* solo espacio horizontal */
+  
 }
+
 /* Contenedor que agrupa los logos */
  header-container {
   display: flex;
@@ -53,8 +62,8 @@ header-unam {
   margin: 0;
 }
 .nav-bar {
-  position: fixed;
-  top: 50px; /* justo debajo del header de 50px */
+  position: relative;
+  top: 0px; /* justo debajo del header de 50px */
   left: 0;
   width: 100%;
   height: 40px;
@@ -114,4 +123,11 @@ ProgPresNumNom {
   align-items: center;
   justify-content: center;
 }
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #292929; /* Gris claro */
+  color: #000;
+}
+
 
