@@ -19,6 +19,7 @@ export default function UsuariosCrud() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [roles, setRoles] = useState<Rol[]>([]);
   const [mensaje, setMensaje] = useState('');
+  const [esError, setEsError] = useState(false);
 
   const API_URL = "http://localhost:3001/usuarios";
   const AREAS_URL = "http://localhost:3001/areas-responsables";
@@ -105,46 +106,107 @@ export default function UsuariosCrud() {
 
     if (!confirm(confirmMsg)) return;
 
-    try {
-      const datos = {
-        ...form,
-        nid_area: parseInt(form.nid_area),
-        nid_rol: parseInt(form.nid_rol),
-        bhabilitado: modo === 'eliminar' ? false : true,
-        dfecha_baja:
-          modo === 'eliminar'
-            ? new Date().toISOString().slice(0, 10)
-            : form.dfecha_baja || '',
-      };
+    const longitudes = [
+      { campo: 'cid_usuario', valor: form.cid_usuario, max: 6 },
+      { campo: 'cnombre_usuario', valor: form.cnombre_usuario, max: 50 },
+      { campo: 'capellido_p_usuario', valor: form.capellido_p_usuario, max: 25 },
+      { campo: 'capellido_m_usuario', valor: form.capellido_m_usuario, max: 25 },
+      { campo: 'ccargo_usuario', valor: form.ccargo_usuario, max: 20 },
+      { campo: 'chashed_password', valor: form.chashed_password, max: 255 },
+      { campo: 'btitulo_usuario', valor: form.btitulo_usuario, max: 10 },
+    ];
 
+    for (const campo of longitudes) {
+      if (campo.valor && campo.valor.length > campo.max) {
+        setMensaje(`❌ El campo "${campo.campo}" excede el límite de ${campo.max} caracteres.`);
+        setEsError(true);
+        return;
+      }
+    }
+
+    if (form.chashed_password.length !== 15) {
+      setMensaje('❌ La contraseña debe tener exactamente 15 caracteres.');
+      setEsError(true);
+      return;
+    }
+
+    const datos = {
+      ...form,
+      nid_area: parseInt(form.nid_area),
+      nid_rol: parseInt(form.nid_rol),
+      dfecha_alta: form.dfecha_alta || new Date().toISOString().slice(0, 10),
+      dfecha_baja:
+        modo === 'eliminar'
+          ? new Date().toISOString().slice(0, 10)
+          : form.dfecha_baja || '',
+      bhabilitado: modo === 'eliminar' ? false : true,
+    };
+
+    try {
       if (modo === 'agregar') {
-        await fetch(API_URL, {
+        const res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(datos),
         });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('❌ Error al agregar usuario:', errorText);
+          setMensaje('Error al agregar usuario (ID duplicado o inválido)');
+          setEsError(true);
+          return;
+        }
+
         setMensaje('Usuario agregado');
+        setEsError(false);
       } else if (modo === 'modificar') {
-        await fetch(`${API_URL}/${form.cid_usuario}`, {
+        const res = await fetch(`${API_URL}/${form.cid_usuario}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(datos),
         });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('❌ Error al actualizar usuario:', errorText);
+          setMensaje('Error al actualizar usuario');
+          setEsError(true);
+          return;
+        }
+
         setMensaje('Usuario actualizado');
+        setEsError(false);
       } else if (modo === 'eliminar') {
-        await fetch(`${API_URL}/estado/${form.cid_usuario}`, {
+        const res = await fetch(`${API_URL}/estado/${form.cid_usuario}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dfecha_baja: datos.dfecha_baja }),
+          body: JSON.stringify({
+            bhabilitado: false,
+            dfecha_baja: new Date().toISOString().slice(0, 10),
+          }),
         });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('❌ Error al desactivar usuario:', errorText);
+          setMensaje('Error al desactivar usuario');
+          setEsError(true);
+          return;
+        }
+
         setMensaje('Usuario desactivado');
+        setEsError(false);
       }
 
       await fetchUsuarios();
       resetForm();
       setTimeout(() => setMensaje(''), 3000);
-    } catch (err) {
-      console.error("Error en la operación:", err);
+
+    } catch (err: any) {
+      console.error("❌ Error en la operación:", err);
+      setMensaje('Error inesperado al procesar la operación');
+      setEsError(true);
     }
   };
 
@@ -168,13 +230,13 @@ export default function UsuariosCrud() {
           top: '20px',
           left: '50%',
           transform: 'translateX(-50%)',
-          backgroundColor: 'green',
+          backgroundColor: esError ? 'darkred' : 'green',
           color: 'white',
           padding: '1rem 2rem',
           borderRadius: '8px',
           zIndex: 1000,
         }}>
-          ✅ {mensaje}
+          {esError ? '⚠️' : '✅'} {mensaje}
         </div>
       )}
 

@@ -42,6 +42,7 @@ export default function UsuariosFormulario({ form, modo, areas, roles, onChange,
           </select>
         </div>
         <div style={rowStyle}><label style={labelStyle}>Fecha Alta:</label><input name="dfecha_alta" type="date" value={form.dfecha_alta} onChange={onChange} style={inputStyle} disabled={esSoloLectura} /></div>
+        <div style={rowStyle}><label style={labelStyle}>Fecha Baja:</label><input name="dfecha_baja" type="date" value={form.dfecha_baja} readOnly style={inputStyle} /></div>
       </div>
 
       {modo !== null && (
