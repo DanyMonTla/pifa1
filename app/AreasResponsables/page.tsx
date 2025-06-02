@@ -75,59 +75,78 @@ export default function AreasResponsablesCrud() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const camposVacios = Object.entries(form)
-      .filter(([key]) => key !== "bhabilitado" && key !== "dfecha_baja")
-      .some(([, val]) => typeof val === "string" && val.trim() === "");
-    if (camposVacios) return alert("Por favor, completa todos los campos.");
+  e.preventDefault();
+  const camposVacios = Object.entries(form)
+    .filter(([key]) => key !== "bhabilitado" && key !== "dfecha_baja")
+    .some(([, val]) => typeof val === "string" && val.trim() === "");
+  if (camposVacios) return alert("Por favor, completa todos los campos.");
 
-    try {
-      if (modo === "modificar") {
-        const confirmar = confirm("¿Deseas actualizar esta área responsable?");
-        if (!confirmar) return;
-        await fetch(`${API_URL}/${form.nid_area}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-        setMensaje("Área modificada exitosamente");
-      } else if (modo === "eliminar") {
-        const confirmar = confirm("¿Deseas marcar como inactiva esta área responsable?");
-        if (!confirmar) return;
-        await fetch(`${API_URL}/estado/${form.nid_area}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bhabilitado: false,
-            dfecha_baja: new Date().toISOString().slice(0, 10),
-          }),
-        });
-        setMensaje("Área marcada como inactiva");
-      } else if (modo === "agregar") {
-        await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-        setMensaje("Área agregada exitosamente");
-      }
+  try {
+    if (modo === "modificar") {
+      const confirmar = confirm("¿Deseas actualizar esta área responsable?");
+      if (!confirmar) return;
 
-      setTimeout(() => setMensaje(""), 3000);
-      resetForm();
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      const areasConvertidas = (Array.isArray(data) ? data : data.areas || []).map((a: any) => ({
-        ...a,
-        bhabilitado: typeof a.bhabilitado === "object"
-          ? a.bhabilitado?.data?.[0] === 1
-          : Boolean(a.bhabilitado),
-      }));
-      setAreas(areasConvertidas);
-    } catch (err) {
-      console.error(err);
-      alert("Error al realizar la operación.");
+      const { nid_area, ...restoForm } = form;
+
+      await fetch(`${API_URL}/${Number(nid_area)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(restoForm),
+      });
+
+      setMensaje("Área modificada exitosamente");
+    } else if (modo === "eliminar") {
+  const confirmar = confirm("¿Deseas marcar como inactiva esta área responsable?");
+  if (!confirmar) return;
+
+  const fechaBaja = new Date().toISOString().slice(0, 10);
+
+  await fetch(`${API_URL}/estado/${form.nid_area}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      bhabilitado: false,
+      dfecha_baja: fechaBaja,
+    }),
+  });
+
+  setMensaje("Área marcada como inactiva");    
+
+    } else if (modo === "agregar") {
+      await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      setMensaje("Área agregada exitosamente");
     }
-  };
+
+    // ✅ Refrescar datos
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    const areasConvertidas = (Array.isArray(data) ? data : data.areas || []).map((a: any) => ({
+      ...a,
+      bhabilitado: typeof a.bhabilitado === "object"
+        ? a.bhabilitado?.data?.[0] === 1
+        : Boolean(a.bhabilitado),
+    }));
+    setAreas(areasConvertidas);
+
+    // ✅ Limpiar formulario y estado
+    resetForm();
+    setModo(null);
+    setSoloVisualizacion(false);
+    setIdBuscadoMostrado(null);
+
+    setTimeout(() => setMensaje(""), 3000);
+  } catch (err) {
+    console.error(err);
+    alert("Error al realizar la operación.");
+  }
+};
+
+
 
   const resetForm = () => {
     setForm({
@@ -203,8 +222,9 @@ export default function AreasResponsablesCrud() {
         />
         <button type="submit" style={btnStyle("#0077b6")}>Buscar</button>
         <button type="button" onClick={() => { resetForm(); setModo("agregar"); }} style={btnStyle("#004c75")}>Agregar</button>
-        <button type="button" onClick={() => setModo("modificar")} style={btnStyle("#004c75")}>Modificar</button>
-        <button type="button" onClick={() => setModo("eliminar")} style={btnStyle("#8B0000")}>Eliminar</button>
+        <button type="button" onClick={() => { if (!form.nid_area) return alert("Primero busca un área para modificar."); setModo("modificar"); setSoloVisualizacion(false); }} style={btnStyle("#004c75")}>Modificar</button>
+        <button type="button" onClick={() => { if (!form.nid_area) return alert("Primero busca un área para eliminar."); setModo("eliminar"); setSoloVisualizacion(false); }} style={btnStyle("#8B0000")}>Eliminar</button>
+
         <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <input
             type="checkbox"

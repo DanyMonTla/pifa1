@@ -38,6 +38,7 @@ export default function RolesCrud() {
       const rolesBool = Array.isArray(data)
         ? data.map(r => ({
             ...r,
+            nidRol: String(r.nidRol), // Asegurar que nidRol sea string
             bhabilitado: r.bhabilitado?.data ? r.bhabilitado.data[0] === 1 : Boolean(r.bhabilitado),
           }))
         : [];
@@ -69,13 +70,13 @@ export default function RolesCrud() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { nidRol, crol, dfechaAlta } = form;
-    if (!nidRol.trim() || !crol || !dfechaAlta) return alert('Completa todos los campos');
+    if (!String(nidRol).trim() || !crol || !dfechaAlta) return alert('Completa todos los campos');
 
     try {
       if (modo === 'modificar') {
         if (!confirm('¿Actualizar este rol?')) return;
         const { nidRol, ...resto } = form;
-        await fetch(`${API_URL}/${nidRol}`, {
+        await fetch(`${API_URL}/${form.nidRol}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(resto),
@@ -171,32 +172,16 @@ export default function RolesCrud() {
           onChange={e => setBusquedaId(e.target.value)}
           style={{ flex: 1, padding: '0.5rem' }}
         />
-        <button onClick={buscarRol} style={btnBuscar}>
-          Buscar
-        </button>
-        <button
-          onClick={() => {
-            resetForm();
-            setModo('agregar');
-          }}
-          style={btnAgregar}
-        >
-          Agregar
-        </button>
-        <button onClick={() => setModo('modificar')} style={btnModificar}>
-          Modificar
-        </button>
-        <button onClick={() => setModo('eliminar')} style={btnEliminar}>
-          Eliminar
-        </button>
-        <label
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}
-        >
+        <button onClick={buscarRol} style={btnBuscar}>Buscar</button>
+        <button onClick={() => { resetForm(); setModo('agregar'); }} style={btnAgregar}>Agregar</button>
+        <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
+        <button onClick={() => setModo('eliminar')} style={btnEliminar}>Eliminar</button>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
           <input
             type="checkbox"
             checked={mostrarInactivos}
             onChange={() => setMostrarInactivos(prev => !prev)}
-          />{' '}
+          />
           Ver inhabilitados
         </label>
       </div>
@@ -268,15 +253,7 @@ export default function RolesCrud() {
           )}
 
           {modo && (
-            <div
-              style={{
-                marginLeft: '120px',
-                marginTop: '1rem',
-                width: 'calc(100% - 120px)',
-                display: 'flex',
-                justifyContent: 'center',
-              }}
-            >
+            <div style={{ marginLeft: '120px', marginTop: '1rem', width: 'calc(100% - 120px)', display: 'flex', justifyContent: 'center' }}>
               <button
                 type="submit"
                 style={{
@@ -324,6 +301,7 @@ export default function RolesCrud() {
   );
 }
 
+// Estilos
 const formStyle: React.CSSProperties = {
   maxWidth: '450px',
   margin: '3rem auto 2rem auto',
