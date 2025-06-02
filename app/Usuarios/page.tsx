@@ -1,9 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, ChangeEvent } from "react";
-import UsuariosFormulario from "../components/UsuariosFormulario"; 
-
-
 
 type Usuario = {
   cid_usuario: string;
@@ -95,7 +92,7 @@ export default function UsuariosCrud() {
     } else {
       alert("No se encontró un usuario con ese ID");
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,7 +110,7 @@ export default function UsuariosCrud() {
         ...form,
         nid_area: parseInt(form.nid_area),
         nid_rol: parseInt(form.nid_rol),
-        dfecha_baja: form.dfecha_baja || null,
+        dfecha_baja: form.dfecha_baja || null
       };
 
       if (modo === "agregar") {
@@ -139,37 +136,37 @@ export default function UsuariosCrud() {
       await fetchUsuarios();
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);
-      resetForm();
+      setForm({
+        cid_usuario: "",
+        cnombre_usuario: "",
+        capellido_p_usuario: "",
+        capellido_m_usuario: "",
+        ccargo_usuario: "",
+        chashed_password: "",
+        nid_area: "",
+        nid_rol: "",
+        btitulo_usuario: "",
+        bhabilitado: true,
+        dfecha_alta: "",
+        dfecha_baja: "",
+      });
+      setModo(null);
     } catch (err) {
       console.error("Error en la operación:", err);
     }
   };
 
-  const resetForm = () => {
-    setForm({
-      cid_usuario: "",
-      cnombre_usuario: "",
-      capellido_p_usuario: "",
-      capellido_m_usuario: "",
-      ccargo_usuario: "",
-      chashed_password: "",
-      nid_area: "",
-      nid_rol: "",
-      btitulo_usuario: "",
-      bhabilitado: true,
-      dfecha_alta: "",
-      dfecha_baja: "",
-    });
-    setModo(null);
-  };
-
   return (
     <div style={{ backgroundColor: "#222", color: "white", padding: "2rem" }}>
       <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>
-        {modo === "agregar" ? "Agregar nuevo usuario"
-          : modo === "modificar" ? "Modificar usuario"
-          : modo === "eliminar" ? "Eliminar usuario"
-          : modo === "visualizar" ? "Detalle de usuario"
+        {modo === "agregar"
+          ? "Agregar nuevo usuario"
+          : modo === "modificar"
+          ? "Modificar usuario"
+          : modo === "eliminar"
+          ? "Eliminar usuario"
+          : modo === "visualizar"
+          ? "Detalle de usuario"
           : "Catálogo de Usuarios"}
       </h2>
 
@@ -189,19 +186,78 @@ export default function UsuariosCrud() {
             type="checkbox"
             checked={mostrarInactivos}
             onChange={() => setMostrarInactivos(prev => !prev)}
-          />
-          Ver inhabilitados
+          /> Ver inhabilitados
         </label>
       </div>
 
-      <UsuariosFormulario
-        form={form}
-        modo={modo}
-        areas={areas}
-        roles={roles}
-        handleChange={handleChange}
-        handleSubmit={handleSubmit}
-      />
+      {modo && (
+        <form onSubmit={handleSubmit} style={{ marginBottom: "2rem", maxWidth: "600px", marginInline: "auto" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {[
+              ["ID Usuario", "cid_usuario"],
+              ["Nombre", "cnombre_usuario"],
+              ["Apellido Paterno", "capellido_p_usuario"],
+              ["Apellido Materno", "capellido_m_usuario"],
+              ["Cargo", "ccargo_usuario"],
+              ["Contraseña (hash)", "chashed_password"],
+              ["Fecha de Alta", "dfecha_alta", "datetime-local"],
+              ["Título", "btitulo_usuario"]
+            ].map(([label, name, type = "text"]) => (
+              <div key={name} style={{ display: "flex", alignItems: "center" }}>
+                <label style={{ width: "200px" }}>{label}</label>
+                <input
+                  type={type}
+                  name={name}
+                  value={form[name as keyof Usuario] as string}
+                  onChange={handleChange}
+                  style={inputStyle}
+                  readOnly={modo === "visualizar" || (modo === "eliminar" && name !== "cid_usuario")}
+                />
+              </div>
+            ))}
+
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <label style={{ width: "200px" }}>Área</label>
+              <select
+                name="nid_area"
+                value={form.nid_area}
+                onChange={handleChange}
+                style={inputStyle}
+                disabled={modo === "visualizar" || modo === "eliminar"}
+              >
+                <option value="">Seleccione un área</option>
+                {areas.map(a => (
+                  <option key={a.idArea} value={a.idArea}>{a.unidad}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <label style={{ width: "200px" }}>Rol</label>
+              <select
+                name="nid_rol"
+                value={form.nid_rol}
+                onChange={handleChange}
+                style={inputStyle}
+                disabled={modo === "visualizar" || modo === "eliminar"}
+              >
+                <option value="">Seleccione un rol</option>
+                {roles.map(r => (
+                  <option key={r.id_rol} value={r.id_rol}>{r.rol}</option>
+                ))}
+              </select>
+            </div>
+
+            {modo !== "visualizar" && (
+              <div style={{ textAlign: "center" }}>
+                <button type="submit" style={btnStyle(modo === "eliminar" ? "#8B0000" : "#0077b6", true)}>
+                  {modo === "modificar" ? "Actualizar" : modo === "eliminar" ? "Inactivar" : "Guardar"}
+                </button>
+              </div>
+            )}
+          </div>
+        </form>
+      )}
 
       {isClient && (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -229,7 +285,7 @@ export default function UsuariosCrud() {
                   <td style={tdStyle}>{u.dfecha_baja}</td>
                   <td style={tdStyle}>{u.bhabilitado ? "Sí" : "No"}</td>
                 </tr>
-              ))}
+            ))}
           </tbody>
         </table>
       )}
