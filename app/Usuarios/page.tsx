@@ -32,20 +32,25 @@ export default function UsuariosCrud() {
   }, []);
 
   const fetchUsuarios = async () => {
-    try {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      const normalizados = Array.isArray(data)
-        ? data.map((u: any) => ({
-            ...u,
-            bhabilitado: u.bhabilitado?.data ? u.bhabilitado.data[0] === 1 : Boolean(u.bhabilitado),
-          }))
-        : [];
-      setUsuarios(normalizados);
-    } catch (err) {
-      console.error("Error al cargar usuarios:", err);
-    }
-  };
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+
+    const normalizados = Array.isArray(data)
+      ? data.map((u: any) => ({
+          ...u,
+          bhabilitado: String(u.bhabilitado).toLowerCase() === 'true' || u.bhabilitado === true || u.bhabilitado === 1,
+        }))
+      : [];
+
+    console.log("🧪 Usuarios recibidos:", normalizados); // 👈 LÍNEA CRÍTICA
+
+    setUsuarios(normalizados);
+  } catch (err) {
+    console.error("Error al cargar usuarios:", err);
+  }
+};
+
 
   const fetchAreas = async () => {
     try {

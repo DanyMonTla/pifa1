@@ -15,6 +15,9 @@ type Props = {
 export default function UsuariosFormulario({ form, modo, areas, roles, onChange, onSubmit }: Props) {
   const esSoloLectura = modo === null || modo === 'eliminar';
 
+  // Línea de depuración para bhabilitado
+  console.log('🧪 Formulario - modo:', modo, '| bhabilitado:', form.bhabilitado);
+
   return (
     <form onSubmit={onSubmit} style={{ maxWidth: '900px', margin: '2rem auto' }}>
       <div style={{
