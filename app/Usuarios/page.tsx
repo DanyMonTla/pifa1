@@ -1,24 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, ChangeEvent } from 'react';
-
-type Usuario = {
-  cid_usuario: string;
-  cnombre_usuario: string;
-  capellido_p_usuario: string;
-  capellido_m_usuario: string;
-  ccargo_usuario: string;
-  chashed_password: string;
-  nid_area: string;
-  nid_rol: string;
-  btitulo_usuario: string;
-  bhabilitado: boolean;
-  dfecha_alta: string;
-  dfecha_baja: string;
-};
-
-type Area = { idArea: string; unidad: string; rawUnidad: string };
-type Rol = { id_rol: string; rol: string; rawRol: string };
+import UsuariosFormulario from '../components/UsuariosFormulario';
+import UsuariosTabla from '../components/UsuariosTabla';
+import { Usuario, Area, Rol } from '../components/tiposUsuarios';
 
 export default function UsuariosCrud() {
   const [form, setForm] = useState<Usuario>({
@@ -91,13 +76,18 @@ export default function UsuariosCrud() {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev: Usuario) => ({ ...prev, [name]: value }));
   };
 
   const handleBuscar = () => {
     const encontrado = usuarios.find(u => u.cid_usuario === busquedaId.trim());
+
     if (encontrado) {
-      setForm(encontrado);
+      setForm({
+        ...encontrado,
+        dfecha_alta: encontrado.dfecha_alta?.slice(0, 10) || '',
+        dfecha_baja: encontrado.dfecha_baja?.slice(0, 10) || '',
+      });
       setModo(null);
     } else {
       alert("No se encontró un usuario con ese ID");
@@ -106,7 +96,13 @@ export default function UsuariosCrud() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const confirmMsg = modo === 'agregar' ? '¿Agregar usuario?' : modo === 'modificar' ? '¿Actualizar usuario?' : '¿Desactivar usuario?';
+    const confirmMsg =
+      modo === 'agregar'
+        ? '¿Agregar usuario?'
+        : modo === 'modificar'
+        ? '¿Actualizar usuario?'
+        : '¿Desactivar usuario?';
+
     if (!confirm(confirmMsg)) return;
 
     try {
@@ -114,27 +110,31 @@ export default function UsuariosCrud() {
         ...form,
         nid_area: parseInt(form.nid_area),
         nid_rol: parseInt(form.nid_rol),
-        dfecha_baja: modo === "eliminar" ? new Date().toISOString().slice(0, 10) : form.dfecha_baja || null,
+        bhabilitado: modo === 'eliminar' ? false : true,
+        dfecha_baja:
+          modo === 'eliminar'
+            ? new Date().toISOString().slice(0, 10)
+            : form.dfecha_baja || '',
       };
 
-      if (modo === "agregar") {
+      if (modo === 'agregar') {
         await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(datos),
         });
         setMensaje('Usuario agregado');
-      } else if (modo === "modificar") {
+      } else if (modo === 'modificar') {
         await fetch(`${API_URL}/${form.cid_usuario}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(datos),
         });
         setMensaje('Usuario actualizado');
-      } else if (modo === "eliminar") {
+      } else if (modo === 'eliminar') {
         await fetch(`${API_URL}/estado/${form.cid_usuario}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ dfecha_baja: datos.dfecha_baja }),
         });
         setMensaje('Usuario desactivado');
@@ -185,10 +185,10 @@ export default function UsuariosCrud() {
           onChange={(e) => setBusquedaId(e.target.value)}
           style={{ flex: 1, padding: '0.5rem' }}
         />
-        <button onClick={handleBuscar} style={btnBuscar}>Buscar</button>
-        <button onClick={() => { resetForm(); setModo('agregar'); }} style={btnAgregar}>Agregar</button>
-        <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
-        <button onClick={() => setModo('eliminar')} style={btnEliminar}>Desactivar</button>
+        <button onClick={handleBuscar} style={{ backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' }}>Buscar</button>
+        <button onClick={() => { resetForm(); setModo('agregar'); }} style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}>Agregar</button>
+        <button onClick={() => setModo('modificar')} style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}>Modificar</button>
+        <button onClick={() => setModo('eliminar')} style={{ backgroundColor: '#8B0000', color: 'white', padding: '0.5rem 1rem' }}>Desactivar</button>
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
           <input type="checkbox" checked={mostrarInactivos} onChange={() => setMostrarInactivos(p => !p)} />
           Ver inhabilitados
@@ -196,109 +196,17 @@ export default function UsuariosCrud() {
       </div>
 
       {(modo !== null || form.cid_usuario !== '') && (
-        <form onSubmit={handleSubmit} style={{ ...formStyle, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <div style={fieldRow}><label style={labelStyle}>ID Usuario:</label><input name="cid_usuario" value={form.cid_usuario} onChange={handleChange} style={inputStyle} /></div>
-          <div style={fieldRow}><label style={labelStyle}>Nombre:</label><input name="cnombre_usuario" value={form.cnombre_usuario} onChange={handleChange} style={inputStyle} /></div>
-          <div style={fieldRow}><label style={labelStyle}>Apellido Paterno:</label><input name="capellido_p_usuario" value={form.capellido_p_usuario} onChange={handleChange} style={inputStyle} /></div>
-          <div style={fieldRow}><label style={labelStyle}>Apellido Materno:</label><input name="capellido_m_usuario" value={form.capellido_m_usuario} onChange={handleChange} style={inputStyle} /></div>
-          <div style={fieldRow}><label style={labelStyle}>Cargo:</label><input name="ccargo_usuario" value={form.ccargo_usuario} onChange={handleChange} style={inputStyle} /></div>
-          <div style={fieldRow}><label style={labelStyle}>Contraseña (hash):</label><input name="chashed_password" value={form.chashed_password} onChange={handleChange} style={inputStyle} /></div>
-          <div style={fieldRow}><label style={labelStyle}>Título:</label><input name="btitulo_usuario" value={form.btitulo_usuario} onChange={handleChange} style={inputStyle} /></div>
-          <div style={fieldRow}><label style={labelStyle}>Área:</label>
-            <select name="nid_area" value={form.nid_area} onChange={handleChange} style={inputStyle}>
-              <option value="">Seleccione Área</option>
-              {areas.map(a => <option key={a.idArea} value={a.idArea}>{a.unidad}</option>)}
-            </select>
-          </div>
-          <div style={fieldRow}><label style={labelStyle}>Rol:</label>
-            <select name="nid_rol" value={form.nid_rol} onChange={handleChange} style={inputStyle}>
-              <option value="">Seleccione Rol</option>
-              {roles.map(r => <option key={r.id_rol} value={r.id_rol}>{r.rol}</option>)}
-            </select>
-          </div>
-          <div style={fieldRow}><label style={labelStyle}>Fecha Alta:</label><input name="dfecha_alta" type="date" value={form.dfecha_alta} onChange={handleChange} style={inputStyle} /></div>
-
-          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center' }}>
-            <button type="submit" style={{ padding: '0.75rem 2rem', backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6', color: 'white', border: 'none', cursor: 'pointer' }}>
-              {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Desactivar' : 'Guardar'}
-            </button>
-          </div>
-        </form>
+        <UsuariosFormulario
+          form={form}
+          modo={modo}
+          areas={areas}
+          roles={roles}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+        />
       )}
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            {['ID', 'Nombre', 'Apellido P', 'Apellido M', 'Cargo', 'Área', 'Rol', 'Título', 'Alta', 'Baja', 'Habilitado'].map(col => (
-              <th key={col} style={thStyle}>{col}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios
-            .filter(u => mostrarInactivos || u.bhabilitado)
-            .map(u => (
-              <tr key={u.cid_usuario} style={{ opacity: u.bhabilitado ? 1 : 0.5 }}>
-                <td style={tdStyle}>{u.cid_usuario}</td>
-                <td style={tdStyle}>{u.cnombre_usuario}</td>
-                <td style={tdStyle}>{u.capellido_p_usuario}</td>
-                <td style={tdStyle}>{u.capellido_m_usuario}</td>
-                <td style={tdStyle}>{u.ccargo_usuario}</td>
-                <td style={tdStyle}>{areas.find(a => a.idArea === u.nid_area)?.unidad || u.nid_area}</td>
-                <td style={tdStyle}>{roles.find(r => r.id_rol === u.nid_rol)?.rol || u.nid_rol}</td>
-                <td style={tdStyle}>{u.btitulo_usuario}</td>
-                <td style={tdStyle}>{u.dfecha_alta}</td>
-                <td style={tdStyle}>{u.dfecha_baja || '-'}</td>
-                <td style={{ ...tdStyle, color: u.bhabilitado ? 'lightgreen' : 'red' }}>{u.bhabilitado ? 'Sí' : 'No'}</td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+      <UsuariosTabla usuarios={usuarios} areas={areas} roles={roles} mostrarInactivos={mostrarInactivos} />
     </div>
   );
 }
-
-const formStyle: React.CSSProperties = {
-  maxWidth: '1000px',
-  margin: '3rem auto 2rem auto',
-};
-
-const fieldRow: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1rem',
-};
-
-const labelStyle: React.CSSProperties = {
-  width: '120px',
-  fontWeight: 'bold',
-  color: 'white',
-  textAlign: 'right',
-};
-
-const inputStyle: React.CSSProperties = {
-  flex: 1,
-  padding: '0.5rem',
-  borderRadius: '4px',
-  border: '1px solid #ccc',
-  fontSize: '1rem',
-};
-
-const thStyle: React.CSSProperties = {
-  border: '1px solid #ccc',
-  padding: '8px',
-  backgroundColor: '#003B5C',
-  color: 'white',
-};
-
-const tdStyle: React.CSSProperties = {
-  border: '1px solid #ccc',
-  padding: '8px',
-  backgroundColor: '#fff',
-  color: '#000',
-};
-
-const btnBuscar = { backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' };
-const btnAgregar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
-const btnModificar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
-const btnEliminar = { backgroundColor: '#8B0000', color: 'white', padding: '0.5rem 1rem' };
