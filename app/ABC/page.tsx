@@ -48,6 +48,13 @@ export default function ABCGeneralesPage() {
         >
           Tipo Indicador
         </button>
+
+        <button
+          onClick={() => router.push('/EducacionContinuaCEDETEC')}
+          style={boton}
+        >
+          Educación Continua
+        </button>
       </div>
     </div>
   );
