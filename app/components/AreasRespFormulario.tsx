@@ -1,138 +1,60 @@
 "use client";
+
 import React, { ChangeEvent } from "react";
 
-type AreaResponsable = {
-  nid_area: string;
-  cunidad_responsable: string;
-  creporta_a: string;
-  ccorreo_electronico_ur: string;
+type Usuario = {
+  cid_usuario: string;
+  cnombre_usuario: string;
+  capellido_p_usuario: string;
+  capellido_m_usuario: string;
+  ccargo_usuario: string;
+  chashed_password: string;
+  nid_area: number;
+  nid_rol: number;
+  btitulo_usuario: string;
   bhabilitado: boolean;
   dfecha_alta: string;
-  dfecha_baja: string;
+  dfecha_baja: string | null;
+};
+
+type Rol = {
+  nid_rol: number;
+  crol: string;
 };
 
 type Props = {
-  form: AreaResponsable;
-  modo: "agregar" | "modificar" | "eliminar" | null;
-  soloVisualizacion: boolean;
-  encabezados: { [key: string]: string };
-  handleChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  form: Usuario;
+  roles: Rol[];
+  handleChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   handleSubmit: (e: React.FormEvent) => void;
 };
 
-export default function AreasRespFormulario({
+export default function UsuariosFormulario({
   form,
-  modo,
-  soloVisualizacion,
-  encabezados,
+  roles,
   handleChange,
   handleSubmit,
 }: Props) {
-  const mostrarCampo = (key: string) => {
-    if (modo === "agregar" && (key === "dfecha_baja" || key === "bhabilitado")) return false;
-    if (modo === "modificar" && key === "bhabilitado") return false;
-    return true;
-  };
-
-  const isReadOnly = modo === "eliminar" || soloVisualizacion;
-
   return (
-    (modo || soloVisualizacion) && (
-      <form onSubmit={handleSubmit} style={formStyle}>
-        {Object.entries(form).map(([key, value]) => {
-          if (!mostrarCampo(key)) return null;
-          const isDate = key === "dfecha_alta" || key === "dfecha_baja";
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <input name="cid_usuario" placeholder="ID Usuario" value={form.cid_usuario} onChange={handleChange} />
+      <input name="cnombre_usuario" placeholder="Nombre" value={form.cnombre_usuario} onChange={handleChange} />
+      <input name="capellido_p_usuario" placeholder="Apellido Paterno" value={form.capellido_p_usuario} onChange={handleChange} />
+      <input name="capellido_m_usuario" placeholder="Apellido Materno" value={form.capellido_m_usuario} onChange={handleChange} />
+      <input name="ccargo_usuario" placeholder="Cargo" value={form.ccargo_usuario} onChange={handleChange} />
+      <input name="chashed_password" placeholder="Contraseña" value={form.chashed_password} onChange={handleChange} />
+      <input name="nid_area" type="number" placeholder="ID Área" value={form.nid_area} onChange={handleChange} />
 
-          return (
-            <div key={key} style={fieldRow}>
-              <label htmlFor={key} style={labelStyle}>
-                {encabezados[key] || key}
-              </label>
+      <select name="nid_rol" value={form.nid_rol} onChange={handleChange}>
+        <option value="">-- Selecciona un rol --</option>
+        {roles.map((r) => (
+          <option key={r.nid_rol} value={r.nid_rol}>{r.crol}</option>
+        ))}
+      </select>
 
-              {key === "bhabilitado" ? (
-                <input
-                  type="text"
-                  value={value ? "Sí" : "No"}
-                  readOnly
-                  style={inputStyle}
-                />
-              ) : (
-                <input
-                  id={key}
-                  name={key}
-                  type={isDate ? "date" : "text"}
-                  value={
-                    typeof value === "string"
-                      ? isDate
-                        ? value.slice(0, 10)
-                        : value
-                      : ""
-                  }
-                  onChange={handleChange}
-                  readOnly={isReadOnly}
-                  style={inputStyle}
-                />
-              )}
-            </div>
-          );
-        })}
-
-        {!soloVisualizacion && modo && (
-          <div style={submitRow}>
-            <button
-              type="submit"
-              style={{
-                padding: "0.75rem 2rem",
-                backgroundColor: modo === "eliminar" ? "#8B0000" : "#0077b6",
-                color: "white",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              {modo === "modificar"
-                ? "Actualizar"
-                : modo === "eliminar"
-                ? "Marcar inactivo"
-                : "Guardar"}
-            </button>
-          </div>
-        )}
-      </form>
-    )
+      <input name="btitulo_usuario" placeholder="Título" value={form.btitulo_usuario} onChange={handleChange} />
+      <input name="dfecha_alta" type="date" value={form.dfecha_alta.slice(0, 10)} onChange={handleChange} />
+      <button type="submit">Guardar</button>
+    </form>
   );
 }
-
-const formStyle: React.CSSProperties = {
-  maxWidth: "600px",
-  margin: "2rem auto",
-  display: "flex",
-  flexDirection: "column",
-  gap: "1.5rem",
-};
-
-const fieldRow: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "1rem",
-};
-
-const labelStyle: React.CSSProperties = {
-  width: "180px",
-  textAlign: "right",
-  fontWeight: "bold",
-  color: "white",
-};
-
-const inputStyle: React.CSSProperties = {
-  flex: 1,
-  padding: "0.5rem",
-  borderRadius: "4px",
-  border: "1px solid #ccc",
-  fontSize: "1rem",
-};
-
-const submitRow: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "center",
-  marginTop: "1rem",
-};
