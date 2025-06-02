@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, ChangeEvent } from "react";
+import AreasRespFormulario from "../components/AreasRespFormulario";
 
 type AreaResponsable = {
   nid_area: string;
@@ -27,22 +28,43 @@ export default function AreasResponsablesCrud() {
   const [areas, setAreas] = useState<AreaResponsable[]>([]);
   const [busquedaId, setBusquedaId] = useState("");
   const [verInactivos, setVerInactivos] = useState(false);
+  const [soloVisualizacion, setSoloVisualizacion] = useState(false);
+  const [mensaje, setMensaje] = useState("");
+  const [idBuscadoMostrado, setIdBuscadoMostrado] = useState<string | null>(null);
 
   const API_URL = "http://localhost:3001/areas-responsables";
 
+  const encabezados: { [key: string]: string } = {
+    nid_area: "ID Área",
+    cunidad_responsable: "Unidad Responsable",
+    creporta_a: "Reporta A",
+    ccorreo_electronico_ur: "Correo Electrónico",
+    dfecha_alta: "Fecha Alta",
+    dfecha_baja: "Fecha Baja",
+    bhabilitado: "Habilitado",
+  };
+
   useEffect(() => {
+    const obtenerAreas = async () => {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+
+        const areasConvertidas = (Array.isArray(data) ? data : data.areas || []).map((a: any) => ({
+          ...a,
+          bhabilitado: typeof a.bhabilitado === "object"
+            ? a.bhabilitado?.data?.[0] === 1
+            : Boolean(a.bhabilitado),
+        }));
+
+        setAreas(areasConvertidas);
+      } catch (err) {
+        console.error(err);
+        alert("No se pudieron cargar las áreas desde el servidor.");
+      }
+    };
     obtenerAreas();
   }, []);
-
-  const obtenerAreas = async () => {
-    try {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      setAreas(data);
-    } catch (error) {
-      alert("No se pudo obtener la lista de áreas.");
-    }
-  };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -50,15 +72,6 @@ export default function AreasResponsablesCrud() {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-  };
-
-  const handleBuscarPorId = () => {
-    const areaSeleccionada = areas.find(a => a.nid_area === busquedaId.trim());
-    if (areaSeleccionada) {
-      setForm(areaSeleccionada);
-    } else {
-      alert("No se encontró un área con ese ID");
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,39 +86,80 @@ export default function AreasResponsablesCrud() {
         const confirmar = confirm("¿Deseas actualizar esta área responsable?");
         if (!confirmar) return;
         await fetch(`${API_URL}/${form.nid_area}`, {
-          method: "PATCH",
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
+        setMensaje("Área modificada exitosamente");
       } else if (modo === "eliminar") {
         const confirmar = confirm("¿Deseas marcar como inactiva esta área responsable?");
         if (!confirmar) return;
         await fetch(`${API_URL}/estado/${form.nid_area}`, {
           method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bhabilitado: false,
+            dfecha_baja: new Date().toISOString().slice(0, 10),
+          }),
         });
+        setMensaje("Área marcada como inactiva");
       } else if (modo === "agregar") {
         await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
+        setMensaje("Área agregada exitosamente");
       }
 
-      await obtenerAreas();
-      alert("Operación exitosa");
+      setTimeout(() => setMensaje(""), 3000);
+      resetForm();
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const areasConvertidas = (Array.isArray(data) ? data : data.areas || []).map((a: any) => ({
+        ...a,
+        bhabilitado: typeof a.bhabilitado === "object"
+          ? a.bhabilitado?.data?.[0] === 1
+          : Boolean(a.bhabilitado),
+      }));
+      setAreas(areasConvertidas);
+    } catch (err) {
+      console.error(err);
+      alert("Error al realizar la operación.");
+    }
+  };
 
+  const resetForm = () => {
+    setForm({
+      nid_area: "",
+      cunidad_responsable: "",
+      creporta_a: "",
+      ccorreo_electronico_ur: "",
+      bhabilitado: true,
+      dfecha_alta: "",
+      dfecha_baja: "",
+    });
+    setModo(null);
+    setSoloVisualizacion(false);
+    setIdBuscadoMostrado(null);
+    setBusquedaId("");
+  };
+
+  const handleBuscarPorId = () => {
+    const idBuscado = parseInt(busquedaId.trim());
+    const areaSeleccionada = areas.find(a => parseInt(a.nid_area) === idBuscado);
+
+    if (areaSeleccionada) {
       setForm({
-        nid_area: "",
-        cunidad_responsable: "",
-        creporta_a: "",
-        ccorreo_electronico_ur: "",
-        bhabilitado: true,
-        dfecha_alta: "",
-        dfecha_baja: "",
+        ...areaSeleccionada,
+        nid_area: String(areaSeleccionada.nid_area),
       });
       setModo(null);
-    } catch (error) {
-      alert("Error al realizar la operación.");
+      setSoloVisualizacion(true);
+      setIdBuscadoMostrado(busquedaId.trim());
+    } else {
+      alert("No se encontró un área con ese ID");
+      setIdBuscadoMostrado(null);
     }
   };
 
@@ -113,34 +167,44 @@ export default function AreasResponsablesCrud() {
     if (modo === "agregar") return "Agregar área responsable";
     if (modo === "modificar") return "Modificar área responsable";
     if (modo === "eliminar") return "Eliminar área responsable";
+    if (soloVisualizacion) return "Visualización de área responsable";
     return "Catálogo de Áreas Responsables";
-  };
-
-  const encabezados: { [key: string]: string } = {
-    nid_area: "ID Área",
-    cunidad_responsable: "Unidad Responsable",
-    creporta_a: "Reporta A",
-    ccorreo_electronico_ur: "Correo Electrónico",
-    dfecha_alta: "Fecha Alta",
-    dfecha_baja: "Fecha Baja",
-    bhabilitado: "Habilitado",
   };
 
   return (
     <div style={{ backgroundColor: "#222", color: "white", padding: "2rem" }}>
-      <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>{obtenerTitulo()}</h2>
+      <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>{obtenerTitulo()}</h2>
 
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+      {mensaje && (
+        <div style={{
+          backgroundColor: "green",
+          padding: "1rem",
+          color: "white",
+          textAlign: "center",
+          borderRadius: "8px",
+          marginBottom: "1rem"
+        }}>
+          ✅ {mensaje}
+        </div>
+      )}
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleBuscarPorId();
+        }}
+        style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}
+      >
         <input
           placeholder="Buscar por ID"
           value={busquedaId}
           onChange={(e) => setBusquedaId(e.target.value)}
           style={{ flex: 1, padding: "0.5rem" }}
         />
-        <button onClick={handleBuscarPorId} style={btnStyle("#0077b6")}>Buscar</button>
-        <button onClick={() => setModo("agregar")} style={btnStyle("#004c75")}>Agregar</button>
-        <button onClick={() => setModo("modificar")} style={btnStyle("#004c75")}>Modificar</button>
-        <button onClick={() => setModo("eliminar")} style={btnStyle("#8B0000")}>Eliminar</button>
+        <button type="submit" style={btnStyle("#0077b6")}>Buscar</button>
+        <button type="button" onClick={() => { resetForm(); setModo("agregar"); }} style={btnStyle("#004c75")}>Agregar</button>
+        <button type="button" onClick={() => setModo("modificar")} style={btnStyle("#004c75")}>Modificar</button>
+        <button type="button" onClick={() => setModo("eliminar")} style={btnStyle("#8B0000")}>Eliminar</button>
         <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <input
             type="checkbox"
@@ -149,59 +213,40 @@ export default function AreasResponsablesCrud() {
           />
           Ver inhabilitados
         </label>
-      </div>
+      </form>
 
-      {modo && (
-        <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
-          {Object.entries(form).map(([key, value]) => {
-            if (key === "bhabilitado") return null;
-            const isDateField = key === "dfecha_alta";
-            return (
-              <input
-                key={key}
-                name={key}
-                type={isDateField ? "date" : "text"}
-                placeholder={(encabezados[key] || key).toUpperCase()}
-                value={typeof value === 'string' ? (isDateField ? value.slice(0, 10) : value) : ''}
-                onChange={handleChange}
-                style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
-                readOnly={modo === "eliminar" || key === "dfecha_baja" || (modo !== "agregar" && key === "nid_area")}
-              />
-            );
-          })}
-          <button type="submit" style={btnStyle(modo === "eliminar" ? "#8B0000" : "#0077b6", true)}>
-            {modo === "modificar" ? "Actualizar" : modo === "eliminar" ? "Marcar inactivo" : "Guardar"}
-          </button>
-        </form>
-      )}
+      <AreasRespFormulario
+        form={form}
+        modo={modo}
+        soloVisualizacion={soloVisualizacion}
+        encabezados={encabezados}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+      />
 
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "2rem" }}>
         <thead>
           <tr>
-            {["nid_area", "cunidad_responsable", "creporta_a", "ccorreo_electronico_ur", "dfecha_alta", "dfecha_baja", "bhabilitado"].map((key) => (
-              <th key={key} style={thStyle}>
-                {encabezados[key] || key.toUpperCase()}
-              </th>
+            {Object.keys(form).map((key) => (
+              <th key={key} style={thStyle}>{encabezados[key] || key.toUpperCase()}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {Array.isArray(areas) &&
-            areas
-              .filter((a) => verInactivos || a.bhabilitado)
-              .map((a) => (
-                <tr key={a.nid_area} style={{ opacity: a.bhabilitado ? 1 : 0.5 }}>
-                  <td style={tdStyle}>{a.nid_area}</td>
-                  <td style={tdStyle}>{a.cunidad_responsable}</td>
-                  <td style={tdStyle}>{a.creporta_a}</td>
-                  <td style={tdStyle}>{a.ccorreo_electronico_ur}</td>
-                  <td style={tdStyle}>{a.dfecha_alta}</td>
-                  <td style={tdStyle}>{a.dfecha_baja}</td>
-                  <td style={{ ...tdStyle, color: a.bhabilitado ? "green" : "red", fontWeight: "bold" }}>
-                    {a.bhabilitado ? "Sí" : "No"}
+          {areas
+            .filter(a => verInactivos || a.bhabilitado)
+            .map(a => (
+              <tr key={a.nid_area} style={{ opacity: a.bhabilitado ? 1 : 0.5 }}>
+                {Object.entries(a).map(([key, val]) => (
+                  <td key={key} style={{
+                    ...tdStyle,
+                    color: key === "bhabilitado" ? (a.bhabilitado ? "green" : "red") : "#000"
+                  }}>
+                    {key === "bhabilitado" ? (val ? "Sí" : "No") : val}
                   </td>
-                </tr>
-              ))}
+                ))}
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>
@@ -219,15 +264,12 @@ const tdStyle: React.CSSProperties = {
   border: "1px solid #ccc",
   padding: "8px",
   backgroundColor: "#fff",
-  color: "#000",
 };
 
-const btnStyle = (color: string, fullWidth = false): React.CSSProperties => ({
+const btnStyle = (color: string): React.CSSProperties => ({
   backgroundColor: color,
   color: "white",
   padding: "0.5rem 1rem",
   border: "none",
   cursor: "pointer",
-  width: fullWidth ? "100%" : undefined,
-  marginTop: fullWidth ? "1rem" : undefined,
 });
