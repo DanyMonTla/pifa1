@@ -17,8 +17,8 @@ type Usuario = {
   dfecha_baja: string;
 };
 
-type Area = { idArea: string; unidad: string };
-type Rol = { id_rol: string; rol: string };
+type Area = { idArea: string; unidad: string; rawUnidad: string };
+type Rol = { id_rol: string; rol: string; rawRol: string };
 
 export default function UsuariosCrud() {
   const [form, setForm] = useState<Usuario>({
@@ -65,7 +65,11 @@ export default function UsuariosCrud() {
     try {
       const res = await fetch(AREAS_URL);
       const data = await res.json();
-      setAreas(data.map((a: any) => ({ idArea: a.nid_area.toString(), unidad: a.cunidad_responsable })));
+      setAreas(data.map((a: any) => ({
+        idArea: a.nid_area.toString(),
+        unidad: `${a.nid_area} - ${a.cunidad_responsable}`,
+        rawUnidad: a.cunidad_responsable,
+      })));
     } catch (err) {
       console.error("Error al cargar áreas:", err);
     }
@@ -75,7 +79,11 @@ export default function UsuariosCrud() {
     try {
       const res = await fetch(ROLES_URL);
       const data = await res.json();
-      setRoles(data.map((r: any) => ({ id_rol: r.nidRol.toString(), rol: r.crol })));
+      setRoles(data.map((r: any) => ({
+        id_rol: r.nidRol.toString(),
+        rol: `${r.nidRol} - ${r.crol}`,
+        rawRol: r.crol,
+      })));
     } catch (err) {
       console.error("Error al cargar roles:", err);
     }
@@ -188,60 +196,33 @@ export default function UsuariosCrud() {
       </div>
 
       {(modo !== null || form.cid_usuario !== '') && (
-        <form onSubmit={handleSubmit} style={formStyle}>
-          {[
-            ['ID Usuario:', 'cid_usuario'],
-            ['Nombre:', 'cnombre_usuario'],
-            ['Apellido Paterno:', 'capellido_p_usuario'],
-            ['Apellido Materno:', 'capellido_m_usuario'],
-            ['Cargo:', 'ccargo_usuario'],
-            ['Contraseña (hash):', 'chashed_password'],
-            ['Título:', 'btitulo_usuario']
-          ].map(([label, name]) => (
-            <div key={name} style={fieldRow}>
-              <label style={labelStyle}>{label}</label>
-              <input
-                name={name}
-                value={(form as any)[name]}
-                onChange={handleChange}
-                style={inputStyle}
-                disabled={modo === 'eliminar'}
-              />
-            </div>
-          ))}
-
-          <div style={fieldRow}>
-            <label style={labelStyle}>Área:</label>
-            <select name="nid_area" value={form.nid_area} onChange={handleChange} required style={inputStyle}>
+        <form onSubmit={handleSubmit} style={{ ...formStyle, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div style={fieldRow}><label style={labelStyle}>ID Usuario:</label><input name="cid_usuario" value={form.cid_usuario} onChange={handleChange} style={inputStyle} /></div>
+          <div style={fieldRow}><label style={labelStyle}>Nombre:</label><input name="cnombre_usuario" value={form.cnombre_usuario} onChange={handleChange} style={inputStyle} /></div>
+          <div style={fieldRow}><label style={labelStyle}>Apellido Paterno:</label><input name="capellido_p_usuario" value={form.capellido_p_usuario} onChange={handleChange} style={inputStyle} /></div>
+          <div style={fieldRow}><label style={labelStyle}>Apellido Materno:</label><input name="capellido_m_usuario" value={form.capellido_m_usuario} onChange={handleChange} style={inputStyle} /></div>
+          <div style={fieldRow}><label style={labelStyle}>Cargo:</label><input name="ccargo_usuario" value={form.ccargo_usuario} onChange={handleChange} style={inputStyle} /></div>
+          <div style={fieldRow}><label style={labelStyle}>Contraseña (hash):</label><input name="chashed_password" value={form.chashed_password} onChange={handleChange} style={inputStyle} /></div>
+          <div style={fieldRow}><label style={labelStyle}>Título:</label><input name="btitulo_usuario" value={form.btitulo_usuario} onChange={handleChange} style={inputStyle} /></div>
+          <div style={fieldRow}><label style={labelStyle}>Área:</label>
+            <select name="nid_area" value={form.nid_area} onChange={handleChange} style={inputStyle}>
               <option value="">Seleccione Área</option>
               {areas.map(a => <option key={a.idArea} value={a.idArea}>{a.unidad}</option>)}
             </select>
           </div>
-          <div style={fieldRow}>
-            <label style={labelStyle}>Rol:</label>
-            <select name="nid_rol" value={form.nid_rol} onChange={handleChange} required style={inputStyle}>
+          <div style={fieldRow}><label style={labelStyle}>Rol:</label>
+            <select name="nid_rol" value={form.nid_rol} onChange={handleChange} style={inputStyle}>
               <option value="">Seleccione Rol</option>
               {roles.map(r => <option key={r.id_rol} value={r.id_rol}>{r.rol}</option>)}
             </select>
           </div>
-          <div style={fieldRow}>
-            <label style={labelStyle}>Fecha Alta:</label>
-            <input name="dfecha_alta" type="date" value={form.dfecha_alta} onChange={handleChange} style={inputStyle} />
-          </div>
+          <div style={fieldRow}><label style={labelStyle}>Fecha Alta:</label><input name="dfecha_alta" type="date" value={form.dfecha_alta} onChange={handleChange} style={inputStyle} /></div>
 
-          {modo && (
-            <div style={{ marginLeft: '120px', marginTop: '1rem', width: 'calc(100% - 120px)', display: 'flex', justifyContent: 'center' }}>
-              <button type="submit" style={{
-                padding: '0.75rem 2rem',
-                backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6',
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer',
-              }}>
-                {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Desactivar' : 'Guardar'}
-              </button>
-            </div>
-          )}
+          <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center' }}>
+            <button type="submit" style={{ padding: '0.75rem 2rem', backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6', color: 'white', border: 'none', cursor: 'pointer' }}>
+              {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Desactivar' : 'Guardar'}
+            </button>
+          </div>
         </form>
       )}
 
@@ -263,8 +244,8 @@ export default function UsuariosCrud() {
                 <td style={tdStyle}>{u.capellido_p_usuario}</td>
                 <td style={tdStyle}>{u.capellido_m_usuario}</td>
                 <td style={tdStyle}>{u.ccargo_usuario}</td>
-                <td style={tdStyle}>{areas.find(a => a.idArea === u.nid_area)?.unidad}</td>
-                <td style={tdStyle}>{roles.find(r => r.id_rol === u.nid_rol)?.rol}</td>
+                <td style={tdStyle}>{areas.find(a => a.idArea === u.nid_area)?.unidad || u.nid_area}</td>
+                <td style={tdStyle}>{roles.find(r => r.id_rol === u.nid_rol)?.rol || u.nid_rol}</td>
                 <td style={tdStyle}>{u.btitulo_usuario}</td>
                 <td style={tdStyle}>{u.dfecha_alta}</td>
                 <td style={tdStyle}>{u.dfecha_baja || '-'}</td>
@@ -277,16 +258,14 @@ export default function UsuariosCrud() {
   );
 }
 
-// Estilos
 const formStyle: React.CSSProperties = {
-  maxWidth: '450px',
+  maxWidth: '1000px',
   margin: '3rem auto 2rem auto',
 };
 
 const fieldRow: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  marginBottom: '1rem',
   gap: '1rem',
 };
 
