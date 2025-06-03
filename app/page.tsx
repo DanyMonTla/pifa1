@@ -148,12 +148,15 @@ export default function HomePage() {
     <div className="home-container">
       <h1>Bienvenido al Sistema de Indicadores</h1>
 
+
       <div className="navigation-buttons">
-        <button 
+        <button
           className="primary-button"
           onClick={() => router.push('/Logros')}>
           Ver Logros
         </button>
+
+        <button
 
         <button 
           className="primary-button"
@@ -161,12 +164,43 @@ export default function HomePage() {
           Fechas
         </button>
 
-        <button 
+        <button
           className="primary-button"
           onClick={() => router.push('/ABC')}>
           CATÁLOGOS
         </button>
+
+        <button
+          className="primary-button"
+          onClick={() => router.push('/Excel')}>
+          Ver excel
+        </button>
+
+        <button
+          className="primary-button"
+          onClick={() => router.push('/Ind_seg')}>
+         Ver segmentados
+        </button>
+
+
+        <button
+  className="primary-button"
+  onClick={() => router.push('/p31-actividades')}
+>
+  P31 Actividades
+</button>
+    <button
+      className="primary-button"
+      onClick={() => router.push('/proyectos')}
+    >
+      Registrar Proyecto
+    </button>
+
+
+
       </div>
     </div>
+
+    
   )
 }
