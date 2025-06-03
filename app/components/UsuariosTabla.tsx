@@ -50,8 +50,7 @@ export default function UsuariosTabla({ usuarios, areas, roles, mostrarInactivos
             <tr
               key={u.cid_usuario}
               style={{
-                backgroundColor: u.bhabilitado ? 'white' : '#f8d7da',
-                
+                backgroundColor: u.bhabilitado ? 'white' :  '#d3d3d3',
               }}
             >
               <td style={tdStyle}>{u.cid_usuario}</td>
@@ -74,6 +73,7 @@ export default function UsuariosTabla({ usuarios, areas, roles, mostrarInactivos
           );
         })}
       </tbody>
+
     </table>
   );
 }
@@ -82,6 +82,5 @@ const tdStyle: React.CSSProperties = {
   border: '1px solid #ccc',
   padding: '10px',
   textAlign: 'center',
-  backgroundColor: 'white',
   color: 'black',
 };

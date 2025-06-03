@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import TipoProgramaFormulario from '../components/TipoProgramaFormulario';
+import TipoProgramaBarraAcciones from '../components/TipoProgramaBarraAcciones';
 
 type TipoPrograma = {
   nid_tipo_programa: string;
@@ -19,23 +21,55 @@ export default function TipoProgramaCrud() {
     dfecha_baja: '',
   });
 
-  const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
+  const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | 'visualizar' | null>(null);
   const [programas, setProgramas] = useState<TipoPrograma[]>([]);
   const [busquedaId, setBusquedaId] = useState('');
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [mensaje, setMensaje] = useState('');
+
+  useEffect(() => {
+    obtenerProgramas();
+  }, []);
+
+  const obtenerProgramas = async () => {
+    try {
+      const res = await fetch('http://localhost:3001/tipo-programa');
+      const data = await res.json();
+      setProgramas(data);
+    } catch (err) {
+      console.error('❌ Error al cargar programas:', err);
+      setProgramas([]);
+    }
+  };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleBuscarPorId = () => {
-    const encontrado = programas.find(p => p.nid_tipo_programa === busquedaId.trim() || p.nid_tipo_programa === form.nid_tipo_programa);
-    if (encontrado) {
-      setForm(encontrado);
-    } else {
-      alert('No se encontró un tipo de programa con ese ID');
+  const handleBuscarPorId = async () => {
+    const id = busquedaId.trim();
+    if (!id) return alert('Por favor, escribe un ID');
+
+    try {
+      const res = await fetch(`http://localhost:3001/tipo-programa/${id}`);
+      if (!res.ok) {
+        alert('No se encontró un tipo de programa con ese ID');
+        return;
+      }
+
+      const data = await res.json();
+      setForm({
+        nid_tipo_programa: String(data.nid_tipo_programa),
+        ctipo_programa: data.ctipo_programa,
+        bhabilitado: data.bhabilitado,
+        dfecha_alta: data.dfecha_alta.slice(0, 10),
+        dfecha_baja: data.dfecha_baja ? data.dfecha_baja.slice(0, 10) : '',
+      });
+      setModo('visualizar'); // 👈 solo visual
+    } catch (error) {
+      console.error('❌ Error al buscar tipo de programa', error);
+      alert('Error al conectar con el servidor');
     }
   };
 
@@ -44,36 +78,67 @@ export default function TipoProgramaCrud() {
     setTimeout(() => setMensaje(''), 3000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const camposVacios = [form.nid_tipo_programa, form.ctipo_programa, form.dfecha_alta].some(val => val.trim() === '');
-    if (camposVacios) return alert('Por favor, completa todos los campos.');
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
+  const camposVacios = [form.nid_tipo_programa, form.ctipo_programa, form.dfecha_alta].some(val => val.trim() === '');
+  if (camposVacios) return alert('Por favor, completa todos los campos.');
+
+  try {
     if (modo === 'modificar') {
       if (!confirm('¿Actualizar tipo de programa?')) return;
-      setProgramas(prev => prev.map(p => p.nid_tipo_programa === form.nid_tipo_programa ? { ...form, bhabilitado: true } : p));
-      mostrarMensaje('Operación exitosa');
-    } else if (modo === 'eliminar') {
-      if (!confirm('¿Inactivar tipo de programa?')) return;
-      const fechaActual = new Date().toISOString().split('T')[0];
-      setProgramas(prev => prev.map(p =>
-        p.nid_tipo_programa === form.nid_tipo_programa ? { ...p, bhabilitado: false, dfecha_baja: fechaActual } : p
-      ));
-      mostrarMensaje('Operación exitosa');
-    } else if (modo === 'agregar') {
-      if (!confirm('¿Agregar nuevo tipo de programa?')) return;
-      setProgramas(prev => [...prev, { ...form, bhabilitado: true }]);
-      mostrarMensaje('Operación exitosa');
+
+      const { nid_tipo_programa, ...restoDelFormulario } = form; // 🔥 separar ID
+
+      await fetch(`http://localhost:3001/tipo-programa/${nid_tipo_programa}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(restoDelFormulario), // ✅ solo los campos del DTO
+      });
+
+      mostrarMensaje('Actualizado correctamente');
     }
 
-    setForm({ nid_tipo_programa: '', ctipo_programa: '', bhabilitado: true, dfecha_alta: '', dfecha_baja: '' });
-    setModo(null);
-  };
+    else if (modo === 'eliminar') {
+      if (!confirm('¿Inactivar tipo de programa?')) return;
+      const fechaActual = new Date().toISOString().split('T')[0];
+
+      await fetch(`http://localhost:3001/tipo-programa/estado/${form.nid_tipo_programa}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bhabilitado: false, dfecha_baja: fechaActual }),
+      });
+
+      mostrarMensaje('Inactivado correctamente');
+    }
+
+    else if (modo === 'agregar') {
+      if (!confirm('¿Agregar nuevo tipo de programa?')) return;
+
+      await fetch('http://localhost:3001/tipo-programa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      mostrarMensaje('Agregado correctamente');
+    }
+  } catch (err) {
+    console.error('❌ Error al realizar operación:', err);
+    alert('Error al conectar con el servidor');
+  }
+
+  await obtenerProgramas();
+  setForm({ nid_tipo_programa: '', ctipo_programa: '', bhabilitado: true, dfecha_alta: '', dfecha_baja: '' });
+  setModo(null);
+};
+
 
   const obtenerTitulo = () => {
     if (modo === 'agregar') return 'Agregar Tipo de Programa';
     if (modo === 'modificar') return 'Modificar Tipo de Programa';
     if (modo === 'eliminar') return 'Eliminar Tipo de Programa';
+    if (modo === 'visualizar') return 'Visualizar Tipo de Programa';
     return 'Catálogo de Tipos de Programa';
   };
 
@@ -97,73 +162,22 @@ export default function TipoProgramaCrud() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
-        <input
-          placeholder="Buscar por ID"
-          value={busquedaId}
-          onChange={(e) => setBusquedaId(e.target.value)}
-          style={{ flex: 1, padding: '0.5rem' }}
-        />
-        <button onClick={handleBuscarPorId} style={btnBuscar}>Buscar</button>
-        <button onClick={() => setModo('agregar')} style={btnAgregar}>Agregar</button>
-        <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
-        <button onClick={() => setModo('eliminar')} style={btnEliminar}>Eliminar</button>
-
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
-          <input
-            type="checkbox"
-            checked={mostrarInactivos}
-            onChange={() => setMostrarInactivos(prev => !prev)}
-          /> Ver inactivos
-        </label>
-      </div>
+      <TipoProgramaBarraAcciones
+        busquedaId={busquedaId}
+        setBusquedaId={setBusquedaId}
+        setModo={setModo}
+        mostrarInactivos={mostrarInactivos}
+        setMostrarInactivos={setMostrarInactivos}
+        handleBuscarPorId={handleBuscarPorId}
+      />
 
       {modo && (
-        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
-          <input
-            name="nid_tipo_programa"
-            placeholder="ID Tipo Programa"
-            value={form.nid_tipo_programa}
-            onChange={handleChange}
-            style={inputStyle}
-            readOnly={modo === 'eliminar'}
-          />
-          <input
-            name="ctipo_programa"
-            placeholder="Tipo de Programa"
-            value={form.ctipo_programa}
-            onChange={handleChange}
-            style={inputStyle}
-            readOnly={modo === 'eliminar'}
-          />
-          <input
-            name="dfecha_alta"
-            type="date"
-            placeholder="Fecha de Alta"
-            value={form.dfecha_alta}
-            onChange={handleChange}
-            style={inputStyle}
-            readOnly={modo === 'eliminar'}
-          />
-          {modo === 'eliminar' && form.dfecha_baja && (
-            <input
-              name="dfecha_baja"
-              type="date"
-              value={form.dfecha_baja}
-              style={inputStyle}
-              readOnly
-            />
-          )}
-          <button type="submit" style={{
-            marginTop: '1rem',
-            padding: '0.75rem 2rem',
-            backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6',
-            color: 'white',
-            border: 'none'
-          }}>
-            {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Inactivar' : 'Guardar'}
-          </button>
-        </form>
+        <TipoProgramaFormulario
+          form={form}
+          modo={modo}
+          handleChange={handleChange}
+          handleSubmit={handleSubmit}
+        />
       )}
 
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -196,7 +210,6 @@ export default function TipoProgramaCrud() {
   );
 }
 
-// Estilos reutilizables
 const thStyle: React.CSSProperties = {
   border: '1px solid #ccc',
   padding: '8px',
@@ -210,14 +223,3 @@ const tdStyle: React.CSSProperties = {
   backgroundColor: '#fff',
   color: '#000',
 };
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  marginBottom: '0.5rem',
-  padding: '0.5rem',
-};
-
-const btnBuscar = { backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' };
-const btnAgregar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
-const btnModificar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
-const btnEliminar = { backgroundColor: '#8B0000', color: 'white', padding: '0.5rem 1rem' };
