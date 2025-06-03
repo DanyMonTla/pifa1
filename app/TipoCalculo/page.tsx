@@ -1,60 +1,149 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-interface TipoIndicador {
-  id: number;
-  color: string;
+interface TipoCalculo {
+  nid_tipo_calculo: number;
+  ctipo_calculo: string;
+  bhabilitado: boolean;
+  dfecha_alta?: string;
+  dfecha_baja?: string | null;
 }
 
-export default function TipoIndicadorABC() {
-  const [lista, setLista] = useState<TipoIndicador[]>([]);
-  const [color, setColor] = useState('');
+const API_URL = 'http://localhost:3001/tipo-calculo';
+
+export default function TipoCalculoCrud() {
+  const [lista, setLista] = useState<TipoCalculo[]>([]);
+  const [ctipo_calculo, setCtipoCalculo] = useState('');
   const [seleccionado, setSeleccionado] = useState<number | null>(null);
+  const [mostrarInhabilitados, setMostrarInhabilitados] = useState(false);
 
-  const handleAgregar = () => {
-    if (!color.trim()) return;
-    const nuevo: TipoIndicador = {
-      id: Date.now(), // ID simulado
-      color,
-    };
-    setLista([...lista, nuevo]);
-    setColor('');
+  useEffect(() => {
+    obtenerCalculos();
+  }, []);
+
+  // Traer todos los tipos de cálculo
+  const obtenerCalculos = async () => {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      console.log("Respuesta del backend:", data);
+
+      // Aseguramos que lista siempre sea array
+      const arreglada =
+        Array.isArray(data) ? data :
+        Array.isArray(data.data) ? data.data :
+        Array.isArray(data.result) ? data.result :
+        Array.isArray(data.items) ? data.items : [];
+
+      setLista(arreglada);
+    } catch (e) {
+      alert('Error al obtener cálculos');
+      setLista([]);
+    }
   };
 
-  const handleModificar = () => {
-    if (seleccionado === null || !color.trim()) return;
-    setLista(prev =>
-      prev.map(item =>
-        item.id === seleccionado ? { ...item, color } : item
-      )
-    );
-    setSeleccionado(null);
-    setColor('');
+  // Agregar nuevo tipo de cálculo
+  const handleAgregar = async () => {
+    if (!ctipo_calculo.trim()) return;
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ctipo_calculo }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setCtipoCalculo('');
+        await obtenerCalculos();
+      } else {
+        alert('Error al agregar\n' + (data.message || JSON.stringify(data)));
+      }
+    } catch (e) {
+      alert('Error al agregar: ' + e);
+    }
   };
 
-  const handleEliminar = () => {
+  // Modificar tipo de cálculo
+  const handleModificar = async () => {
+    if (seleccionado === null || !ctipo_calculo.trim()) return;
+    try {
+      const res = await fetch(`${API_URL}/${seleccionado}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ctipo_calculo }),
+      });
+      if (res.ok) {
+        setSeleccionado(null);
+        setCtipoCalculo('');
+        await obtenerCalculos();
+      } else {
+        alert('Error al modificar');
+      }
+    } catch {
+      alert('Error al modificar');
+    }
+  };
+
+  // Inhabilitar (eliminar lógico)
+  const handleEliminar = async () => {
     if (seleccionado === null) return;
-    setLista(prev => prev.filter(item => item.id !== seleccionado));
-    setSeleccionado(null);
-    setColor('');
+    const dfecha_baja = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    try {
+      const res = await fetch(`${API_URL}/${seleccionado}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bhabilitado: false,
+          dfecha_baja,
+        }),
+      });
+      if (res.ok) {
+        setSeleccionado(null);
+        setCtipoCalculo('');
+        await obtenerCalculos();
+      } else {
+        alert('Error al eliminar');
+      }
+    } catch {
+      alert('Error al eliminar');
+    }
   };
 
-  const seleccionarFila = (item: TipoIndicador) => {
-    setSeleccionado(item.id);
-    setColor(item.color);
+  // Seleccionar fila para editar
+  const seleccionarFila = (item: TipoCalculo) => {
+    setSeleccionado(item.nid_tipo_calculo);
+    setCtipoCalculo(item.ctipo_calculo);
   };
+
+  // Filtrado según habilitado
+  const listaFiltrada = lista.filter(
+    item => mostrarInhabilitados ? !item.bhabilitado : item.bhabilitado
+  );
 
   return (
-    <div style={{ maxWidth: '800px', margin: '2rem auto' }}>
-      <h2 style={{ textAlign: 'center' }}>Catálogo Tipo Indicador</h2>
+    <div style={{ maxWidth: '900px', margin: '2rem auto' }}>
+      <h2 style={{ textAlign: 'center' }}>Catálogo Tipo Cálculo</h2>
+
+      {/* Switch para mostrar inhabilitados */}
+      <div style={{ marginBottom: '1rem', textAlign: 'right' }}>
+        <button
+          onClick={() => setMostrarInhabilitados(!mostrarInhabilitados)}
+          style={{
+            ...botonEstilo,
+            backgroundColor: mostrarInhabilitados ? '#8B0000' : '#003B5C'
+          }}
+        >
+          {mostrarInhabilitados ? 'Ver habilitados' : 'Ver inhabilitados'}
+        </button>
+      </div>
 
       {/* Formulario */}
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
         <input
           type="text"
-          value={color}
-          onChange={e => setColor(e.target.value)}
-          placeholder="Color del indicador"
+          value={ctipo_calculo}
+          onChange={e => setCtipoCalculo(e.target.value)}
+          placeholder="Nombre del cálculo"
           style={{ flex: 1, padding: '0.5rem' }}
         />
 
@@ -83,20 +172,28 @@ export default function TipoIndicadorABC() {
         <thead style={{ backgroundColor: '#003B5C', color: 'white' }}>
           <tr>
             <th style={th}>ID</th>
-            <th style={th}>Color Indicador</th>
+            <th style={th}>Tipo Cálculo</th>
+            {/* Si tienes fechas, descomenta */}
+            {/* <th style={th}>Fecha Alta</th>
+            <th style={th}>Fecha Baja</th> */}
+            <th style={th}>Habilitado</th>
             <th style={th}>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {lista.map((item) => (
+          {listaFiltrada.map((item) => (
             <tr
-              key={item.id}
+              key={item.nid_tipo_calculo}
               style={{
-                backgroundColor: item.id === seleccionado ? '#f0f8ff' : 'white'
+                backgroundColor: item.nid_tipo_calculo === seleccionado ? '#f0f8ff' : 'white'
               }}
             >
-              <td style={td}>{item.id}</td>
-              <td style={td}>{item.color}</td>
+              <td style={td}>{item.nid_tipo_calculo}</td>
+              <td style={td}>{item.ctipo_calculo}</td>
+              {/* Si tienes fechas, descomenta */}
+              {/* <td style={td}>{item.dfecha_alta ? item.dfecha_alta.slice(0, 10) : '-'}</td>
+              <td style={td}>{item.dfecha_baja ? item.dfecha_baja.slice(0, 10) : '-'}</td> */}
+              <td style={td}>{item.bhabilitado ? 'Sí' : 'No'}</td>
               <td style={td}>
                 <button onClick={() => seleccionarFila(item)} style={{ cursor: 'pointer' }}>
                   Seleccionar
