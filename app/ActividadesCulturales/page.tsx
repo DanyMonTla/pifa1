@@ -5,7 +5,7 @@ export default function ActividadesCulturalesPage() {
   const [actividades, setActividades] = useState<any[]>([]);
   const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
   const [form, setForm] = useState({
-    nombre: '', categoria: '', tipo: '', funcion: '', modalidad: '', genero: '', realizadas: '', sesiones: '', asistentes: '', inicio: '', fin: ''
+    actividad: '', categoria: '', funcion: '', modalidad: '', genero: '', realizadas: '', asistentes: '', inicio: '', fin: ''
   });
   const [busquedaNombre, setBusquedaNombre] = useState('');
 
@@ -15,7 +15,7 @@ export default function ActividadesCulturalesPage() {
   };
 
   const handleBuscarPorNombre = () => {
-    const actividad = actividades.find(a => a.nombre.toLowerCase() === busquedaNombre.toLowerCase().trim());
+    const actividad = actividades.find(a => a.actividad.toLowerCase() === busquedaNombre.toLowerCase().trim());
     if (actividad) setForm(actividad);
     else alert("No se encontró la actividad");
   };
@@ -28,12 +28,12 @@ export default function ActividadesCulturalesPage() {
     if (modo === 'agregar') {
       setActividades(prev => [...prev, form]);
     } else if (modo === 'modificar') {
-      setActividades(prev => prev.map(a => a.nombre === form.nombre ? form : a));
+      setActividades(prev => prev.map(a => a.actividad === form.actividad ? form : a));
     } else if (modo === 'eliminar') {
-      setActividades(prev => prev.filter(a => a.nombre !== form.nombre));
+      setActividades(prev => prev.filter(a => a.actividad !== form.actividad));
     }
 
-    setForm({ nombre: '', categoria: '', tipo: '', funcion: '', modalidad: '', genero: '', realizadas: '', sesiones: '', asistentes: '', inicio: '', fin: '' });
+    setForm({ actividad: '', categoria: '', funcion: '', modalidad: '', genero: '', realizadas: '', asistentes: '', inicio: '', fin: '' });
     setModo(null);
   };
 
@@ -41,7 +41,7 @@ export default function ActividadesCulturalesPage() {
     <main style={{ padding: "2rem" }}>
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
         <input
-          placeholder="Buscar por NOMBRE"
+          placeholder="Buscar por ACTIVIDAD"
           value={busquedaNombre}
           onChange={(e) => setBusquedaNombre(e.target.value)}
           style={{ flex: 1, padding: '0.5rem' }}
@@ -74,15 +74,13 @@ export default function ActividadesCulturalesPage() {
       <table border={1} cellPadding={8} style={{ marginTop: "1rem", borderCollapse: "collapse", width: "100%" }}>
         <thead style={{ backgroundColor: "#003366", color: "#fff" }}>
           <tr>
-            <th>#</th>
-            <th>Nombre de la actividad</th>
+            <th>N°</th>
+            <th>Actividad</th>
             <th>Categoría</th>
-            <th>Tipo Actividad</th>
             <th>Actividad por función</th>
-            <th>Modalidad</th>
-            <th>Género</th>
-            <th>Realizadas</th>
-            <th>Sesiones</th>
+            <th>Modalidad (Presencial/Mixta/A distancia)</th>
+            <th>Actividad con temática de equidad de género y no discriminación</th>
+            <th>Número de actividades</th>
             <th>Asistentes</th>
             <th>Fecha inicio</th>
             <th>Fecha final</th>
@@ -91,7 +89,7 @@ export default function ActividadesCulturalesPage() {
         <tbody>
           {actividades.length === 0 ? (
             <tr>
-              <td colSpan={12} style={{ textAlign: "center", padding: "1rem", backgroundColor: "#f0f0f0" }}>
+              <td colSpan={10} style={{ textAlign: "center", padding: "1rem", backgroundColor: "#f0f0f0" }}>
                 No hay actividades registradas aún.
               </td>
             </tr>
@@ -99,14 +97,12 @@ export default function ActividadesCulturalesPage() {
             actividades.map((a, i) => (
               <tr key={i}>
                 <td>{i + 1}</td>
-                <td>{a.nombre}</td>
+                <td>{a.actividad}</td>
                 <td>{a.categoria}</td>
-                <td>{a.tipo}</td>
                 <td>{a.funcion}</td>
                 <td>{a.modalidad}</td>
                 <td>{a.genero}</td>
                 <td>{a.realizadas}</td>
-                <td>{a.sesiones}</td>
                 <td>{a.asistentes}</td>
                 <td>{a.inicio}</td>
                 <td>{a.fin}</td>
