@@ -1,0 +1,61 @@
+.p31-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
+}
+
+.p31-container h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #003B5C;
+}
+
+.p31-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.p31-tabla th,
+.p31-tabla td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+}
+
+.p31-tabla th {
+  background-color: #003B5C;
+  color: white;
+  font-weight: bold;
+}
+
+.p31-tabla input,
+.p31-tabla select {
+  width: 100%;
+  padding: 0.4rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  border: 1px solid #aaa;
+}
+
+.p31-botones {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.p31-botones button {
+  background-color: #003B5C;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.p31-botones button:hover {
+  background-color: #005a88;
+}
