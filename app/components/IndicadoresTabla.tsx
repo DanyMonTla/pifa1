@@ -12,7 +12,7 @@ type Indicador = {
   cdesc_indicador: string;
   cdefinicion_indicador: string;
   nid_frecuencia: number;
-  nid_fuente: number;
+  cfuente: string;
   nid_tipo_calculo: number;
   nid_tipo_indicador: number;
   // ...agrega más campos si quieres
@@ -29,14 +29,12 @@ const API = {
 export default function IndicadoresTabla() {
   const [indicadores, setIndicadores] = useState<Indicador[]>([]);
   const [frecuencias, setFrecuencias] = useState<Frecuencia[]>([]);
-  const [fuentes, setFuentes] = useState<Fuente[]>([]);
   const [tiposCalculo, setTiposCalculo] = useState<TipoCalculo[]>([]);
   const [tiposIndicador, setTiposIndicador] = useState<TipoIndicador[]>([]);
 
   // Carga de catálogos y lista
   useEffect(() => { fetch(API.indicadores).then(r => r.json()).then(setIndicadores); }, []);
   useEffect(() => { fetch(API.frecuencias).then(r => r.json()).then(setFrecuencias); }, []);
-  useEffect(() => { fetch(API.fuentes).then(r => r.json()).then(setFuentes); }, []);
   useEffect(() => { fetch(API.tiposCalculo).then(r => r.json()).then(setTiposCalculo); }, []);
   useEffect(() => { fetch(API.tiposIndicador).then(r => r.json()).then(setTiposIndicador); }, []);
 
@@ -57,19 +55,24 @@ export default function IndicadoresTabla() {
           </tr>
         </thead>
         <tbody>
-          {Array.isArray(indicadores) && indicadores.map(ind => (
-            <tr key={ind.nid_indicador}>
-              <td>{ind.nid_indicador}</td>
-              <td>{ind.cclave_indicador}</td>
-              <td>{ind.cdesc_indicador}</td>
-              <td>{ind.cdefinicion_indicador}</td>
-              <td>{frecuencias.find(f => f.nid_frecuencia === ind.nid_frecuencia)?.cfrecuencia ?? ind.nid_frecuencia}</td>
-              <td>{fuentes.find(f => f.nid_fuente === ind.nid_fuente)?.cfuente ?? ind.nid_fuente}</td>
-              <td>{tiposCalculo.find(tc => tc.nid_tipo_calculo === ind.nid_tipo_calculo)?.ctipo_calculo ?? ind.nid_tipo_calculo}</td>
-              <td>{tiposIndicador.find(ti => ti.nid_tipo_indicador === ind.nid_tipo_indicador)?.ccolor_indicador ?? ind.nid_tipo_indicador}</td>
-            </tr>
-          ))}
-        </tbody>
+  {Array.isArray(indicadores) && indicadores.map(ind => (
+    <tr key={ind.nid_indicador}>
+      <td>{ind.nid_indicador}</td>
+      <td>{ind.cclave_indicador}</td>
+      <td>{ind.cdesc_indicador}</td>
+      <td>{ind.cdefinicion_indicador}</td>
+<td>
+  {Array.isArray(frecuencias)
+    ? (frecuencias.find(f => f.nid_frecuencia === ind.nid_frecuencia)?.cfrecuencia ?? ind.nid_frecuencia)
+    : ind.nid_frecuencia}
+</td>
+      <td>{ind.cfuente}</td>
+      <td>{tiposCalculo.find(tc => tc.nid_tipo_calculo === ind.nid_tipo_calculo)?.ctipo_calculo ?? ind.nid_tipo_calculo}</td>
+      <td>{tiposIndicador.find(ti => ti.nid_tipo_indicador === ind.nid_tipo_indicador)?.ccolor_indicador ?? ind.nid_tipo_indicador}</td>
+    </tr>
+  ))}
+</tbody>
+
       </table>
     </div>
   );
