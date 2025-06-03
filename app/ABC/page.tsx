@@ -62,6 +62,20 @@ export default function ABCGeneralesPage() {
         >
           Actividades Culturales
         </button>
+
+        <button
+          onClick={() => router.push('/TipoActCultural')}
+          style={boton}
+        >
+          Tipo Actividad Cultural
+        </button>
+
+        <button
+          onClick={() => router.push('/TipoEducacionContinua')}
+          style={boton}
+        >
+          Tipo Educación Continua
+        </button>
       </div>
     </div>
   );
