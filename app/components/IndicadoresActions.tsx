@@ -3,109 +3,15 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import IndicadoresForm from "../components/IndicadoresForm";
 
-const indicadoresEjemplo = [
-  {
-    nid_indicador: 1,
-    cclave_indicador: 'A.1.1',
-    cdesc_indicador: 'Tasa de graduación',
-    cdefinicion_indicador: 'Porcentaje de alumnos que concluyen en tiempo',
-    cfuente: 'Sistema Escolar',
-    nid_frecuencia: 1,
-    nid_tipo_calculo: 1,
-    nid_tipo_indicador: 1,
-    bhabilitado: 1
-  },
-  {
-    nid_indicador: 2,
-    cclave_indicador: 'A.3.2',
-    cdesc_indicador: 'Participación en eventos culturales',
-    cdefinicion_indicador: 'Número de alumnos que asisten a eventos culturales',
-    cfuente: 'Departamento de Cultura',
-    nid_frecuencia: 2,
-    nid_tipo_calculo: 1,
-    nid_tipo_indicador: 2,
-    bhabilitado: 1
-  }
-];
-
-export default function IndicadoresActions() {
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  const [modo, setModo] = useState<'agregar' | 'modificar' | null>(null);
-  const [indicadorSeleccionado, setIndicadorSeleccionado] = useState<any>(null);
-
-  const exportarAExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(indicadoresEjemplo);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Indicadores');
-    XLSX.writeFile(workbook, 'indicadores.xlsx');
-  };
-
-  const modificarIndicador = () => {
-    // Simulamos que se selecciona el primer indicador
-    setIndicadorSeleccionado(indicadoresEjemplo[0]);
-    setModo('modificar');
-    setMostrarFormulario(true);
-  };
-
-  const eliminarIndicador = async () => {
-    const confirmar = confirm("¿Deseas marcar este indicador como inhabilitado?");
-    if (!confirmar) return;
-
-    try {
-      await fetch(`http://localhost:3001/indicadores/estado/${indicadoresEjemplo[0].nid_indicador}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bhabilitado: 0 }),
-      });
-      alert("Indicador inhabilitado exitosamente");
-    } catch (e) {
-      alert("Error al inhabilitar");
-    }
-  };
-
-  return (
-    <div style={{ padding: '2px' }}>
-      <div style={{
-        display: 'flex',
-        gap: '1rem',
-        justifyContent: 'center',
-        marginBottom: '0',
-        flexWrap: 'wrap'
-      }}>
-        <button onClick={exportarAExcel} style={{ ...botonEstilo, backgroundColor: '#2E8B57' }}>
-          Descargar Excel
-        </button>
-
-        <button
-          onClick={() => {
-            setIndicadorSeleccionado(null);
-            setModo('agregar');
-            setMostrarFormulario(prev => !prev);
-          }}
-          style={botonEstilo}
-        >
-          {mostrarFormulario && modo === 'agregar' ? 'Ocultar formulario' : 'Agregar Indicador'}
-        </button>
-
-        <button onClick={modificarIndicador} style={botonEstilo}>
-          Modificar Indicador
-        </button>
-
-        <button onClick={eliminarIndicador} style={{ ...botonEstilo, backgroundColor: '#8B0000' }}>
-          Eliminar Indicador
-        </button>
-      </div>
-
-      {mostrarFormulario && (
-        <IndicadoresForm
-          modo={modo}
-          indicadorInicial={indicadorSeleccionado}
-        />
-      )}
-    </div>
-  );
-}
-
+type IndicadoresActionsProps = {
+  indicadores: any[];
+  indicadorSeleccionado: any;
+  setIndicadorSeleccionadoAction: (ind: any) => void;
+  datosExcel: any[];
+  recargarAction: () => void;
+  mostrarSoloInhabilitados: boolean;
+  setMostrarSoloInhabilitadosAction: (b: boolean) => void;
+};
 const botonEstilo: React.CSSProperties = {
   padding: '0.75rem',
   backgroundColor: '#003B5C',
@@ -116,3 +22,136 @@ const botonEstilo: React.CSSProperties = {
   cursor: 'pointer',
   fontSize: '1rem'
 };
+
+export default function IndicadoresActions({
+  indicadores,
+  indicadorSeleccionado,
+  setIndicadorSeleccionadoAction,
+  datosExcel,
+  recargarAction,
+  mostrarSoloInhabilitados,
+  setMostrarSoloInhabilitadosAction
+}: IndicadoresActionsProps) {
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [modo, setModo] = useState<'agregar' | 'modificar' | null>(null);
+
+  // Exporta solo los datos visibles (sin IDs)
+  const exportarAExcel = () => {
+    if (!datosExcel.length) return alert('No hay indicadores para exportar');
+    const worksheet = XLSX.utils.json_to_sheet(datosExcel);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Indicadores');
+    XLSX.writeFile(workbook, 'indicadores.xlsx');
+  };
+
+  // Modificar
+  const modificarIndicador = () => {
+    if (!indicadorSeleccionado) return alert('Selecciona un indicador haciendo click en la tabla');
+    if (mostrarFormulario && modo === 'modificar') {
+    setMostrarFormulario(false);
+    setModo(null);
+    return;
+  }
+  setModo('modificar');
+  setMostrarFormulario(true);
+  recargarAction();
+  };
+
+  // Eliminar
+ const eliminarIndicador = async () => {
+  if (!indicadorSeleccionado) return alert('Selecciona un indicador haciendo click en la tabla');
+  const confirmar = confirm("¿Deseas marcar este indicador como inhabilitado?");
+  if (!confirmar) return;
+  try {
+    const res = await fetch(`http://localhost:3001/indicadores/estado/${indicadorSeleccionado.nid_indicador}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bhabilitado: 0 }),
+    });
+    if (res.ok) {
+      alert("Indicador inhabilitado exitosamente");
+      setIndicadorSeleccionadoAction(null);    // Limpia selección
+      setMostrarFormulario && setMostrarFormulario(false); // Cierra form si existe
+      setModo && setModo(null); // Resetea modo si existe
+      recargarAction(); // Refresca la tabla
+    } else {
+      alert("Error al inhabilitar (status no OK)");
+    }
+  } catch (e) {
+    alert("Error al inhabilitar: " + e);
+  }
+};
+
+  // Mostrar formulario para agregar
+  const mostrarAgregar = () => {
+    setIndicadorSeleccionadoAction(null);
+    setModo('agregar');
+    setMostrarFormulario(prev => !prev);
+    recargarAction();
+  };
+
+  // Al guardar, cierra formulario y recarga
+  const handleGuardado = () => {
+    setMostrarFormulario(false);
+    recargarAction();
+    setIndicadorSeleccionadoAction(null);
+  };
+  // Al cancelar, cierra formulario
+   const handleGuardadoOCancelado = () => {
+    setMostrarFormulario(false);
+    setIndicadorSeleccionadoAction(null);
+    recargarAction();
+  };
+
+return (
+  <div style={{ padding: '2px' }}>
+    {/* Checkbox para mostrar solo inhabilitados */}
+    <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+      <label style={{ fontWeight: 600 }}>
+        <input
+          type="checkbox"
+          checked={mostrarSoloInhabilitados}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMostrarSoloInhabilitadosAction(e.target.checked)}
+          style={{ marginRight: 6 }}
+        />
+        Mostrar solo inhabilitados
+      </label>
+    </div>
+    {/* Botones de acciones */}
+    <div
+      style={{
+        display: 'flex',
+        gap: '1rem',
+        justifyContent: 'center',
+        marginBottom: '0',
+        flexWrap: 'wrap'
+      }}
+    >
+      <button onClick={exportarAExcel} style={{ ...botonEstilo, backgroundColor: '#2E8B57' }}>
+        Descargar Excel
+      </button>
+      <button onClick={mostrarAgregar} style={botonEstilo}
+      >
+        {mostrarFormulario && modo === 'agregar' ? 'Ocultar formulario' : 'Agregar Indicador'}
+      </button>
+      <button onClick={modificarIndicador} style={botonEstilo}>
+        Modificar Indicador
+      </button>
+      <button onClick={eliminarIndicador} style={{ ...botonEstilo, backgroundColor: '#8B0000' }}>
+        Eliminar Indicador
+      </button>
+    </div>
+    {/* Formulario (solo cuando corresponde) */}
+    {mostrarFormulario && (
+      <IndicadoresForm
+        modo={modo === 'modificar' ? 'modificar' : 'agregar'}
+        indicadorInicial={modo === 'modificar' ? indicadorSeleccionado : null}
+        onGuardado={handleGuardadoOCancelado}
+        onCancelar={handleGuardadoOCancelado}
+      />
+      
+    )}
+  </div>
+);
+
+}     

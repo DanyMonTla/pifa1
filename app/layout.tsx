@@ -21,16 +21,16 @@ const TITULOS_POR_RUTA: Record<string, string> = {
   '/Fuente': 'ABC Fuente de indicadores',
   '/TipoCalculo': 'ABC Tipo Cálculo de indicadores',
   '/TipoIndicador': 'ABC Tipo Indicadores',
-<<<<<<< HEAD
+
   '/Usuarios': 'ABC Usuarios',
   '/ProgramaPresupuestal': 'ABC de Programa presupuestal',
   '/AreasResponsables': 'ABC de areas responsables',
   '/Roles': 'ABC de roles',
   '/TipoPrograPres': 'ABC de Tipo Programa',
-=======
+
   '/EducacionContinuaCEDETEC': 'Actividades Educación Continua',
   '/ActividadesCulturales': 'Actividades Culturales',
->>>>>>> origin/Lazaro-v1.0
+
 };
 
 export default function RootLayout({

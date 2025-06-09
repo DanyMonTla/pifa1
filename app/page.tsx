@@ -156,8 +156,6 @@ export default function HomePage() {
           Ver Logros
         </button>
 
-        <button
-
         <button 
           className="primary-button"
           onClick={() => router.push('/Fechas')}>
@@ -184,20 +182,17 @@ export default function HomePage() {
 
 
         <button
-  className="primary-button"
-  onClick={() => router.push('/p31-actividades')}
->
-  P31 Actividades
-</button>
-    <button
-      className="primary-button"
-      onClick={() => router.push('/proyectos')}
-    >
-      Registrar Proyecto
-    </button>
-
-
-
+          className="primary-button"
+          onClick={() => router.push('/p31-actividades')}
+        >
+          P31 Actividades
+        </button>
+        <button
+          className="primary-button"
+          onClick={() => router.push('/proyectos')}
+        >
+          Registrar Proyecto
+        </button>
       </div>
     </div>
 
