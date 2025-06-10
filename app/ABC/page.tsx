@@ -57,6 +57,7 @@ export default function ABCGeneralesPage() {
         </button>
 
         <button
+
           onClick={() => router.push('/AreasResponsables')}
           style={boton}
         >
@@ -79,10 +80,32 @@ export default function ABCGeneralesPage() {
         </button>
 
         <button
-          onClick={() => router.push('/TipoPrograPres')}
+          onClick={() => router.push('/EducacionContinuaCEDETEC')}
           style={boton}
         >
-          Tipo Programa Presupuestal
+          Educación Continua
+        </button>
+
+        <button
+          onClick={() => router.push('/ActividadesCulturales')}
+          style={boton}
+        >
+          Actividades Culturales
+        </button>
+
+        <button
+          onClick={() => router.push('/TipoActCultural')}
+          style={boton}
+        >
+          Tipo Actividad Cultural
+        </button>
+
+        <button
+          onClick={() => router.push('/TipoEducacionContinua')}
+          style={boton}
+        >
+          Tipo Educación Continua
+
         </button>
       </div>
     </div>

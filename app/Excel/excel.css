@@ -1,0 +1,115 @@
+/* Contenedor general de la vista */
+.excel-container {
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f9fafb; /* gris muy claro */
+  min-height: 100vh; /* asegura que ocupe toda la altura de la pantalla */
+}
+
+/* Título principal centrado */
+.excel-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: #111827; /* gris oscuro */
+  text-align: center;
+}
+
+/* Contenedor de controles (input y botón) */
+.excel-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Botón para exportar el archivo editado */
+.export-button {
+  background-color: #2563eb; /* azul */
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.export-button:hover {
+  background-color: #1d4ed8; /* azul más oscuro al pasar el mouse */
+}
+
+/* Estilos para la tabla */
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  background-color: white;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* sombra suave */
+}
+
+/* Celdas comunes */
+.excel-table th,
+.excel-table td {
+  border: 1px solid #e5e7eb; /* bordes grises suaves */
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  color: #111827; /* texto gris oscuro */
+}
+
+/* Encabezado de la tabla */
+.excel-table th {
+  background-color: #111827; /* fondo oscuro */
+  color: white; /* texto blanco */
+}
+
+/* Filas pares con fondo gris claro (estilo zebra) */
+.excel-table tbody tr:nth-child(even) {
+  background-color: #f3f4f6;
+}
+
+/* Estilo para inputs dentro de las celdas */
+.cell-input {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  font-size: 0.85rem;
+  background-color: transparent;
+  color: #111827;
+}
+
+/* Efecto al enfocar el input */
+.cell-input:focus {
+  outline: 1px solid #3b82f6; /* borde azul */
+  background-color: #eff6ff; /* azul claro */
+}
+/* Contenedor de botones centrado */
+.excel-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Estilo general para ambos botones */
+.custom-button {
+  background-color: #2563eb;
+  color: white;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: inline-block;
+  text-align: center;
+}
+
+/* Hover consistente */
+.custom-button:hover {
+  background-color: #1d4ed8;
+}
