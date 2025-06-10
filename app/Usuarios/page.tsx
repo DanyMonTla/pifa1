@@ -32,25 +32,22 @@ export default function UsuariosCrud() {
   }, []);
 
   const fetchUsuarios = async () => {
-  try {
-    const res = await fetch(API_URL);
-    const data = await res.json();
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
 
-    const normalizados = Array.isArray(data)
-      ? data.map((u: any) => ({
-          ...u,
-          bhabilitado: String(u.bhabilitado).toLowerCase() === 'true' || u.bhabilitado === true || u.bhabilitado === 1,
-        }))
-      : [];
+      const normalizados = Array.isArray(data)
+        ? data.map((u: any) => ({
+            ...u,
+            bhabilitado: String(u.bhabilitado).toLowerCase() === 'true' || u.bhabilitado === true || u.bhabilitado === 1,
+          }))
+        : [];
 
-    console.log("🧪 Usuarios recibidos:", normalizados); // 👈 LÍNEA CRÍTICA
-
-    setUsuarios(normalizados);
-  } catch (err) {
-    console.error("Error al cargar usuarios:", err);
-  }
-};
-
+      setUsuarios(normalizados);
+    } catch (err) {
+      console.error("Error al cargar usuarios:", err);
+    }
+  };
 
   const fetchAreas = async () => {
     try {
@@ -85,20 +82,34 @@ export default function UsuariosCrud() {
     setForm((prev: Usuario) => ({ ...prev, [name]: value }));
   };
 
-  const handleBuscar = () => {
-    const encontrado = usuarios.find(u => u.cid_usuario === busquedaId.trim());
+ const handleBuscar = () => {
+  if (!busquedaId.trim()) {
+    setMensaje('❌ Ingresa un ID para buscar');
+    setEsError(true);
+    setTimeout(() => setMensaje(''), 2000);
+    return;
+  }
 
-    if (encontrado) {
-      setForm({
-        ...encontrado,
-        dfecha_alta: encontrado.dfecha_alta?.slice(0, 10) || '',
-        dfecha_baja: encontrado.dfecha_baja?.slice(0, 10) || '',
-      });
-      setModo(null);
-    } else {
-      alert("No se encontró un usuario con ese ID");
-    }
-  };
+  const encontrado = usuarios.find(u => u.cid_usuario === busquedaId.trim());
+
+  if (encontrado) {
+   setForm({
+  ...encontrado,
+  dfecha_alta: encontrado.dfecha_alta?.slice(0, 10) || '',
+  dfecha_baja: encontrado.dfecha_baja?.slice(0, 10) || '',
+  bhabilitado: !!encontrado.bhabilitado, // ✅ conversión segura
+});
+
+    setMensaje('✅ Usuario encontrado');
+    setEsError(false);
+  } else {
+    setMensaje('❌ Usuario no encontrado');
+    setEsError(true);
+  }
+
+  setTimeout(() => setMensaje(''), 2000);
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,10 +151,7 @@ export default function UsuariosCrud() {
       nid_area: parseInt(form.nid_area),
       nid_rol: parseInt(form.nid_rol),
       dfecha_alta: form.dfecha_alta || new Date().toISOString().slice(0, 10),
-      dfecha_baja:
-        modo === 'eliminar'
-          ? new Date().toISOString().slice(0, 10)
-          : form.dfecha_baja || '',
+      dfecha_baja: modo === 'eliminar' ? new Date().toISOString().slice(0, 10) : form.dfecha_baja || '',
       bhabilitado: modo === 'eliminar' ? false : true,
     };
 
@@ -245,22 +253,66 @@ export default function UsuariosCrud() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center' }}>
+      {/* 🔍 Formulario para búsqueda y acciones */}
+     <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleBuscar();
+        }}
+        style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center' }}
+      >
         <input
           placeholder="Buscar por ID"
           value={busquedaId}
           onChange={(e) => setBusquedaId(e.target.value)}
           style={{ flex: 1, padding: '0.5rem' }}
         />
-        <button onClick={handleBuscar} style={{ backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' }}>Buscar</button>
-        <button onClick={() => { resetForm(); setModo('agregar'); }} style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}>Agregar</button>
-        <button onClick={() => setModo('modificar')} style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}>Modificar</button>
-        <button onClick={() => setModo('eliminar')} style={{ backgroundColor: '#8B0000', color: 'white', padding: '0.5rem 1rem' }}>Desactivar</button>
+
+        <button type="submit" style={{ backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' }}>
+          Buscar
+        </button>
+
+        <button onClick={() => { resetForm(); setModo('agregar'); }} type="button"
+          style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}>
+          Agregar
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setModo('modificar')}
+          disabled={!form.cid_usuario || form.bhabilitado === false}
+          style={{
+            backgroundColor: '#004c75',
+            color: 'white',
+            padding: '0.5rem 1rem',
+            opacity: !form.cid_usuario || form.bhabilitado === false ? 0.5 : 1,
+            cursor: !form.cid_usuario || form.bhabilitado === false ? 'not-allowed' : 'pointer',
+          }}
+        >
+          Modificar
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setModo('eliminar')}
+          disabled={!form.cid_usuario || form.bhabilitado === false}
+          style={{
+            backgroundColor: '#8B0000',
+            color: 'white',
+            padding: '0.5rem 1rem',
+            opacity: !form.cid_usuario || form.bhabilitado === false ? 0.5 : 1,
+            cursor: !form.cid_usuario || form.bhabilitado === false ? 'not-allowed' : 'pointer',
+          }}
+        >
+          Desactivar
+        </button>
+
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
           <input type="checkbox" checked={mostrarInactivos} onChange={() => setMostrarInactivos(p => !p)} />
           Ver inhabilitados
         </label>
-      </div>
+      </form>
+
 
       {(modo !== null || form.cid_usuario !== '') && (
         <UsuariosFormulario

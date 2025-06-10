@@ -15,9 +15,6 @@ type Props = {
 export default function UsuariosFormulario({ form, modo, areas, roles, onChange, onSubmit }: Props) {
   const esSoloLectura = modo === null || modo === 'eliminar';
 
-  // Línea de depuración para bhabilitado
-  console.log('🧪 Formulario - modo:', modo, '| bhabilitado:', form.bhabilitado);
-
   return (
     <form onSubmit={onSubmit} style={{ maxWidth: '900px', margin: '2rem auto' }}>
       <div style={{
@@ -45,8 +42,34 @@ export default function UsuariosFormulario({ form, modo, areas, roles, onChange,
           </select>
         </div>
         <div style={rowStyle}><label style={labelStyle}>Fecha Alta:</label><input name="dfecha_alta" type="date" value={form.dfecha_alta} onChange={onChange} style={inputStyle} disabled={esSoloLectura} /></div>
-        <div style={rowStyle}><label style={labelStyle}>Fecha Baja:</label><input name="dfecha_baja" type="date" value={form.dfecha_baja} readOnly style={inputStyle} /></div>
       </div>
+
+      {/* ✅ Mostrar si está habilitado o no en modo visualización */}
+      {modo === null && (
+        <div style={{ ...rowStyle, marginTop: '1rem' }}>
+          <label style={labelStyle}>Habilitado:</label>
+          <input
+            type="text"
+            value={form.bhabilitado ? 'Sí' : 'No'}
+            readOnly
+            style={inputStyle}
+          />
+        </div>
+      )}
+
+      {/* ✅ Mostrar Fecha Baja solo si está inhabilitado */}
+      {modo === null && form.bhabilitado === false && (
+        <div style={{ ...rowStyle, marginTop: '1rem' }}>
+          <label style={labelStyle}>Fecha Baja:</label>
+          <input
+            name="dfecha_baja"
+            type="date"
+            value={form.dfecha_baja}
+            readOnly
+            style={inputStyle}
+          />
+        </div>
+      )}
 
       {modo !== null && (
         <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
