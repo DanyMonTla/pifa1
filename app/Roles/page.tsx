@@ -24,6 +24,7 @@ export default function RolesCrud() {
   const [busquedaId, setBusquedaId] = useState('');
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [mensaje, setMensaje] = useState('');
+  const [buscando, setBuscando] = useState(false);
 
   const API_URL = 'http://localhost:3001/roles';
 
@@ -38,7 +39,7 @@ export default function RolesCrud() {
       const rolesBool = Array.isArray(data)
         ? data.map(r => ({
             ...r,
-            nidRol: String(r.nidRol), // Asegurar que nidRol sea string
+            nidRol: String(r.nidRol),
             bhabilitado: r.bhabilitado?.data ? r.bhabilitado.data[0] === 1 : Boolean(r.bhabilitado),
           }))
         : [];
@@ -49,23 +50,27 @@ export default function RolesCrud() {
   };
 
   const cargarRolEnFormulario = (rol: Rol) => {
-    setForm({
-      ...rol,
-      dfechaAlta: rol.dfechaAlta ? rol.dfechaAlta.substring(0, 10) : '',
-      dfechaBaja: rol.dfechaBaja ? rol.dfechaBaja.substring(0, 10) : '',
-    });
-    setModo(null);
-  };
+  setForm({
+    ...rol,
+    dfechaAlta: rol.dfechaAlta ? rol.dfechaAlta.substring(0, 10) : '',
+    dfechaBaja: rol.dfechaBaja ? rol.dfechaBaja.substring(0, 10) : '',
+  });
+
+  // 🔥 Esta línea fue eliminada para conservar el modo (modificar/eliminar)
+  // setModo(null);
+};
+
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const mostrarMensaje = (texto: string) => {
-    setMensaje(texto);
-    setTimeout(() => setMensaje(''), 3000);
-  };
+  const mostrarMensaje = (texto: string, duracion = 2000) => {
+  setMensaje(texto);
+  setTimeout(() => setMensaje(''), duracion);
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,21 +124,21 @@ export default function RolesCrud() {
     setBusquedaId('');
   };
 
-  const buscarRol = () => {
+  const buscarRol = async () => {
     const id = busquedaId.trim();
+    if (!id) return alert('Ingresa un ID para buscar');
 
-    if (!id) {
-      alert('Ingresa un ID para buscar');
-      return;
-    }
+    setBuscando(true);
 
     const encontrado = roles.find(r => String(r.nidRol) === id);
 
     if (encontrado) {
       cargarRolEnFormulario(encontrado);
     } else {
-      alert('No se encontró un rol con ese ID');
+      mostrarMensaje('❌ No se encontró un rol con ese ID', 2000);
     }
+
+    setTimeout(() => setBuscando(false), 500);
   };
 
   const obtenerTitulo = () => {
@@ -154,14 +159,14 @@ export default function RolesCrud() {
             top: '20px',
             left: '50%',
             transform: 'translateX(-50%)',
-            backgroundColor: 'green',
+            backgroundColor: mensaje.includes('❌') ? '#d32f2f' : 'green',
             color: 'white',
             padding: '1rem 2rem',
             borderRadius: '8px',
             zIndex: 1000,
           }}
         >
-          ✅ {mensaje}
+          {mensaje}
         </div>
       )}
 
@@ -170,9 +175,18 @@ export default function RolesCrud() {
           placeholder="Buscar por ID"
           value={busquedaId}
           onChange={e => setBusquedaId(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              buscarRol();
+            }
+          }}
           style={{ flex: 1, padding: '0.5rem' }}
         />
-        <button onClick={buscarRol} style={btnBuscar}>Buscar</button>
+        <button onClick={buscarRol} style={{ ...btnBuscar, ...(buscando ? btnBuscarLoading : {}) }} disabled={buscando}>
+          {buscando ? 'Buscando...' : 'Buscar'}
+        </button>
+
         <button onClick={() => { resetForm(); setModo('agregar'); }} style={btnAgregar}>Agregar</button>
         <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
         <button onClick={() => setModo('eliminar')} style={btnEliminar}>Eliminar</button>
@@ -202,6 +216,7 @@ export default function RolesCrud() {
             />
           </div>
 
+          {modo !== 'agregar' && modo !== 'modificar' && (
           <div style={fieldRow}>
             <label style={labelStyle}>Habilitado:</label>
             <input
@@ -211,6 +226,9 @@ export default function RolesCrud() {
               style={inputStyle}
             />
           </div>
+        )}
+
+
 
           <div style={fieldRow}>
             <label htmlFor="crol" style={labelStyle}>Rol:</label>
@@ -277,8 +295,12 @@ export default function RolesCrud() {
             <th style={thStyle}>ID Rol</th>
             <th style={thStyle}>Rol</th>
             <th style={thStyle}>Fecha Alta</th>
-            <th style={thStyle}>Fecha Baja</th>
-            <th style={thStyle}>Habilitado</th>
+
+            {/* Activo primero */}
+            <th style={thStyle}>Activo</th>
+
+            {/* Fecha Baja después, solo si está habilitado */}
+            {mostrarInactivos && <th style={thStyle}>Fecha Baja</th>}
           </tr>
         </thead>
         <tbody>
@@ -289,10 +311,18 @@ export default function RolesCrud() {
                 <td style={tdStyle}>{r.nidRol}</td>
                 <td style={tdStyle}>{r.crol}</td>
                 <td style={tdStyle}>{r.dfechaAlta?.substring(0, 10)}</td>
-                <td style={tdStyle}>{r.dfechaBaja ? r.dfechaBaja.substring(0, 10) : '-'}</td>
+
+                {/* Activo */}
                 <td style={{ ...tdStyle, color: r.bhabilitado ? 'green' : 'red' }}>
                   {r.bhabilitado ? 'Sí' : 'No'}
                 </td>
+
+                {/* Fecha Baja */}
+                {mostrarInactivos && (
+                  <td style={tdStyle}>
+                    {r.dfechaBaja ? r.dfechaBaja.substring(0, 10) : '-'}
+                  </td>
+                )}
               </tr>
             ))}
         </tbody>
@@ -334,16 +364,35 @@ const thStyle: React.CSSProperties = {
   padding: '8px',
   backgroundColor: '#003B5C',
   color: 'white',
+  textAlign: 'center', // ← agregado
 };
+
 
 const tdStyle: React.CSSProperties = {
   border: '1px solid #ccc',
   padding: '8px',
   backgroundColor: '#fff',
   color: '#000',
+  textAlign: 'center', // ← agregado
 };
 
-const btnBuscar = { backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' };
+
+const btnBuscar: React.CSSProperties = {
+  backgroundColor: '#0077b6',
+  color: 'white',
+  padding: '0.5rem 1rem',
+  border: 'none',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
+  transition: 'background-color 0.3s ease',
+};
+
+const btnBuscarLoading: React.CSSProperties = {
+  backgroundColor: '#005f86',
+};
+
 const btnAgregar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
 const btnModificar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
 const btnEliminar = { backgroundColor: '#8B0000', color: 'white', padding: '0.5rem 1rem' };

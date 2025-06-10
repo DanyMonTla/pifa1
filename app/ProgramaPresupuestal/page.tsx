@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useState, ChangeEvent, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent, useMemo } from 'react';
+import FormularioProgramaPresupuestal from '../components/FormularioProgramaPresupuestal';
+import TablaProgramasPresupuestales from '../components/TablaProgramasPresupuestales';
+import BarraAcciones from '../components/BarraAccionesPrograPres';
 
 type ProgramaPresupuestal = {
   nid_programa_presupuestal: string;
@@ -25,7 +28,7 @@ export default function ProgramasPresupuestalesCrud() {
   const [programas, setProgramas] = useState<ProgramaPresupuestal[]>([]);
   const [busquedaId, setBusquedaId] = useState('');
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
-  const [mensaje, setMensaje] = useState('');
+  const [mensaje, setMensaje] = useState<{ texto: string; tipo: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     const obtenerProgramas = async () => {
@@ -33,40 +36,62 @@ export default function ProgramasPresupuestalesCrud() {
         const res = await fetch('http://localhost:3001/programa-presupuestal');
         const data = await res.json();
         setProgramas(data);
-      } catch (error) {
-        alert('Error al obtener los programas presupuestales');
+      } catch {
+        mostrarMensaje('Error al obtener los programas presupuestales', 'error');
       }
     };
     obtenerProgramas();
   }, []);
+
+  const programaEncontrado = useMemo(() => {
+    const id = Number(busquedaId.trim());
+    if (isNaN(id)) return null;
+    return programas.find(p => Number(p.nid_programa_presupuestal) === id) || null;
+  }, [busquedaId, programas]);
+
+ const handleBuscarPorId = () => {
+  const idBuscado = Number(busquedaId.trim());
+  if (isNaN(idBuscado)) {
+    mostrarMensaje('Por favor, ingresa un ID válido', 'error');
+    return;
+  }
+
+  if (!programaEncontrado) {
+    mostrarMensaje('No se encontró un programa con ese ID', 'error');
+    return;
+  }
+
+  // Cortamos la fecha para que sea compatible con el input[type="date"]
+  setForm({
+    ...programaEncontrado,
+    dfecha_alta: programaEncontrado.dfecha_alta.split('T')[0],
+    dfecha_baja: programaEncontrado.dfecha_baja
+      ? programaEncontrado.dfecha_baja.split('T')[0]
+      : '',
+  });
+
+  // ✅ Solo cambiamos a modo "visualizar" si no estás ya en "modificar" o "eliminar"
+  if (modo !== 'modificar' && modo !== 'eliminar') {
+    setModo('visualizar');
+  }
+
+  mostrarMensaje('Programa encontrado', 'success');
+};
+
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleBuscarPorId = () => {
-    const idBuscado = Number(busquedaId.trim());
-    if (isNaN(idBuscado)) {
-      alert('Por favor, ingresa un ID válido');
-      return;
-    }
-    const encontrado = programas.find(p => Number(p.nid_programa_presupuestal) === idBuscado);
-    if (encontrado) {
-      setForm(encontrado);
-      setModo('visualizar');
-    } else {
-      alert('No se encontró un programa con ese ID');
-    }
-  };
-
-  const mostrarMensaje = (texto: string) => {
-    setMensaje(texto);
-    setTimeout(() => setMensaje(''), 3000);
+  const mostrarMensaje = (texto: string, tipo: 'success' | 'error' = 'success') => {
+    setMensaje({ texto, tipo });
+    setTimeout(() => setMensaje(null), 3000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const camposVacios = [
       form.nid_programa_presupuestal,
       form.cprograma_presupuestal,
@@ -74,7 +99,10 @@ export default function ProgramasPresupuestalesCrud() {
       form.dfecha_alta
     ].some(val => typeof val === 'string' && val.trim() === '');
 
-    if (camposVacios) return alert('Por favor, completa todos los campos obligatorios.');
+    if (camposVacios) {
+      mostrarMensaje('Por favor, completa todos los campos obligatorios.', 'error');
+      return;
+    }
 
     try {
       if (modo === 'modificar') {
@@ -101,9 +129,9 @@ export default function ProgramasPresupuestalesCrud() {
       const res = await fetch('http://localhost:3001/programa-presupuestal');
       const data = await res.json();
       setProgramas(data);
-      mostrarMensaje('Operación exitosa');
-    } catch (error) {
-      alert('Error en la operación. Verifica la conexión al servidor.');
+      mostrarMensaje('Operación exitosa', 'success');
+    } catch {
+      mostrarMensaje('Error en la operación. Verifica la conexión al servidor.', 'error');
     }
 
     setForm({
@@ -130,139 +158,50 @@ export default function ProgramasPresupuestalesCrud() {
       <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>{obtenerTitulo()}</h2>
 
       {mensaje && (
-        <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'green', color: 'white', padding: '1rem 2rem', borderRadius: '8px', zIndex: 1000 }}>
-          ✅ {mensaje}
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: mensaje.tipo === 'success' ? 'green' : 'darkred',
+          color: 'white',
+          padding: '1rem 2rem',
+          borderRadius: '8px',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          {mensaje.tipo === 'success' ? '✅' : '❌'} {mensaje.texto}
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
-        <input
-          placeholder="Buscar por ID"
-          value={busquedaId}
-          onChange={(e) => setBusquedaId(e.target.value)}
-          style={{ flex: 1, padding: '0.5rem' }}
-        />
-        <button onClick={handleBuscarPorId} style={btnBuscar}>Buscar</button>
-        <button onClick={() => setModo('agregar')} style={btnAgregar}>Agregar</button>
-        <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
-        <button onClick={() => setModo('eliminar')} style={btnEliminar}>Desactivar</button>
+      <BarraAcciones
+        busquedaId={busquedaId}
+        onChangeBusqueda={(e) => setBusquedaId(e.target.value)}
+        onBuscar={handleBuscarPorId}
+        onAgregar={() => {setForm({nid_programa_presupuestal: '',cprograma_presupuestal: '',cdefinicion_programa_presupuestal: '',
+        bhabilitado: true,dfecha_alta: '',dfecha_baja: '',});
+        setModo('agregar');
+}}
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <input
-            type="checkbox"
-            checked={mostrarInactivos}
-            onChange={() => setMostrarInactivos(prev => !prev)}
-          />
-          Ver inhabilitados
-        </label>
-      </div>
+        onModificar={() => setModo('modificar')}
+        onEliminar={() => setModo('eliminar')}
+        mostrarInactivos={mostrarInactivos}
+        onToggleInactivos={() => setMostrarInactivos(prev => !prev)}
+      />
 
-      {modo && (
-        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem', maxWidth: '600px', marginInline: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-            <label style={{ width: '200px' }}>ID Programa</label>
-            <input
-              name="nid_programa_presupuestal"
-              value={form.nid_programa_presupuestal}
-              onChange={handleChange}
-              style={inputStyle}
-              readOnly={modo !== 'agregar'}
-            />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-            <label style={{ width: '200px' }}>Nombre del Programa</label>
-            <input
-              name="cprograma_presupuestal"
-              value={form.cprograma_presupuestal}
-              onChange={handleChange}
-              style={inputStyle}
-              readOnly={modo === 'eliminar' || modo === 'visualizar'}
-            />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-            <label style={{ width: '200px' }}>Definición del Programa</label>
-            <textarea
-              name="cdefinicion_programa_presupuestal"
-              value={form.cdefinicion_programa_presupuestal}
-              onChange={handleChange}
-              style={{ ...inputStyle, height: '80px' }}
-              readOnly={modo === 'eliminar' || modo === 'visualizar'}
-            />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-            <label style={{ width: '200px' }}>Fecha de Alta</label>
-            <input
-              type="date"
-              name="dfecha_alta"
-              value={form.dfecha_alta}
-              onChange={handleChange}
-              style={inputStyle}
-              readOnly={modo === 'eliminar' || modo === 'visualizar'}
-            />
-          </div>
+      <FormularioProgramaPresupuestal
+        form={form}
+        modo={modo}
+        onChange={handleChange}
+        onSubmit={handleSubmit}
+      />
 
-          {modo !== 'visualizar' && (
-            <div style={{ textAlign: 'center' }}>
-              <button type="submit" style={{ marginTop: '1rem', padding: '0.75rem 2rem', backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6', color: 'white', border: 'none' }}>
-                {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Desactivar' : 'Guardar'}
-              </button>
-            </div>
-          )}
-        </form>
-      )}
-
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th style={thStyle}>ID</th>
-            <th style={thStyle}>Programa Presupuestal</th>
-            <th style={thStyle}>Definición</th>
-            <th style={thStyle}>Alta</th>
-            <th style={thStyle}>Baja</th>
-            <th style={thStyle}>Habilitado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {programas
-            .filter(p => mostrarInactivos || p.bhabilitado)
-            .map(p => (
-              <tr key={p.nid_programa_presupuestal} style={{ opacity: p.bhabilitado ? 1 : 0.5 }}>
-                <td style={tdStyle}>{p.nid_programa_presupuestal}</td>
-                <td style={tdStyle}>{p.cprograma_presupuestal}</td>
-                <td style={tdStyle}>{p.cdefinicion_programa_presupuestal}</td>
-                <td style={tdStyle}>{p.dfecha_alta}</td>
-                <td style={tdStyle}>{p.dfecha_baja || ''}</td>
-                <td style={{ ...tdStyle, color: p.bhabilitado ? 'green' : 'red' }}>
-                  {p.bhabilitado ? 'Sí' : 'No'}
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+      <TablaProgramasPresupuestales
+        programas={programas}
+        mostrarInactivos={mostrarInactivos}
+      />
     </div>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  border: '1px solid #ccc',
-  padding: '8px',
-  backgroundColor: '#003B5C',
-  color: 'white',
-};
-
-const tdStyle: React.CSSProperties = {
-  border: '1px solid #ccc',
-  padding: '8px',
-  backgroundColor: '#fff',
-  color: '#000',
-};
-
-const inputStyle: React.CSSProperties = {
-  flex: 1,
-  padding: '0.5rem',
-};
-
-const btnBuscar = { backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' };
-const btnAgregar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
-const btnModificar = { backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' };
-const btnEliminar = { backgroundColor: '#8B0000', color: 'white', padding: '0.5rem 1rem' };

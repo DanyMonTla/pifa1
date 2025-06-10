@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, ChangeEvent } from "react";
 import AreasRespFormulario from "../components/AreasRespFormulario";
+import AreasRespTabla from "../components/AreasRespTabla";
+import AreasRespAcciones from "../components/AreasRespAcciones";
 
 type AreaResponsable = {
   nid_area: string;
@@ -30,6 +32,7 @@ export default function AreasResponsablesCrud() {
   const [verInactivos, setVerInactivos] = useState(false);
   const [soloVisualizacion, setSoloVisualizacion] = useState(false);
   const [mensaje, setMensaje] = useState("");
+  const [error, setError] = useState("");
   const [idBuscadoMostrado, setIdBuscadoMostrado] = useState<string | null>(null);
 
   const API_URL = "http://localhost:3001/areas-responsables";
@@ -40,8 +43,8 @@ export default function AreasResponsablesCrud() {
     creporta_a: "Reporta A",
     ccorreo_electronico_ur: "Correo Electrónico",
     dfecha_alta: "Fecha Alta",
+    bhabilitado: "Activo",
     dfecha_baja: "Fecha Baja",
-    bhabilitado: "Habilitado",
   };
 
   useEffect(() => {
@@ -75,78 +78,79 @@ export default function AreasResponsablesCrud() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  const camposVacios = Object.entries(form)
-    .filter(([key]) => key !== "bhabilitado" && key !== "dfecha_baja")
-    .some(([, val]) => typeof val === "string" && val.trim() === "");
-  if (camposVacios) return alert("Por favor, completa todos los campos.");
+    e.preventDefault();
+    const camposVacios = Object.entries(form)
+      .filter(([key]) => key !== "bhabilitado" && key !== "dfecha_baja")
+      .some(([, val]) => typeof val === "string" && val.trim() === "");
+    if (camposVacios) return alert("Por favor, completa todos los campos.");
 
-  try {
-    if (modo === "modificar") {
-      const confirmar = confirm("¿Deseas actualizar esta área responsable?");
-      if (!confirmar) return;
+    try {
+      if (modo === "modificar") {
+        const confirmar = confirm("¿Deseas actualizar esta área responsable?");
+        if (!confirmar) return;
 
-      const { nid_area, ...restoForm } = form;
+        const { nid_area, ...restoForm } = form;
 
-      await fetch(`${API_URL}/${Number(nid_area)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(restoForm),
-      });
+        await fetch(`${API_URL}/${Number(nid_area)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(restoForm),
+        });
 
-      setMensaje("Área modificada exitosamente");
-    } else if (modo === "eliminar") {
-  const confirmar = confirm("¿Deseas marcar como inactiva esta área responsable?");
-  if (!confirmar) return;
+        setMensaje("Área modificada exitosamente");
+      } else if (modo === "eliminar") {
+        if (!form.bhabilitado) {
+          setError("Esta área ya está inactiva.");
+          setTimeout(() => setError(""), 2000);
+          return;
+        }
 
-  const fechaBaja = new Date().toISOString().slice(0, 10);
+        const confirmar = confirm("¿Deseas marcar como inactiva esta área responsable?");
+        if (!confirmar) return;
 
-  await fetch(`${API_URL}/estado/${form.nid_area}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      bhabilitado: false,
-      dfecha_baja: fechaBaja,
-    }),
-  });
+        const fechaBaja = new Date().toISOString().slice(0, 10);
 
-  setMensaje("Área marcada como inactiva");    
+        await fetch(`${API_URL}/estado/${form.nid_area}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bhabilitado: false,
+            dfecha_baja: fechaBaja,
+          }),
+        });
 
-    } else if (modo === "agregar") {
-      await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+        setMensaje("Área marcada como inactiva");
 
-      setMensaje("Área agregada exitosamente");
+      } else if (modo === "agregar") {
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+
+        setMensaje("Área agregada exitosamente");
+      }
+
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const areasConvertidas = (Array.isArray(data) ? data : data.areas || []).map((a: any) => ({
+        ...a,
+        bhabilitado: typeof a.bhabilitado === "object"
+          ? a.bhabilitado?.data?.[0] === 1
+          : Boolean(a.bhabilitado),
+      }));
+      setAreas(areasConvertidas);
+
+      resetForm();
+      setModo(null);
+      setSoloVisualizacion(false);
+      setIdBuscadoMostrado(null);
+      setTimeout(() => setMensaje(""), 3000);
+    } catch (err) {
+      console.error(err);
+      alert("Error al realizar la operación.");
     }
-
-    // ✅ Refrescar datos
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    const areasConvertidas = (Array.isArray(data) ? data : data.areas || []).map((a: any) => ({
-      ...a,
-      bhabilitado: typeof a.bhabilitado === "object"
-        ? a.bhabilitado?.data?.[0] === 1
-        : Boolean(a.bhabilitado),
-    }));
-    setAreas(areasConvertidas);
-
-    // ✅ Limpiar formulario y estado
-    resetForm();
-    setModo(null);
-    setSoloVisualizacion(false);
-    setIdBuscadoMostrado(null);
-
-    setTimeout(() => setMensaje(""), 3000);
-  } catch (err) {
-    console.error(err);
-    alert("Error al realizar la operación.");
-  }
-};
-
-
+  };
 
   const resetForm = () => {
     setForm({
@@ -164,23 +168,31 @@ export default function AreasResponsablesCrud() {
     setBusquedaId("");
   };
 
-  const handleBuscarPorId = () => {
-    const idBuscado = parseInt(busquedaId.trim());
-    const areaSeleccionada = areas.find(a => parseInt(a.nid_area) === idBuscado);
+ const handleBuscarPorId = () => {
+  const idBuscado = parseInt(busquedaId.trim());
+  const areaSeleccionada = areas.find(a => parseInt(a.nid_area) === idBuscado);
 
-    if (areaSeleccionada) {
-      setForm({
-        ...areaSeleccionada,
-        nid_area: String(areaSeleccionada.nid_area),
-      });
+  if (areaSeleccionada) {
+    setForm({
+      ...areaSeleccionada,
+      nid_area: String(areaSeleccionada.nid_area),
+    });
+
+    // ✅ Ya no cambiamos el modo si está en modificar o eliminar
+    if (modo === "modificar" || modo === "eliminar") {
+      setSoloVisualizacion(false);
+    } else {
+      // Solo si NO hay un modo activo, entramos a visualización
       setModo(null);
       setSoloVisualizacion(true);
-      setIdBuscadoMostrado(busquedaId.trim());
-    } else {
-      alert("No se encontró un área con ese ID");
-      setIdBuscadoMostrado(null);
     }
-  };
+
+    setIdBuscadoMostrado(busquedaId.trim());
+  } else {
+    alert("No se encontró un área con ese ID");
+    setIdBuscadoMostrado(null);
+  }
+};
 
   const obtenerTitulo = () => {
     if (modo === "agregar") return "Agregar área responsable";
@@ -207,33 +219,32 @@ export default function AreasResponsablesCrud() {
         </div>
       )}
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleBuscarPorId();
-        }}
-        style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}
-      >
-        <input
-          placeholder="Buscar por ID"
-          value={busquedaId}
-          onChange={(e) => setBusquedaId(e.target.value)}
-          style={{ flex: 1, padding: "0.5rem" }}
-        />
-        <button type="submit" style={btnStyle("#0077b6")}>Buscar</button>
-        <button type="button" onClick={() => { resetForm(); setModo("agregar"); }} style={btnStyle("#004c75")}>Agregar</button>
-        <button type="button" onClick={() => { if (!form.nid_area) return alert("Primero busca un área para modificar."); setModo("modificar"); setSoloVisualizacion(false); }} style={btnStyle("#004c75")}>Modificar</button>
-        <button type="button" onClick={() => { if (!form.nid_area) return alert("Primero busca un área para eliminar."); setModo("eliminar"); setSoloVisualizacion(false); }} style={btnStyle("#8B0000")}>Eliminar</button>
+      {error && (
+        <div style={{
+          backgroundColor: "#8B0000",
+          padding: "1rem",
+          color: "white",
+          textAlign: "center",
+          borderRadius: "8px",
+          marginBottom: "1rem",
+          fontWeight: "bold"
+        }}>
+          ⚠️ {error}
+        </div>
+      )}
 
-        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <input
-            type="checkbox"
-            checked={verInactivos}
-            onChange={() => setVerInactivos(!verInactivos)}
-          />
-          Ver inhabilitados
-        </label>
-      </form>
+      <AreasRespAcciones
+        form={form}
+        setModo={setModo}
+        resetForm={resetForm}
+        setSoloVisualizacion={setSoloVisualizacion}
+        setError={setError}
+        verInactivos={verInactivos}
+        setVerInactivos={setVerInactivos}
+        handleBuscar={handleBuscarPorId}
+        busquedaId={busquedaId}
+        setBusquedaId={setBusquedaId}
+      />
 
       <AreasRespFormulario
         form={form}
@@ -244,52 +255,11 @@ export default function AreasResponsablesCrud() {
         handleSubmit={handleSubmit}
       />
 
-      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "2rem" }}>
-        <thead>
-          <tr>
-            {Object.keys(form).map((key) => (
-              <th key={key} style={thStyle}>{encabezados[key] || key.toUpperCase()}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {areas
-            .filter(a => verInactivos || a.bhabilitado)
-            .map(a => (
-              <tr key={a.nid_area} style={{ opacity: a.bhabilitado ? 1 : 0.5 }}>
-                {Object.entries(a).map(([key, val]) => (
-                  <td key={key} style={{
-                    ...tdStyle,
-                    color: key === "bhabilitado" ? (a.bhabilitado ? "green" : "red") : "#000"
-                  }}>
-                    {key === "bhabilitado" ? (val ? "Sí" : "No") : val}
-                  </td>
-                ))}
-              </tr>
-            ))}
-        </tbody>
-      </table>
+      <AreasRespTabla
+        areas={areas}
+        verInactivos={verInactivos}
+        encabezados={encabezados}
+      />
     </div>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  border: "1px solid #ccc",
-  padding: "8px",
-  backgroundColor: "#003B5C",
-  color: "white",
-};
-
-const tdStyle: React.CSSProperties = {
-  border: "1px solid #ccc",
-  padding: "8px",
-  backgroundColor: "#fff",
-};
-
-const btnStyle = (color: string): React.CSSProperties => ({
-  backgroundColor: color,
-  color: "white",
-  padding: "0.5rem 1rem",
-  border: "none",
-  cursor: "pointer",
-});

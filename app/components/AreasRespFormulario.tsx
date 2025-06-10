@@ -29,10 +29,13 @@ export default function AreasRespFormulario({
   handleSubmit,
 }: Props) {
   const mostrarCampo = (key: string) => {
-    if (modo === "agregar" && (key === "dfecha_baja" || key === "bhabilitado")) return false;
-    if (modo === "modificar" && key === "bhabilitado") return false;
-    return true;
-  };
+  if (modo === "agregar" && (key === "dfecha_baja" || key === "bhabilitado")) return false;
+  if (modo === "modificar" && (key === "dfecha_baja" || key === "bhabilitado")) return false;
+  if ((modo === "eliminar" || soloVisualizacion) && key === "dfecha_baja" && form.bhabilitado) return false;
+  return true;
+};
+
+
 
   const isReadOnly = modo === "eliminar" || soloVisualizacion;
 
