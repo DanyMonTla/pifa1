@@ -89,61 +89,70 @@ export default function ProgramasPresupuestalesCrud() {
     setTimeout(() => setMensaje(null), 3000);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    const camposVacios = [
-      form.nid_programa_presupuestal,
-      form.cprograma_presupuestal,
-      form.cdefinicion_programa_presupuestal,
-      form.dfecha_alta
-    ].some(val => typeof val === 'string' && val.trim() === '');
+  const camposVacios = [
+    form.nid_programa_presupuestal,
+    form.cprograma_presupuestal,
+    form.cdefinicion_programa_presupuestal,
+    form.dfecha_alta,
+  ].some(val => typeof val === 'string' && val.trim() === '');
 
-    if (camposVacios) {
-      mostrarMensaje('Por favor, completa todos los campos obligatorios.', 'error');
-      return;
-    }
+  if (camposVacios) {
+    mostrarMensaje('Por favor, completa todos los campos obligatorios.', 'error');
+    return;
+  }
 
-    try {
-      if (modo === 'modificar') {
-        if (!confirm('¿Deseas actualizar este programa presupuestal?')) return;
-        await fetch(`http://localhost:3001/programa-presupuestal/${form.nid_programa_presupuestal}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        });
-      } else if (modo === 'eliminar') {
-        if (!confirm('¿Deseas desactivar este programa presupuestal?')) return;
-        await fetch(`http://localhost:3001/programa-presupuestal/estado/${form.nid_programa_presupuestal}`, {
-          method: 'PATCH',
-        });
-      } else if (modo === 'agregar') {
-        if (!confirm('¿Deseas agregar este nuevo programa presupuestal?')) return;
-        await fetch('http://localhost:3001/programa-presupuestal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        });
-      }
-
-      const res = await fetch('http://localhost:3001/programa-presupuestal');
-      const data = await res.json();
-      setProgramas(data);
-      mostrarMensaje('Operación exitosa', 'success');
-    } catch {
-      mostrarMensaje('Error en la operación. Verifica la conexión al servidor.', 'error');
-    }
-
-    setForm({
-      nid_programa_presupuestal: '',
-      cprograma_presupuestal: '',
-      cdefinicion_programa_presupuestal: '',
-      bhabilitado: true,
-      dfecha_alta: '',
-      dfecha_baja: '',
-    });
-    setModo(null);
+  // ✅ Corrección: convertir los datos antes de enviarlos
+  const datosParaEnviar = {
+    ...form,
+    nid_programa_presupuestal: Number(form.nid_programa_presupuestal),
+    dfecha_alta: new Date(form.dfecha_alta),
+    dfecha_baja: form.dfecha_baja ? new Date(form.dfecha_baja) : undefined,
   };
+
+  try {
+    if (modo === 'modificar') {
+      if (!confirm('¿Deseas actualizar este programa presupuestal?')) return;
+      await fetch(`http://localhost:3001/programa-presupuestal/${form.nid_programa_presupuestal}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosParaEnviar),
+      });
+    } else if (modo === 'eliminar') {
+      if (!confirm('¿Deseas desactivar este programa presupuestal?')) return;
+      await fetch(`http://localhost:3001/programa-presupuestal/estado/${form.nid_programa_presupuestal}`, {
+        method: 'PATCH',
+      });
+    } else if (modo === 'agregar') {
+      if (!confirm('¿Deseas agregar este nuevo programa presupuestal?')) return;
+      await fetch('http://localhost:3001/programa-presupuestal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosParaEnviar),
+      });
+    }
+
+    const res = await fetch('http://localhost:3001/programa-presupuestal');
+    const data = await res.json();
+    setProgramas(data);
+    mostrarMensaje('Operación exitosa', 'success');
+  } catch {
+    mostrarMensaje('Error en la operación. Verifica la conexión al servidor.', 'error');
+  }
+
+  setForm({
+    nid_programa_presupuestal: '',
+    cprograma_presupuestal: '',
+    cdefinicion_programa_presupuestal: '',
+    bhabilitado: true,
+    dfecha_alta: '',
+    dfecha_baja: '',
+  });
+  setModo(null);
+};
+
 
   const obtenerTitulo = () => {
     if (modo === 'agregar') return 'Agregar nuevo Programa Presupuestal';
@@ -180,16 +189,66 @@ export default function ProgramasPresupuestalesCrud() {
         busquedaId={busquedaId}
         onChangeBusqueda={(e) => setBusquedaId(e.target.value)}
         onBuscar={handleBuscarPorId}
-        onAgregar={() => {setForm({nid_programa_presupuestal: '',cprograma_presupuestal: '',cdefinicion_programa_presupuestal: '',
-        bhabilitado: true,dfecha_alta: '',dfecha_baja: '',});
-        setModo('agregar');
-}}
+        onAgregar={() => {
+          setForm({
+            nid_programa_presupuestal: '',
+            cprograma_presupuestal: '',
+            cdefinicion_programa_presupuestal: '',
+            bhabilitado: true,
+            dfecha_alta: '',
+            dfecha_baja: '',
+          });
+          setModo('agregar');
+        }}
+        onModificar={() => {
+          if (!form.bhabilitado) {
+            mostrarMensaje('No se puede modificar un registro inactivo', 'error');
+            return;
+          }
+          setModo('modificar');
+        }}
+        onEliminar={() => {
+          if (!form.bhabilitado) {
+            mostrarMensaje('El registro ya está inactivo', 'error');
+            return;
+          }
+          setModo('eliminar');
+        }}
+        onReactivar={async () => {
+          if (form.bhabilitado) {
+            mostrarMensaje('El registro ya está activo', 'error');
+            return;
+          }
 
-        onModificar={() => setModo('modificar')}
-        onEliminar={() => setModo('eliminar')}
+          if (!confirm('¿Deseas reactivar este programa presupuestal?')) return;
+
+          try {
+            await fetch(`http://localhost:3001/programa-presupuestal/reactivar/${form.nid_programa_presupuestal}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+            });
+
+            const nuevos = await fetch('http://localhost:3001/programa-presupuestal').then(r => r.json());
+            setProgramas(nuevos);
+
+            setForm(prev => ({
+              ...prev,
+              bhabilitado: true,
+              dfecha_baja: '',
+            }));
+
+            setModo('visualizar');
+            mostrarMensaje('Programa reactivado correctamente', 'success');
+          } catch {
+            mostrarMensaje('Error al reactivar el programa', 'error');
+          }
+        }}
         mostrarInactivos={mostrarInactivos}
         onToggleInactivos={() => setMostrarInactivos(prev => !prev)}
+        form={form}
       />
+
+
 
       <FormularioProgramaPresupuestal
         form={form}

@@ -66,13 +66,34 @@ export default function FormularioProgramaPresupuestal({ form, modo, onChange, o
         />
       </div>
 
-      {modo !== 'visualizar' && (
+     {modo !== 'visualizar' && (
         <div style={{ textAlign: 'center' }}>
-          <button type="submit" style={{ marginTop: '1rem', padding: '0.75rem 2rem', backgroundColor: modo === 'eliminar' ? '#8B0000' : '#0077b6', color: 'white', border: 'none' }}>
+          <button
+            type="submit"
+            disabled={
+              (modo === 'modificar' || modo === 'eliminar') && !form.bhabilitado
+            }
+            style={{
+              marginTop: '1rem',
+              padding: '0.75rem 2rem',
+              backgroundColor: (modo === 'eliminar' ? '#8B0000' : '#0077b6'),
+              color: 'white',
+              border: 'none',
+              opacity:
+                (modo === 'modificar' || modo === 'eliminar') && !form.bhabilitado
+                  ? 0.5
+                  : 1,
+              cursor:
+                (modo === 'modificar' || modo === 'eliminar') && !form.bhabilitado
+                  ? 'not-allowed'
+                  : 'pointer',
+            }}
+          >
             {modo === 'modificar' ? 'Actualizar' : modo === 'eliminar' ? 'Desactivar' : 'Guardar'}
           </button>
         </div>
       )}
+
     </form>
   );
 }
