@@ -151,9 +151,13 @@ export default function UsuariosCrud() {
       nid_area: parseInt(form.nid_area),
       nid_rol: parseInt(form.nid_rol),
       dfecha_alta: form.dfecha_alta || new Date().toISOString().slice(0, 10),
-      dfecha_baja: modo === 'eliminar' ? new Date().toISOString().slice(0, 10) : form.dfecha_baja || '',
+      dfecha_baja:
+        modo === 'eliminar'
+          ? new Date().toISOString().slice(0, 10)
+          : form.dfecha_baja || null,
       bhabilitado: modo === 'eliminar' ? false : true,
     };
+
 
     try {
       if (modo === 'agregar') {
@@ -280,13 +284,13 @@ export default function UsuariosCrud() {
         <button
           type="button"
           onClick={() => setModo('modificar')}
-          disabled={!form.cid_usuario || form.bhabilitado === false}
+          disabled={form.cid_usuario !== '' && form.bhabilitado === false}
           style={{
             backgroundColor: '#004c75',
             color: 'white',
             padding: '0.5rem 1rem',
-            opacity: !form.cid_usuario || form.bhabilitado === false ? 0.5 : 1,
-            cursor: !form.cid_usuario || form.bhabilitado === false ? 'not-allowed' : 'pointer',
+            opacity: form.cid_usuario !== '' && form.bhabilitado === false ? 0.5 : 1,
+            cursor: form.cid_usuario !== '' && form.bhabilitado === false ? 'not-allowed' : 'pointer',
           }}
         >
           Modificar
@@ -295,17 +299,18 @@ export default function UsuariosCrud() {
         <button
           type="button"
           onClick={() => setModo('eliminar')}
-          disabled={!form.cid_usuario || form.bhabilitado === false}
+          disabled={form.cid_usuario !== '' && form.bhabilitado === false}
           style={{
             backgroundColor: '#8B0000',
             color: 'white',
             padding: '0.5rem 1rem',
-            opacity: !form.cid_usuario || form.bhabilitado === false ? 0.5 : 1,
-            cursor: !form.cid_usuario || form.bhabilitado === false ? 'not-allowed' : 'pointer',
+            opacity: form.cid_usuario !== '' && form.bhabilitado === false ? 0.5 : 1,
+            cursor: form.cid_usuario !== '' && form.bhabilitado === false ? 'not-allowed' : 'pointer',
           }}
         >
           Desactivar
         </button>
+
 
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
           <input type="checkbox" checked={mostrarInactivos} onChange={() => setMostrarInactivos(p => !p)} />

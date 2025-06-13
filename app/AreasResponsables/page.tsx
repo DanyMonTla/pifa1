@@ -122,14 +122,23 @@ export default function AreasResponsablesCrud() {
         setMensaje("Área marcada como inactiva");
 
       } else if (modo === "agregar") {
-        await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
+  const formAEnviar = {
+    ...form,
+    nid_area: Number(form.nid_area), // 🟢 Asegurar que vaya como número
+    dfecha_alta: new Date(form.dfecha_alta), // 🟢 Convertir a Date si es string
+    dfecha_baja: null // 🟢 No se debe enviar en alta
+  };
 
-        setMensaje("Área agregada exitosamente");
-      }
+  await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formAEnviar),
+  });
+
+  setMensaje("Área agregada exitosamente");
+}
+
+
 
       await obtenerAreas();
       resetForm();
