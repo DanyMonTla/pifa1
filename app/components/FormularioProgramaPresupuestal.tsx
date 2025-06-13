@@ -20,13 +20,14 @@ export default function FormularioProgramaPresupuestal({ form, modo, onChange, o
   if (!modo) return null;
 
   return (
-    <form onSubmit={onSubmit} style={{ marginBottom: '2rem', maxWidth: '600px', marginInline: 'auto' }}>
+    <form onSubmit={onSubmit} autoComplete="off" style={{ marginBottom: '2rem', maxWidth: '600px', marginInline: 'auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
         <label style={{ width: '200px' }}>ID Programa</label>
         <input
           name="nid_programa_presupuestal"
           value={form.nid_programa_presupuestal}
           onChange={onChange}
+          autoComplete="off"
           style={inputStyle}
           readOnly={modo !== 'agregar'}
         />
@@ -38,6 +39,7 @@ export default function FormularioProgramaPresupuestal({ form, modo, onChange, o
           name="cprograma_presupuestal"
           value={form.cprograma_presupuestal}
           onChange={onChange}
+          autoComplete="off"
           style={inputStyle}
           readOnly={modo === 'eliminar' || modo === 'visualizar'}
         />
@@ -50,6 +52,7 @@ export default function FormularioProgramaPresupuestal({ form, modo, onChange, o
           name="cdefinicion_programa_presupuestal"
           value={form.cdefinicion_programa_presupuestal}
           onChange={onChange}
+          autoComplete="off"
           rows={10}
           style={{
             ...inputStyle,
@@ -68,6 +71,7 @@ export default function FormularioProgramaPresupuestal({ form, modo, onChange, o
           name="dfecha_alta"
           value={form.dfecha_alta}
           onChange={onChange}
+          autoComplete="off"
           style={inputStyle}
           readOnly={modo === 'eliminar' || modo === 'visualizar'}
         />
@@ -81,6 +85,7 @@ export default function FormularioProgramaPresupuestal({ form, modo, onChange, o
               type="text"
               readOnly
               value="No"
+              autoComplete="off"
               style={inputStyle}
             />
           </div>
@@ -89,6 +94,7 @@ export default function FormularioProgramaPresupuestal({ form, modo, onChange, o
             <input
               type="date"
               readOnly
+              autoComplete="off"
               value={form.dfecha_baja || ''}
               style={inputStyle}
             />

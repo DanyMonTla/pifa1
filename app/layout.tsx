@@ -10,18 +10,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 const TITULOS_POR_RUTA: Record<string, string> = {
   '/indicadores': 'Listado de Indicadores',
   '/usuarios': 'Gestión de Usuarios',
-  '/ABC': 'Módulos ABC Generales',
-  '/Frecuencia': 'ABC Frecuencia de indicadores',
-  '/Fuente': 'ABC Fuente de indicadores',
-  '/TipoCalculo': 'ABC Tipo Cálculo de indicadores',
-  '/TipoIndicador': 'ABC Tipo Indicadores',
-  '/Usuarios': 'ABC Usuarios',
-  '/ProgramaPresupuestal': 'ABC de Programa presupuestal',
-  '/AreasResponsables': 'ABC de areas responsables',
-  '/Roles': 'ABC de roles',
-  '/TipoPrograPres': 'ABC de Tipo Programa',
-  '/EducacionContinuaCEDETEC': 'Actividades Educación Continua',
-  '/ActividadesCulturales': 'Actividades Culturales',
+  // ...
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -31,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const isLoginPage = pathname === '/' || pathname === '/login';
 
   const [nombre, setNombre] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('nombre_usuario');
@@ -38,11 +28,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }, []);
 
   const handleLogout = () => {
-    const confirmar = window.confirm('¿Estás segur@ de cerrar sesión?');
-    if (confirmar) {
-      localStorage.removeItem('nombre_usuario');
-      router.push('/');
-    }
+    localStorage.removeItem('nombre_usuario');
+    setShowModal(false);
+    router.push('/');
   };
 
   return (
@@ -63,15 +51,60 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="menu-izquierda">
               <button onClick={() => router.push('/')}>Inicio</button>
               <button>Directorio</button>
-              <button onClick={handleLogout}>Salir</button>
+              <button onClick={() => setShowModal(true)}>Salir</button>
             </div>
             <div className="usuario">{nombre || 'Nombre del Usuario'}</div>
           </nav>
         )}
 
-        <main className="contenido">
-          {children}
-        </main>
+        {showModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              backgroundColor: '#fff',
+              padding: '2rem',
+              borderRadius: '10px',
+              textAlign: 'center',
+              maxWidth: '300px',
+              boxShadow: '0 0 10px rgba(0,0,0,0.3)'
+            }}>
+              <p style={{ marginBottom: '1.5rem', fontSize: '1.1rem' }}>
+                ¿Estás segur@ de cerrar sesión?
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                <button onClick={handleLogout} style={{
+                  backgroundColor: '#c70000',
+                  color: 'white',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}>Sí, salir</button>
+                <button onClick={() => setShowModal(false)} style={{
+                  backgroundColor: '#aaa',
+                  color: '#000',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  border: '1px solid #888',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}>
+                  Cancelar
+                </button>
+
+              </div>
+            </div>
+          </div>
+        )}
+
+        <main className="contenido">{children}</main>
       </body>
     </html>
   );

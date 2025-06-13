@@ -17,7 +17,7 @@ type Props = {
 
 export default function RolesFormulario({ form, modo, onChange, onSubmit }: Props) {
   return (
-    <form onSubmit={onSubmit} style={formStyle}>
+    <form onSubmit={onSubmit} autoComplete="off" style={formStyle}>
       <div style={fieldRow}>
         <label htmlFor="nidRol" style={labelStyle}>ID Rol:</label>
         <input
@@ -27,6 +27,7 @@ export default function RolesFormulario({ form, modo, onChange, onSubmit }: Prop
           placeholder="ID Rol"
           value={form.nidRol}
           onChange={onChange}
+          autoComplete="off"
           style={inputStyle}
           readOnly={modo !== 'agregar'}
         />
@@ -34,22 +35,23 @@ export default function RolesFormulario({ form, modo, onChange, onSubmit }: Prop
 
       {modo !== 'agregar' && modo !== 'modificar' ? (
         <div style={fieldRow}>
-            <label style={labelStyle}>Habilitado:</label>
-            <input
+          <label style={labelStyle}>Habilitado:</label>
+          <input
             type="text"
             value={form.bhabilitado ? 'Sí' : 'No'}
             readOnly
+            autoComplete="off"
             style={inputStyle}
-            />
+          />
         </div>
-        ) : (
+      ) : (
         <input
-            type="hidden"
-            name="bhabilitado"
-            value={form.bhabilitado ? 'true' : 'false'}
+          type="hidden"
+          name="bhabilitado"
+          value={form.bhabilitado ? 'true' : 'false'}
+          autoComplete="off"
         />
-        )}
-
+      )}
 
       <div style={fieldRow}>
         <label htmlFor="crol" style={labelStyle}>Rol:</label>
@@ -59,6 +61,7 @@ export default function RolesFormulario({ form, modo, onChange, onSubmit }: Prop
           placeholder="Rol"
           value={form.crol}
           onChange={onChange}
+          autoComplete="off"
           style={inputStyle}
           readOnly={modo === 'eliminar' || modo === null}
         />
@@ -72,6 +75,7 @@ export default function RolesFormulario({ form, modo, onChange, onSubmit }: Prop
           type="date"
           value={form.dfechaAlta}
           onChange={onChange}
+          autoComplete="off"
           style={inputStyle}
           readOnly={modo === 'eliminar' || modo === null}
         />
@@ -85,6 +89,7 @@ export default function RolesFormulario({ form, modo, onChange, onSubmit }: Prop
             name="dfechaBaja"
             type="date"
             value={form.dfechaBaja}
+            autoComplete="off"
             style={inputStyle}
             readOnly
           />
@@ -92,7 +97,13 @@ export default function RolesFormulario({ form, modo, onChange, onSubmit }: Prop
       )}
 
       {modo && (
-        <div style={{ marginLeft: '120px', marginTop: '1rem', width: 'calc(100% - 120px)', display: 'flex', justifyContent: 'center' }}>
+        <div style={{
+          marginLeft: '120px',
+          marginTop: '1rem',
+          width: 'calc(100% - 120px)',
+          display: 'flex',
+          justifyContent: 'center'
+        }}>
           <button
             type="submit"
             style={{

@@ -73,8 +73,11 @@ export default function AreasRespFormulario({
                   }
                   onChange={handleChange}
                   readOnly={isReadOnly}
+                  autoComplete="off"
                   style={inputStyle}
                 />
+
+
               )}
             </div>
           );
