@@ -1,5 +1,5 @@
-// components/AreasRespTabla.tsx
-"use client";
+'use client';
+
 import React from "react";
 
 type AreaResponsable = {
@@ -35,35 +35,37 @@ export default function AreasRespTabla({ areas, verInactivos, encabezados }: Pro
       </thead>
       <tbody>
         {areas
-            .filter(a => verInactivos || a.bhabilitado)
-            .map(a => (
+          .filter((a) => verInactivos || a.bhabilitado)
+          .map((a) => (
             <tr key={a.nid_area} style={{ opacity: a.bhabilitado ? 1 : 0.5 }}>
-                {Object.keys(encabezados).map((key) => {
+              {Object.keys(encabezados).map((key) => {
                 if (!verInactivos && key === "dfecha_baja") return null;
 
                 const val = a[key as keyof AreaResponsable];
 
+                const isFecha = key === "dfecha_alta" || key === "dfecha_baja";
+                const isEstado = key === "bhabilitado";
+
                 return (
-                    <td
+                  <td
                     key={key}
                     style={{
-                        ...tdStyle,
-                        color: key === "bhabilitado" ? (a.bhabilitado ? "green" : "red") : "#000",
+                      ...tdStyle,
+                      color: isEstado ? (a.bhabilitado ? "green" : "red") : "#000",
+                      whiteSpace: isFecha ? "nowrap" : "normal",
                     }}
-                    >
-                    {key === "bhabilitado"
-                        ? a.bhabilitado ? "Sí" : "No"
-                        : key === "dfecha_alta" || key === "dfecha_baja"
-                            ? val ? String(val).slice(0, 10) : ""
-                            : val
-                            }
-                    </td>
+                  >
+                    {isEstado
+                      ? a.bhabilitado ? "Sí" : "No"
+                      : isFecha
+                      ? val ? String(val).slice(0, 10) : ""
+                      : val}
+                  </td>
                 );
-                })}
+              })}
             </tr>
-            ))}
-        </tbody>
-
+          ))}
+      </tbody>
     </table>
   );
 }
@@ -73,15 +75,15 @@ const thStyle: React.CSSProperties = {
   padding: "8px",
   backgroundColor: "#003B5C",
   color: "white",
-  textAlign: "center",           // CENTRAR horizontalmente
-  verticalAlign: "middle",       // CENTRAR verticalmente
+  textAlign: "center",
+  verticalAlign: "middle",
 };
-
 
 const tdStyle: React.CSSProperties = {
   border: "1px solid #ccc",
   padding: "8px",
   backgroundColor: "#fff",
-  textAlign: "center",           // CENTRAR horizontalmente
-  verticalAlign: "middle",       // CENTRAR verticalmente
+  textAlign: "center",
+  verticalAlign: "middle",
+  wordBreak: "break-word",
 };

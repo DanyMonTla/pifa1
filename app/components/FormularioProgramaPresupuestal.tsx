@@ -43,14 +43,21 @@ export default function FormularioProgramaPresupuestal({ form, modo, onChange, o
         />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-        <label style={{ width: '200px' }}>Definición del Programa</label>
+      <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '1rem' }}>
+        <label style={{ width: '200px', paddingTop: '0.5rem' }}>Definición del Programa</label>
         <textarea
+          id="cdefinicion_programa_presupuestal"
           name="cdefinicion_programa_presupuestal"
           value={form.cdefinicion_programa_presupuestal}
           onChange={onChange}
-          style={{ ...inputStyle, height: '80px' }}
-          readOnly={modo === 'eliminar' || modo === 'visualizar'}
+          rows={10}
+          style={{
+            ...inputStyle,
+            resize: 'vertical',
+            whiteSpace: 'pre-wrap',
+            overflowWrap: 'break-word',
+            minHeight: '140px',
+          }}
         />
       </div>
 
@@ -66,7 +73,30 @@ export default function FormularioProgramaPresupuestal({ form, modo, onChange, o
         />
       </div>
 
-     {modo !== 'visualizar' && (
+      {modo === 'visualizar' && !form.bhabilitado && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <label style={{ width: '200px' }}>Activo</label>
+            <input
+              type="text"
+              readOnly
+              value="No"
+              style={inputStyle}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+            <label style={{ width: '200px' }}>Fecha de Baja</label>
+            <input
+              type="date"
+              readOnly
+              value={form.dfecha_baja || ''}
+              style={inputStyle}
+            />
+          </div>
+        </>
+      )}
+
+      {modo !== 'visualizar' && (
         <div style={{ textAlign: 'center' }}>
           <button
             type="submit"
@@ -93,7 +123,6 @@ export default function FormularioProgramaPresupuestal({ form, modo, onChange, o
           </button>
         </div>
       )}
-
     </form>
   );
 }

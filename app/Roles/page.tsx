@@ -206,6 +206,7 @@ export default function RolesCrud() {
       )}
 
       <RolesAcciones
+        form={form} // ✅ esta línea es necesaria
         busquedaId={busquedaId}
         setBusquedaId={setBusquedaId}
         buscarRol={buscarRol}
@@ -216,6 +217,7 @@ export default function RolesCrud() {
         puedeReactivar={mostrarInactivos && !form.bhabilitado}
         reactivarRol={reactivarRol}
       />
+
 
       {(modo !== null || form.nidRol !== '') && (
         <RolesFormulario

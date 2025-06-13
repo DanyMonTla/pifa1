@@ -18,38 +18,50 @@ type Props = {
 
 export default function TablaProgramasPresupuestales({ programas, mostrarInactivos }: Props) {
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-      <thead>
-        <tr>
-          <th style={thStyle}>ID</th>
-          <th style={thStyle}>Programa Presupuestal</th>
-          <th style={thStyle}>Definición</th>
-          <th style={thStyle}> Fecha Alta</th>
-          <th style={thStyle}>Activo</th>
-          {mostrarInactivos && <th style={thStyle}>Fecha Baja</th>}
-        </tr>
-      </thead>
-      <tbody>
-        {programas
-          .filter(p => mostrarInactivos || p.bhabilitado)
-          .map(p => (
-            <tr key={p.nid_programa_presupuestal} style={{ opacity: p.bhabilitado ? 1 : 0.5 }}>
-              <td style={tdStyle}>{p.nid_programa_presupuestal}</td>
-              <td style={tdStyle}>{p.cprograma_presupuestal}</td>
-              <td style={tdStyle}>{p.cdefinicion_programa_presupuestal}</td>
-              <td style={tdStyle}>{p.dfecha_alta?.split('T')[0]}</td>
-              <td style={{ ...tdStyle, color: p.bhabilitado ? 'green' : 'red' }}>
-                {p.bhabilitado ? 'Sí' : 'No'}
-              </td>
-              {mostrarInactivos && (
-                <td style={tdStyle}>
-                  {p.dfecha_baja ? p.dfecha_baja.split('T')[0] : ''}
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+        <thead>
+          <tr>
+            <th style={{ ...thStyle, width: '60px' }}>ID</th>
+            <th style={{ ...thStyle, width: '220px' }}>Programa Presupuestal</th>
+            <th style={{ ...thStyle }}>Definición</th>
+            <th style={{ ...thStyle, width: '120px', whiteSpace: 'nowrap' }}>Fecha Alta</th>
+            <th style={{ ...thStyle, width: '80px' }}>Activo</th>
+            {mostrarInactivos && (
+              <th style={{ ...thStyle, width: '120px', whiteSpace: 'nowrap' }}>Fecha Baja</th>
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {programas
+            .filter(p => mostrarInactivos || p.bhabilitado)
+            .map(p => (
+              <tr
+                key={p.nid_programa_presupuestal}
+                style={{
+                  backgroundColor: p.bhabilitado ? 'white' : '#bbb',
+                  color: '#000',
+                }}
+              >
+                <td style={tdStyle}>{p.nid_programa_presupuestal}</td>
+                <td style={tdStyle}>{p.cprograma_presupuestal}</td>
+                <td style={{ ...tdStyle, textAlign: 'justify', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
+                  {p.cdefinicion_programa_presupuestal}
                 </td>
-              )}
-            </tr>
-          ))}
-      </tbody>
-    </table>
+                <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{p.dfecha_alta?.split('T')[0]}</td>
+                <td style={{ ...tdStyle, color: p.bhabilitado ? 'green' : 'red' }}>
+                  {p.bhabilitado ? 'Sí' : 'No'}
+                </td>
+                {mostrarInactivos && (
+                  <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                    {p.dfecha_baja ? p.dfecha_baja.split('T')[0] : '-'}
+                  </td>
+                )}
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -64,7 +76,6 @@ const thStyle: React.CSSProperties = {
 const tdStyle: React.CSSProperties = {
   border: '1px solid #ccc',
   padding: '8px',
-  backgroundColor: '#fff',
-  color: '#000',
   textAlign: 'center',
+  verticalAlign: 'top',
 };

@@ -1,7 +1,16 @@
 'use client';
 import React from 'react';
 
+type Rol = {
+  nidRol: string;
+  crol: string;
+  bhabilitado: boolean;
+  dfechaAlta: string;
+  dfechaBaja?: string;
+};
+
 type Props = {
+  form: Rol;
   busquedaId: string;
   setBusquedaId: (id: string) => void;
   buscarRol: () => void;
@@ -14,6 +23,7 @@ type Props = {
 };
 
 export default function RolesAcciones({
+  form,
   busquedaId,
   setBusquedaId,
   buscarRol,
@@ -40,11 +50,35 @@ export default function RolesAcciones({
       />
       <button onClick={buscarRol} style={btnBuscar}>Buscar</button>
       <button onClick={() => { resetForm(); setModo('agregar'); }} style={btnAgregar}>Agregar</button>
-      <button onClick={() => setModo('modificar')} style={btnModificar}>Modificar</button>
-      <button onClick={() => setModo('eliminar')} style={btnEliminar}>Eliminar</button>
+
+      <button
+        onClick={() => setModo('modificar')}
+        disabled={!form.bhabilitado}
+        style={{
+          ...btnModificar,
+          opacity: form.bhabilitado ? 1 : 0.5,
+          cursor: form.bhabilitado ? 'pointer' : 'not-allowed'
+        }}
+      >
+        Modificar
+      </button>
+
+      <button
+        onClick={() => setModo('eliminar')}
+        disabled={!form.bhabilitado}
+        style={{
+          ...btnEliminar,
+          opacity: form.bhabilitado ? 1 : 0.5,
+          cursor: form.bhabilitado ? 'pointer' : 'not-allowed'
+        }}
+      >
+        Eliminar
+      </button>
+
       {mostrarInactivos && puedeReactivar && (
         <button onClick={reactivarRol} style={btnReactivar}>Reactivar</button>
       )}
+
       <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
         <input
           type="checkbox"
@@ -57,6 +91,7 @@ export default function RolesAcciones({
   );
 }
 
+// Estilos originales conservados
 const btnBuscar = {
   backgroundColor: '#0077b6',
   color: 'white',
@@ -77,16 +112,14 @@ const btnModificar = {
   backgroundColor: '#004c75',
   color: 'white',
   padding: '0.5rem 1rem',
-  border: 'none',
-  cursor: 'pointer'
+  border: 'none'
 };
 
 const btnEliminar = {
   backgroundColor: '#8B0000',
   color: 'white',
   padding: '0.5rem 1rem',
-  border: 'none',
-  cursor: 'pointer'
+  border: 'none'
 };
 
 const btnReactivar = {
