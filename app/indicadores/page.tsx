@@ -12,7 +12,7 @@ export default function IndicadoresPage() {
     return (
       <div className="ProgPresNumNom" style={{ paddingTop: 0, marginTop: 0 }}>
         <IndicadoresActions />
-         <IndicadoresTabla />
+        <IndicadoresTabla />
       </div>
     );
 }
