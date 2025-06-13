@@ -8,28 +8,35 @@ export default function HomePage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [advertencia, setAdvertencia] = useState('')
 
   const handleLogin = async () => {
+    setAdvertencia('')
     try {
       const res = await fetch('http://localhost:3001/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          cid_usuario: username,
-          password: password,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cid_usuario: username, password }),
       })
 
       if (!res.ok) throw new Error('Credenciales incorrectas')
 
       const data = await res.json()
       console.log('✅ Login exitoso:', data)
+
+      // Guardar nombre y apellido en localStorage
+      const nombreCompleto = `${data.cnombre_usuario} ${data.capellido_p_usuario}`
+      localStorage.setItem('nombre_usuario', nombreCompleto)
+
       setIsLoggedIn(true)
-    } catch (err) {
-      alert('❌ Usuario o contraseña incorrectos')
-      console.error('Error en login:', err)
+    } catch {
+      setAdvertencia('❌ Usuario o contraseña incorrectos')
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleLogin()
     }
   }
 
@@ -51,20 +58,10 @@ export default function HomePage() {
           justifyContent: 'center'
         }}>
           <div style={{ textAlign: 'left', lineHeight: '1.6', maxWidth: '600px' }}>
-            <h1 style={{
-              color: '#1f2e52',
-              fontWeight: '900',
-              margin: 0,
-              fontSize: '2.6rem'
-            }}>
+            <h1 style={{ color: '#1f2e52', fontWeight: '900', margin: 0, fontSize: '2.6rem' }}>
               Bienvenido al sistema<br />de
             </h1>
-            <h1 style={{
-              color: '#c89700',
-              fontWeight: '900',
-              margin: 0,
-              fontSize: '2.6rem'
-            }}>
+            <h1 style={{ color: '#c89700', fontWeight: '900', margin: 0, fontSize: '2.6rem' }}>
               Seguimiento Programático<br />de la FES ACATLÁN
             </h1>
           </div>
@@ -108,6 +105,7 @@ export default function HomePage() {
                   placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
@@ -140,6 +138,8 @@ export default function HomePage() {
               </div>
             </div>
 
+            {advertencia && <div style={{ color: 'red', textAlign: 'center' }}>{advertencia}</div>}
+
             <button
               onClick={handleLogin}
               style={{
@@ -161,10 +161,9 @@ export default function HomePage() {
     )
   }
 
-  // 👇 Contenido después del login exitoso
+  // Vista tras login exitoso (sin el mensaje ni botón de salir)
   return (
-    <div className="home-container">
-      <h1>Bienvenido al Sistema de Indicadores</h1>
+    <div style={{ textAlign: 'center', marginTop: '3rem' }}>
       <div className="navigation-buttons">
         <button className="primary-button" onClick={() => router.push('/Logros')}>Ver Logros</button>
         <button className="primary-button" onClick={() => router.push('/Fechas')}>Fechas</button>
