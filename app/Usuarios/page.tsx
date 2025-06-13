@@ -82,34 +82,33 @@ export default function UsuariosCrud() {
     setForm((prev: Usuario) => ({ ...prev, [name]: value }));
   };
 
- const handleBuscar = () => {
-  if (!busquedaId.trim()) {
-    setMensaje('❌ Ingresa un ID para buscar');
-    setEsError(true);
+  const handleBuscar = () => {
+    if (!busquedaId.trim()) {
+      setMensaje('❌ Ingresa un ID para buscar');
+      setEsError(true);
+      setTimeout(() => setMensaje(''), 2000);
+      return;
+    }
+
+    const encontrado = usuarios.find(u => u.cid_usuario === busquedaId.trim());
+
+    if (encontrado) {
+      setForm({
+        ...encontrado,
+        dfecha_alta: encontrado.dfecha_alta?.slice(0, 10) || '',
+        dfecha_baja: encontrado.dfecha_baja?.slice(0, 10) || '',
+        bhabilitado: !!encontrado.bhabilitado,
+      });
+
+      setMensaje('✅ Usuario encontrado');
+      setEsError(false);
+    } else {
+      setMensaje('❌ Usuario no encontrado');
+      setEsError(true);
+    }
+
     setTimeout(() => setMensaje(''), 2000);
-    return;
-  }
-
-  const encontrado = usuarios.find(u => u.cid_usuario === busquedaId.trim());
-
-  if (encontrado) {
-   setForm({
-  ...encontrado,
-  dfecha_alta: encontrado.dfecha_alta?.slice(0, 10) || '',
-  dfecha_baja: encontrado.dfecha_baja?.slice(0, 10) || '',
-  bhabilitado: !!encontrado.bhabilitado, // ✅ conversión segura
-});
-
-    setMensaje('✅ Usuario encontrado');
-    setEsError(false);
-  } else {
-    setMensaje('❌ Usuario no encontrado');
-    setEsError(true);
-  }
-
-  setTimeout(() => setMensaje(''), 2000);
-};
-
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,7 +156,6 @@ export default function UsuariosCrud() {
           : form.dfecha_baja || null,
       bhabilitado: modo === 'eliminar' ? false : true,
     };
-
 
     try {
       if (modo === 'agregar') {
@@ -227,6 +225,26 @@ export default function UsuariosCrud() {
     }
   };
 
+  const handleReactivar = async () => {
+    if (!form.cid_usuario) return;
+    if (!confirm('¿Deseas reactivar este usuario?')) return;
+    try {
+      const res = await fetch(`${API_URL}/reactivar/${form.cid_usuario}`, {
+        method: 'PATCH',
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setMensaje('✅ Usuario reactivado');
+      setEsError(false);
+      await fetchUsuarios();
+      resetForm();
+    } catch (err) {
+      console.error('❌ Error al reactivar:', err);
+      setMensaje('Error al reactivar usuario');
+      setEsError(true);
+    }
+    setTimeout(() => setMensaje(''), 2000);
+  };
+
   const resetForm = () => {
     setForm({
       cid_usuario: '', cnombre_usuario: '', capellido_p_usuario: '', capellido_m_usuario: '',
@@ -257,8 +275,7 @@ export default function UsuariosCrud() {
         </div>
       )}
 
-      {/* 🔍 Formulario para búsqueda y acciones */}
-     <form
+      <form
         onSubmit={(e) => {
           e.preventDefault();
           handleBuscar();
@@ -311,13 +328,26 @@ export default function UsuariosCrud() {
           Desactivar
         </button>
 
+        {form.cid_usuario && form.bhabilitado === false && (
+          <button
+            type="button"
+            onClick={handleReactivar}
+            style={{
+              backgroundColor: '#006400',
+              color: 'white',
+              padding: '0.5rem 1rem',
+              border: 'none',
+            }}
+          >
+            Reactivar
+          </button>
+        )}
 
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
           <input type="checkbox" checked={mostrarInactivos} onChange={() => setMostrarInactivos(p => !p)} />
           Ver inhabilitados
         </label>
       </form>
-
 
       {(modo !== null || form.cid_usuario !== '') && (
         <UsuariosFormulario
