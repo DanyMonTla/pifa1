@@ -12,6 +12,8 @@ type Props = {
   handleBuscar: () => void;
   busquedaId: string;
   setBusquedaId: (id: string) => void;
+  puedeReactivar: boolean;
+  reactivarArea: () => void;
 };
 
 export default function AreasRespAcciones({
@@ -24,7 +26,9 @@ export default function AreasRespAcciones({
   setVerInactivos,
   handleBuscar,
   busquedaId,
-  setBusquedaId
+  setBusquedaId,
+  puedeReactivar,
+  reactivarArea
 }: Props) {
   return (
     <form
@@ -32,7 +36,7 @@ export default function AreasRespAcciones({
         e.preventDefault();
         handleBuscar();
       }}
-      style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}
+      style={{ display: "flex", gap: "1rem", marginBottom: "2rem", alignItems: "center" }}
     >
       <input
         placeholder="Buscar por ID"
@@ -87,7 +91,17 @@ export default function AreasRespAcciones({
         Eliminar
       </button>
 
-      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      {verInactivos && puedeReactivar && (
+        <button
+          type="button"
+          onClick={reactivarArea}
+          style={btnStyle("#228B22")}
+        >
+          Reactivar
+        </button>
+      )}
+
+      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "white" }}>
         <input
           type="checkbox"
           checked={verInactivos}

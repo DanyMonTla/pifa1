@@ -48,26 +48,25 @@ export default function AreasResponsablesCrud() {
   };
 
   useEffect(() => {
-    const obtenerAreas = async () => {
-      try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-
-        const areasConvertidas = (Array.isArray(data) ? data : data.areas || []).map((a: any) => ({
-          ...a,
-          bhabilitado: typeof a.bhabilitado === "object"
-            ? a.bhabilitado?.data?.[0] === 1
-            : Boolean(a.bhabilitado),
-        }));
-
-        setAreas(areasConvertidas);
-      } catch (err) {
-        console.error(err);
-        alert("No se pudieron cargar las áreas desde el servidor.");
-      }
-    };
     obtenerAreas();
   }, []);
+
+  const obtenerAreas = async () => {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const areasConvertidas = (Array.isArray(data) ? data : data.areas || []).map((a: any) => ({
+        ...a,
+        bhabilitado: typeof a.bhabilitado === "object"
+          ? a.bhabilitado?.data?.[0] === 1
+          : Boolean(a.bhabilitado),
+      }));
+      setAreas(areasConvertidas);
+    } catch (err) {
+      console.error(err);
+      alert("No se pudieron cargar las áreas desde el servidor.");
+    }
+  };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -98,6 +97,7 @@ export default function AreasResponsablesCrud() {
         });
 
         setMensaje("Área modificada exitosamente");
+
       } else if (modo === "eliminar") {
         if (!form.bhabilitado) {
           setError("Esta área ya está inactiva.");
@@ -131,16 +131,7 @@ export default function AreasResponsablesCrud() {
         setMensaje("Área agregada exitosamente");
       }
 
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      const areasConvertidas = (Array.isArray(data) ? data : data.areas || []).map((a: any) => ({
-        ...a,
-        bhabilitado: typeof a.bhabilitado === "object"
-          ? a.bhabilitado?.data?.[0] === 1
-          : Boolean(a.bhabilitado),
-      }));
-      setAreas(areasConvertidas);
-
+      await obtenerAreas();
       resetForm();
       setModo(null);
       setSoloVisualizacion(false);
@@ -151,6 +142,52 @@ export default function AreasResponsablesCrud() {
       alert("Error al realizar la operación.");
     }
   };
+
+  const reactivarArea = async () => {
+    if (!form.nid_area) {
+      setError("No hay área seleccionada.");
+      return;
+    }
+
+    if (form.bhabilitado) {
+      setError("El área ya está activa.");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
+    const confirmar = confirm("¿Deseas reactivar esta área responsable?");
+    if (!confirmar) return;
+
+    try {
+      const res = await fetch(`${API_URL}/reactivar/${form.nid_area}`, {
+        method: "PATCH",
+      });
+
+      if (!res.ok) {
+        const errorBody = await res.json();
+        throw new Error(errorBody.message || "Error al reactivar");
+      }
+
+      setMensaje("Área reactivada exitosamente");
+      await obtenerAreas();
+
+      setForm(prev => ({
+        ...prev,
+        bhabilitado: true,
+        dfecha_baja: "",
+      }));
+
+      setModo(null);
+      setSoloVisualizacion(false);
+      setIdBuscadoMostrado(null);
+      setTimeout(() => setMensaje(""), 3000);
+    } catch (err: any) {
+      console.error("Error al reactivar:", err);
+      setError(err.message || "Error inesperado al reactivar");
+      setTimeout(() => setError(""), 3000);
+    }
+  };
+
 
   const resetForm = () => {
     setForm({
@@ -168,31 +205,29 @@ export default function AreasResponsablesCrud() {
     setBusquedaId("");
   };
 
- const handleBuscarPorId = () => {
-  const idBuscado = parseInt(busquedaId.trim());
-  const areaSeleccionada = areas.find(a => parseInt(a.nid_area) === idBuscado);
+  const handleBuscarPorId = () => {
+    const idBuscado = parseInt(busquedaId.trim());
+    const areaSeleccionada = areas.find(a => parseInt(a.nid_area) === idBuscado);
 
-  if (areaSeleccionada) {
-    setForm({
-      ...areaSeleccionada,
-      nid_area: String(areaSeleccionada.nid_area),
-    });
+    if (areaSeleccionada) {
+      setForm({
+        ...areaSeleccionada,
+        nid_area: String(areaSeleccionada.nid_area),
+      });
 
-    // ✅ Ya no cambiamos el modo si está en modificar o eliminar
-    if (modo === "modificar" || modo === "eliminar") {
-      setSoloVisualizacion(false);
+      if (modo === "modificar" || modo === "eliminar") {
+        setSoloVisualizacion(false);
+      } else {
+        setModo(null);
+        setSoloVisualizacion(true);
+      }
+
+      setIdBuscadoMostrado(busquedaId.trim());
     } else {
-      // Solo si NO hay un modo activo, entramos a visualización
-      setModo(null);
-      setSoloVisualizacion(true);
+      alert("No se encontró un área con ese ID");
+      setIdBuscadoMostrado(null);
     }
-
-    setIdBuscadoMostrado(busquedaId.trim());
-  } else {
-    alert("No se encontró un área con ese ID");
-    setIdBuscadoMostrado(null);
-  }
-};
+  };
 
   const obtenerTitulo = () => {
     if (modo === "agregar") return "Agregar área responsable";
@@ -244,6 +279,8 @@ export default function AreasResponsablesCrud() {
         handleBuscar={handleBuscarPorId}
         busquedaId={busquedaId}
         setBusquedaId={setBusquedaId}
+        puedeReactivar={verInactivos && !form.bhabilitado}
+        reactivarArea={reactivarArea}
       />
 
       <AreasRespFormulario
