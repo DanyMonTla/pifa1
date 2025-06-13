@@ -9,8 +9,28 @@ export default function HomePage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleLogin = () => {
-    setIsLoggedIn(true)
+  const handleLogin = async () => {
+    try {
+      const res = await fetch('http://localhost:3001/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cid_usuario: username,
+          password: password,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Credenciales incorrectas')
+
+      const data = await res.json()
+      console.log('✅ Login exitoso:', data)
+      setIsLoggedIn(true)
+    } catch (err) {
+      alert('❌ Usuario o contraseña incorrectos')
+      console.error('Error en login:', err)
+    }
   }
 
   if (!isLoggedIn) {
@@ -21,9 +41,8 @@ export default function HomePage() {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        overflow: 'hidden' // <- evita líneas abajo
+        overflow: 'hidden'
       }}>
-      
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -31,25 +50,24 @@ export default function HomePage() {
           flexWrap: 'wrap',
           justifyContent: 'center'
         }}>
-         <div style={{ textAlign: 'left', lineHeight: '1.6', maxWidth: '600px' }}>
-          <h1 style={{
-            color: '#1f2e52',
-            fontWeight: '900',
-            margin: 0,
-            fontSize: '2.6rem'
-          }}>
-            Bienvenido al sistema<br />de
-          </h1>
-          <h1 style={{
-            color: '#c89700',
-            fontWeight: '900',
-            margin: 0,
-            fontSize: '2.6rem'
-          }}>
-            Seguimiento Programático<br />de la FES ACATLÁN
-          </h1>
-        </div>
-
+          <div style={{ textAlign: 'left', lineHeight: '1.6', maxWidth: '600px' }}>
+            <h1 style={{
+              color: '#1f2e52',
+              fontWeight: '900',
+              margin: 0,
+              fontSize: '2.6rem'
+            }}>
+              Bienvenido al sistema<br />de
+            </h1>
+            <h1 style={{
+              color: '#c89700',
+              fontWeight: '900',
+              margin: 0,
+              fontSize: '2.6rem'
+            }}>
+              Seguimiento Programático<br />de la FES ACATLÁN
+            </h1>
+          </div>
 
           {/* Formulario */}
           <div style={{
@@ -143,59 +161,19 @@ export default function HomePage() {
     )
   }
 
-  // 👇 Contenido principal ya autenticado
+  // 👇 Contenido después del login exitoso
   return (
     <div className="home-container">
       <h1>Bienvenido al Sistema de Indicadores</h1>
-
-
       <div className="navigation-buttons">
-        <button
-          className="primary-button"
-          onClick={() => router.push('/Logros')}>
-          Ver Logros
-        </button>
-
-        <button 
-          className="primary-button"
-          onClick={() => router.push('/Fechas')}>
-          Fechas
-        </button>
-
-        <button
-          className="primary-button"
-          onClick={() => router.push('/ABC')}>
-          CATÁLOGOS
-        </button>
-
-        <button
-          className="primary-button"
-          onClick={() => router.push('/Excel')}>
-          Ver excel
-        </button>
-
-        <button
-          className="primary-button"
-          onClick={() => router.push('/Ind_seg')}>
-         Ver segmentados
-        </button>
-
-
-        <button
-          className="primary-button"
-          onClick={() => router.push('/p31-actividades')}
-        >
-          P31 Actividades
-        </button>
-        <button
-          className="primary-button"
-          onClick={() => router.push('/proyectos')}
-        >
-          Registrar Proyecto
-        </button>
+        <button className="primary-button" onClick={() => router.push('/Logros')}>Ver Logros</button>
+        <button className="primary-button" onClick={() => router.push('/Fechas')}>Fechas</button>
+        <button className="primary-button" onClick={() => router.push('/ABC')}>CATÁLOGOS</button>
+        <button className="primary-button" onClick={() => router.push('/Excel')}>Ver excel</button>
+        <button className="primary-button" onClick={() => router.push('/Ind_seg')}>Ver segmentados</button>
+        <button className="primary-button" onClick={() => router.push('/p31-actividades')}>P31 Actividades</button>
+        <button className="primary-button" onClick={() => router.push('/proyectos')}>Registrar Proyecto</button>
       </div>
     </div>
-
-    
   )
 }
