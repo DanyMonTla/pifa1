@@ -20,6 +20,7 @@ export default function UsuariosCrud() {
   const [roles, setRoles] = useState<Rol[]>([]);
   const [mensaje, setMensaje] = useState('');
   const [esError, setEsError] = useState(false);
+  const [contrasenaOriginal, setContrasenaOriginal] = useState('');
 
   const API_URL = "http://localhost:3001/usuarios";
   const AREAS_URL = "http://localhost:3001/areas-responsables";
@@ -94,12 +95,20 @@ export default function UsuariosCrud() {
 
     if (encontrado) {
       setForm({
-        ...encontrado,
-        dfecha_alta: encontrado.dfecha_alta?.slice(0, 10) || '',
-        dfecha_baja: encontrado.dfecha_baja?.slice(0, 10) || '',
+        cid_usuario: encontrado.cid_usuario ?? '',
+        cnombre_usuario: encontrado.cnombre_usuario ?? '',
+        capellido_p_usuario: encontrado.capellido_p_usuario ?? '',
+        capellido_m_usuario: encontrado.capellido_m_usuario ?? '',
+        ccargo_usuario: encontrado.ccargo_usuario ?? '',
+        chashed_password: encontrado.chashed_password ?? '',
+        nid_area: (encontrado.nid_area ?? '').toString(),
+        nid_rol: (encontrado.nid_rol ?? '').toString(),
+        btitulo_usuario: encontrado.btitulo_usuario ?? '',
         bhabilitado: !!encontrado.bhabilitado,
+        dfecha_alta: encontrado.dfecha_alta?.slice(0, 10) ?? '',
+        dfecha_baja: encontrado.dfecha_baja?.slice(0, 10) ?? '',
       });
-
+      setContrasenaOriginal(encontrado.chashed_password ?? '');
       setMensaje('✅ Usuario encontrado');
       setEsError(false);
     } else {
@@ -139,21 +148,38 @@ export default function UsuariosCrud() {
       }
     }
 
-    if (form.chashed_password.length !== 15) {
-      setMensaje('❌ La contraseña debe tener exactamente 15 caracteres.');
+    if (modo === 'agregar') {
+      if (!form.chashed_password || form.chashed_password.length !== 15) {
+        setMensaje('❌ La contraseña debe tener exactamente 15 caracteres.');
+        setEsError(true);
+        return;
+      }
+    }
+
+    if (modo === 'modificar') {
+      const haCambiado = form.chashed_password !== contrasenaOriginal;
+      if (haCambiado && form.chashed_password.length !== 15) {
+        setMensaje('❌ La nueva contraseña debe tener exactamente 15 caracteres.');
+        setEsError(true);
+        return;
+      }
+    }
+
+    const parsedArea = parseInt(form.nid_area);
+    const parsedRol = parseInt(form.nid_rol);
+
+    if (isNaN(parsedArea) || isNaN(parsedRol)) {
+      setMensaje('❌ Selecciona un área y un rol válidos.');
       setEsError(true);
       return;
     }
 
     const datos = {
       ...form,
-      nid_area: parseInt(form.nid_area),
-      nid_rol: parseInt(form.nid_rol),
+      nid_area: parsedArea,
+      nid_rol: parsedRol,
       dfecha_alta: form.dfecha_alta || new Date().toISOString().slice(0, 10),
-      dfecha_baja:
-        modo === 'eliminar'
-          ? new Date().toISOString().slice(0, 10)
-          : form.dfecha_baja || null,
+      dfecha_baja: modo === 'eliminar' ? new Date().toISOString().slice(0, 10) : form.dfecha_baja || null,
       bhabilitado: modo === 'eliminar' ? false : true,
     };
 
@@ -251,6 +277,7 @@ export default function UsuariosCrud() {
       ccargo_usuario: '', chashed_password: '', nid_area: '', nid_rol: '',
       btitulo_usuario: '', bhabilitado: true, dfecha_alta: '', dfecha_baja: ''
     });
+    setContrasenaOriginal('');
     setModo(null);
     setBusquedaId('');
   };
