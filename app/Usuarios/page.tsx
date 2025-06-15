@@ -7,10 +7,11 @@ import { Usuario, Area, Rol } from '../components/tiposUsuarios';
 
 export default function UsuariosCrud() {
   const [form, setForm] = useState<Usuario>({
-    cid_usuario: '', cnombre_usuario: '', capellido_p_usuario: '', capellido_m_usuario: '',
-    ccargo_usuario: '', chashed_password: '', nid_area: '', nid_rol: '',
-    btitulo_usuario: '', bhabilitado: true, dfecha_alta: '', dfecha_baja: '',
-  });
+    cid_usuario: '',cnombre_usuario: '',capellido_p_usuario: '',
+    capellido_m_usuario: '',ccargo_usuario: '',chashed_password: '',nid_area: '',
+    nid_rol: '',btitulo_usuario: '', bhabilitado: true, dfecha_alta: '',dfecha_baja: '',rfc: ''  
+    });
+
 
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [busquedaId, setBusquedaId] = useState('');
@@ -38,11 +39,15 @@ export default function UsuariosCrud() {
       const data = await res.json();
 
       const normalizados = Array.isArray(data)
-        ? data.map((u: any) => ({
-            ...u,
-            bhabilitado: String(u.bhabilitado).toLowerCase() === 'true' || u.bhabilitado === true || u.bhabilitado === 1,
-          }))
+        ? data
+            .map((u: any) => ({
+              ...u,
+              rfc: u.rfc ?? '',
+              bhabilitado: String(u.bhabilitado).toLowerCase() === 'true' || u.bhabilitado === true || u.bhabilitado === 1,
+            }))
+            .sort((a, b) => parseInt(a.cid_usuario) - parseInt(b.cid_usuario)) // 👈 aquí se ordenan por ID numérico
         : [];
+
 
       setUsuarios(normalizados);
     } catch (err) {
@@ -97,6 +102,7 @@ export default function UsuariosCrud() {
       setForm({
         cid_usuario: encontrado.cid_usuario ?? '',
         cnombre_usuario: encontrado.cnombre_usuario ?? '',
+        rfc: encontrado.rfc ?? '',
         capellido_p_usuario: encontrado.capellido_p_usuario ?? '',
         capellido_m_usuario: encontrado.capellido_m_usuario ?? '',
         ccargo_usuario: encontrado.ccargo_usuario ?? '',
@@ -138,6 +144,8 @@ export default function UsuariosCrud() {
       { campo: 'ccargo_usuario', valor: form.ccargo_usuario, max: 20 },
       { campo: 'chashed_password', valor: form.chashed_password, max: 255 },
       { campo: 'btitulo_usuario', valor: form.btitulo_usuario, max: 10 },
+      { campo: 'rfc', valor: form.rfc, max: 13 },
+
     ];
 
     for (const campo of longitudes) {
@@ -272,11 +280,11 @@ export default function UsuariosCrud() {
   };
 
   const resetForm = () => {
-    setForm({
-      cid_usuario: '', cnombre_usuario: '', capellido_p_usuario: '', capellido_m_usuario: '',
-      ccargo_usuario: '', chashed_password: '', nid_area: '', nid_rol: '',
-      btitulo_usuario: '', bhabilitado: true, dfecha_alta: '', dfecha_baja: ''
-    });
+    setForm({cid_usuario: '',cnombre_usuario: '',capellido_p_usuario: '',
+      capellido_m_usuario: '',ccargo_usuario: '',chashed_password: '',nid_area: '',
+      nid_rol: '',btitulo_usuario: '',bhabilitado: true,dfecha_alta: '',dfecha_baja: '',rfc: ''  
+      });
+
     setContrasenaOriginal('');
     setModo(null);
     setBusquedaId('');

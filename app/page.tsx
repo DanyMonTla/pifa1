@@ -10,29 +10,30 @@ export default function HomePage() {
   const [showPassword, setShowPassword] = useState(false)
   const [advertencia, setAdvertencia] = useState('')
 
-  const handleLogin = async () => {
-    setAdvertencia('')
-    try {
-      const res = await fetch('http://localhost:3001/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cid_usuario: username, password }),
-      })
+ const handleLogin = async () => {
+  setAdvertencia('')
+  try {
+    const res = await fetch('http://localhost:3001/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rfc: username, password }), // ✅ Campo corregido aquí
+    })
 
-      if (!res.ok) throw new Error('Credenciales incorrectas')
+    if (!res.ok) throw new Error('Credenciales incorrectas')
 
-      const data = await res.json()
-      console.log('✅ Login exitoso:', data)
+    const data = await res.json()
+    console.log('✅ Login exitoso:', data)
 
-      // Guardar nombre y apellido en localStorage
-      const nombreCompleto = `${data.cnombre_usuario} ${data.capellido_p_usuario}`
-      localStorage.setItem('nombre_usuario', nombreCompleto)
+    const nombreCompleto = `${data.cnombre_usuario} ${data.capellido_p_usuario}`
+    localStorage.setItem('nombre_usuario', nombreCompleto)
 
-      setIsLoggedIn(true)
-    } catch {
-      setAdvertencia('❌ Usuario o contraseña incorrectos')
-    }
+    setIsLoggedIn(true)
+  } catch {
+    setAdvertencia('❌ Usuario o contraseña incorrectos')
   }
+}
+
+
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {

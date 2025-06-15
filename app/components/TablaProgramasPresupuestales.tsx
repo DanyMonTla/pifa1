@@ -24,7 +24,7 @@ export default function TablaProgramasPresupuestales({ programas, mostrarInactiv
           <tr>
             <th style={{ ...thStyle, width: '60px' }}>ID</th>
             <th style={{ ...thStyle, width: '220px' }}>Programa Presupuestal</th>
-            <th style={{ ...thStyle }}>Definición</th>
+            <th style={{ ...thStyle }}>Objetivo</th>
             <th style={{ ...thStyle, width: '120px', whiteSpace: 'nowrap' }}>Fecha Alta</th>
             <th style={{ ...thStyle, width: '80px' }}>Activo</th>
             {mostrarInactivos && (

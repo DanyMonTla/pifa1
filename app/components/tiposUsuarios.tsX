@@ -1,6 +1,7 @@
-export type Usuario = {
+export interface Usuario {
   cid_usuario: string;
   cnombre_usuario: string;
+  rfc: string; // ← nuevo campo
   capellido_p_usuario: string;
   capellido_m_usuario: string;
   ccargo_usuario: string;
@@ -10,8 +11,9 @@ export type Usuario = {
   btitulo_usuario: string;
   bhabilitado: boolean;
   dfecha_alta: string;
-  dfecha_baja: string;
-};
+  dfecha_baja?: string;
+}
+
 
 export type Area = {
   idArea: string;

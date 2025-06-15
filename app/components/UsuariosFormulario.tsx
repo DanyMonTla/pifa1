@@ -31,6 +31,10 @@ export default function UsuariosFormulario({ form, modo, areas, roles, onChange,
             <input name="cid_usuario" autoComplete="off" value={form.cid_usuario} onChange={onChange} style={inputStyle} disabled={esSoloLectura} />
           </div>
           <div style={rowStyle}>
+            <label style={labelStyle}>RFC:</label>
+            <input name="rfc" autoComplete="off" value={form.rfc} onChange={onChange} style={inputStyle} disabled={esSoloLectura} />
+          </div>
+          <div style={rowStyle}>
             <label style={labelStyle}>Apellido Paterno:</label>
             <input name="capellido_p_usuario" autoComplete="off" value={form.capellido_p_usuario} onChange={onChange} style={inputStyle} disabled={esSoloLectura} />
           </div>
@@ -108,7 +112,6 @@ export default function UsuariosFormulario({ form, modo, areas, roles, onChange,
         </div>
       </div>
 
-      {/* Visualización de habilitado */}
       {modo === null && (
         <div style={{ ...rowStyle, marginTop: '1rem' }}>
           <label style={labelStyle}>Habilitado:</label>
@@ -116,7 +119,6 @@ export default function UsuariosFormulario({ form, modo, areas, roles, onChange,
         </div>
       )}
 
-      {/* Visualización de fecha baja */}
       {modo === null && form.bhabilitado === false && (
         <div style={{ ...rowStyle, marginTop: '1rem' }}>
           <label style={labelStyle}>Fecha Baja:</label>
@@ -124,7 +126,6 @@ export default function UsuariosFormulario({ form, modo, areas, roles, onChange,
         </div>
       )}
 
-      {/* Botón de acción */}
       {modo !== null && (
         <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
           <button
@@ -146,7 +147,6 @@ export default function UsuariosFormulario({ form, modo, areas, roles, onChange,
   );
 }
 
-// Estilos base
 const rowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
