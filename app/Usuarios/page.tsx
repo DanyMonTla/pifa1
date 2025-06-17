@@ -280,124 +280,124 @@ export default function UsuariosCrud() {
           {esError ? '⚠️' : '✅'} {mensaje}
         </div>
       )}
-  <form
-    onSubmit={(e) => {
-      e.preventDefault();
-      const coincidencia = usuarios.find(
-        (u) => u.cnombre_usuario.toLowerCase() === busquedaNombre.toLowerCase()
-      );
-      if (coincidencia) {
-        setForm({
-          ...coincidencia,
-          nid_area: coincidencia.nid_area.toString(),
-          nid_rol: coincidencia.nid_rol.toString(),
-          dfecha_alta: coincidencia.dfecha_alta ?? '',
-          dfecha_baja: coincidencia.dfecha_baja ?? '',
-        });
-        setContrasenaOriginal(coincidencia.chashed_password);
-        setMensaje('✅ Usuario encontrado');
-        setEsError(false);
-      } else {
-        setMensaje('❌ Usuario no encontrado');
-        setEsError(true);
-      }
-      setTimeout(() => setMensaje(''), 2000);
-    }}
-    style={{
-      display: 'flex',
-      gap: '1rem',
-      marginBottom: '1.5rem',
-      alignItems: 'center',
-    }}
-  >
-    <input
-      list="lista-nombres"
-      placeholder="Buscar por nombre"
-      value={busquedaNombre}
-      onChange={(e) => setBusquedaNombre(e.target.value)}
-      style={{ flex: 1, padding: '0.5rem' }}
-    />
-
-    <datalist id="lista-nombres">
-      {usuarios
-        .filter((u) =>
-          busquedaNombre.length > 0 &&
-          u.cnombre_usuario.toLowerCase().includes(busquedaNombre.toLowerCase())
-        )
-        .map((u, i) => (
-          <option key={i} value={u.cnombre_usuario} />
-        ))}
-    </datalist>
-
-    <button type="submit" style={{ backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' }}>
-      Buscar
-    </button>
-
-    <button
-      onClick={() => {
-        resetForm();
-        setModo('agregar');
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const coincidencia = usuarios.find(
+          (u) => u.cnombre_usuario.toLowerCase() === busquedaNombre.toLowerCase()
+        );
+        if (coincidencia) {
+          setForm({
+            ...coincidencia,
+            nid_area: coincidencia.nid_area?.toString() ?? '',
+            nid_rol: coincidencia.nid_rol?.toString() ?? '',
+            dfecha_alta: coincidencia.dfecha_alta?.slice(0, 10) ?? '',
+            dfecha_baja: coincidencia.dfecha_baja?.slice(0, 10) ?? '',
+          });
+          setContrasenaOriginal(coincidencia.chashed_password);
+          setMensaje('✅ Usuario encontrado');
+          setEsError(false);
+        } else {
+          setMensaje('❌ Usuario no encontrado');
+          setEsError(true);
+        }
+        setTimeout(() => setMensaje(''), 2000);
       }}
-      type="button"
-      style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}
-    >
-      Agregar
-    </button>
-
-    <button
-      type="button"
-      onClick={() => setModo('modificar')}
-      disabled={form.cid_usuario !== '' && form.bhabilitado === false}
       style={{
-        backgroundColor: '#004c75',
-        color: 'white',
-        padding: '0.5rem 1rem',
-        opacity: form.cid_usuario !== '' && form.bhabilitado === false ? 0.5 : 1,
-        cursor: form.cid_usuario !== '' && form.bhabilitado === false ? 'not-allowed' : 'pointer',
+        display: 'flex',
+        gap: '1rem',
+        marginBottom: '1.5rem',
+        alignItems: 'center',
       }}
     >
-      Modificar
-    </button>
+      <input
+        list="lista-nombres"
+        placeholder="Buscar por nombre"
+        value={busquedaNombre}
+        onChange={(e) => setBusquedaNombre(e.target.value)}
+        style={{ flex: 1, padding: '0.5rem' }}
+      />
 
-    <button
-      type="button"
-      onClick={() => setModo('eliminar')}
-      disabled={form.cid_usuario !== '' && form.bhabilitado === false}
-      style={{
-        backgroundColor: '#8B0000',
-        color: 'white',
-        padding: '0.5rem 1rem',
-        opacity: form.cid_usuario !== '' && form.bhabilitado === false ? 0.5 : 1,
-        cursor: form.cid_usuario !== '' && form.bhabilitado === false ? 'not-allowed' : 'pointer',
-      }}
-    >
-      Desactivar
-    </button>
+      <datalist id="lista-nombres">
+        {usuarios
+          .filter((u) =>
+            busquedaNombre.length > 0 &&
+            u.cnombre_usuario.toLowerCase().includes(busquedaNombre.toLowerCase())
+          )
+          .map((u, i) => (
+            <option key={i} value={u.cnombre_usuario} />
+          ))}
+      </datalist>
 
-    {form.cid_usuario && form.bhabilitado === false && (
+      <button type="submit" style={{ backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' }}>
+        Buscar
+      </button>
+
+      <button
+        onClick={() => {
+          resetForm();
+          setModo('agregar');
+        }}
+        type="button"
+        style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}
+      >
+        Agregar
+      </button>
+
       <button
         type="button"
-        onClick={handleReactivar}
+        onClick={() => setModo('modificar')}
+        disabled={form.cid_usuario !== '' && form.bhabilitado === false}
         style={{
-          backgroundColor: '#006400',
+          backgroundColor: '#004c75',
           color: 'white',
           padding: '0.5rem 1rem',
-          border: 'none',
+          opacity: form.cid_usuario !== '' && form.bhabilitado === false ? 0.5 : 1,
+          cursor: form.cid_usuario !== '' && form.bhabilitado === false ? 'not-allowed' : 'pointer',
         }}
       >
-        Reactivar
+        Modificar
       </button>
-    )}
 
-    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
-      <input
-        type="checkbox"
-        checked={mostrarInactivos}
-        onChange={() => setMostrarInactivos((p) => !p)}
-      />
-      Ver inhabilitados
-    </label>
-  </form>
+      <button
+        type="button"
+        onClick={() => setModo('eliminar')}
+        disabled={form.cid_usuario !== '' && form.bhabilitado === false}
+        style={{
+          backgroundColor: '#8B0000',
+          color: 'white',
+          padding: '0.5rem 1rem',
+          opacity: form.cid_usuario !== '' && form.bhabilitado === false ? 0.5 : 1,
+          cursor: form.cid_usuario !== '' && form.bhabilitado === false ? 'not-allowed' : 'pointer',
+        }}
+      >
+        Desactivar
+      </button>
+
+      {form.cid_usuario && form.bhabilitado === false && (
+        <button
+          type="button"
+          onClick={handleReactivar}
+          style={{
+            backgroundColor: '#006400',
+            color: 'white',
+            padding: '0.5rem 1rem',
+            border: 'none',
+          }}
+        >
+          Reactivar
+        </button>
+      )}
+
+      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
+        <input
+          type="checkbox"
+          checked={mostrarInactivos}
+          onChange={() => setMostrarInactivos((p) => !p)}
+        />
+        Ver inhabilitados
+      </label>
+    </form>
 
 
 
