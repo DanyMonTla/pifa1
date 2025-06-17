@@ -54,7 +54,7 @@ export default function IndicadoresActions({
   }
   setModo('modificar');
   setMostrarFormulario(true);
-  recargarAction();
+  //recargarAction();
   };
 
   // Eliminar
@@ -73,7 +73,7 @@ export default function IndicadoresActions({
       setIndicadorSeleccionadoAction(null);    // Limpia selección
       setMostrarFormulario && setMostrarFormulario(false); // Cierra form si existe
       setModo && setModo(null); // Resetea modo si existe
-      recargarAction(); // Refresca la tabla
+      //recargarAction(); // Refresca la tabla
     } else {
       alert("Error al inhabilitar (status no OK)");
     }
@@ -87,20 +87,20 @@ export default function IndicadoresActions({
     setIndicadorSeleccionadoAction(null);
     setModo('agregar');
     setMostrarFormulario(prev => !prev);
-    recargarAction();
+    //recargarAction();
   };
 
   // Al guardar, cierra formulario y recarga
   const handleGuardado = () => {
     setMostrarFormulario(false);
-    recargarAction();
+   // recargarAction();
     setIndicadorSeleccionadoAction(null);
   };
   // Al cancelar, cierra formulario
    const handleGuardadoOCancelado = () => {
     setMostrarFormulario(false);
     setIndicadorSeleccionadoAction(null);
-    recargarAction();
+   // recargarAction();
   };
 
 return (
