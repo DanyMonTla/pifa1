@@ -13,7 +13,7 @@ export default function IndicadoresPage() {
   const [indicadores, setIndicadores] = useState([]);
   const [actualizar, setActualizar] = useState(0);
   const [mostrarSoloInhabilitados, setMostrarSoloInhabilitados] = useState(false);
-  const recargarAction = () => setActualizar(a => a + 1);
+ const recargarAction = () => setActualizar(a => a + 1);
   const [indicadorSeleccionado, setIndicadorSeleccionado] = useState(null);
   const [datosExcel, setDatosExcel] = useState<any[]>([]);
   const cargarIndicadores = async () => {
@@ -40,14 +40,15 @@ export default function IndicadoresPage() {
   return (
   <div className="ProgPresNumNom" style={{ paddingTop: 0, marginTop: 0 }}>
     <IndicadoresActions
-      indicadores={indicadores}
-      indicadorSeleccionado={indicadorSeleccionado}
-      setIndicadorSeleccionadoAction={setIndicadorSeleccionado}
-      datosExcel={datosExcel}
-      recargarAction={() => setActualizar(a => a + 1)}
-      mostrarSoloInhabilitados={mostrarSoloInhabilitados}
-      setMostrarSoloInhabilitadosAction={setMostrarSoloInhabilitados}
-    />
+        indicadores={indicadores}
+        indicadorSeleccionado={indicadorSeleccionado}
+        setIndicadorSeleccionadoAction={setIndicadorSeleccionado}
+        datosExcel={datosExcel}
+        //recargarAction={() => setActualizar(a => a + 1)}
+        recargarAction={recargarAction} // <-- ESTA ES LA BUENA
+        mostrarSoloInhabilitados={mostrarSoloInhabilitados}
+        setMostrarSoloInhabilitadosAction={setMostrarSoloInhabilitados}
+      />
     <IndicadoresTabla
       setDatosExcelAction={setDatosExcel}
       indicadores={indicadores}
