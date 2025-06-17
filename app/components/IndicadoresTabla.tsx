@@ -136,8 +136,10 @@ const filteredIndicadores = indicadoresFiltrados.filter(ind =>
   )
 );
   // Exportación: mapea los datos visibles (sin IDs)
+// Solo actualiza si realmente cambió usando un ref para comparar:
+const prevDatosExcel = useRef<any[]>([]);
+
 useEffect(() => {
-  console.log('USEEFFECT: Exportando datos limpios');
   const datosLimpios = filteredIndicadores.map(ind => ({
     Clave: ind.cclave_indicador,
     Descripción: ind.cdesc_indicador,
@@ -148,14 +150,20 @@ useEffect(() => {
     "Tipo Cálculo": getColValue(ind, 'tipo_calculo'),
     "Tipo Indicador": getColValue(ind, 'tipo_indicador'),
   }));
-  setDatosExcelAction(datosLimpios);
+
+  if (JSON.stringify(prevDatosExcel.current) !== JSON.stringify(datosLimpios)) {
+    setDatosExcelAction(datosLimpios);
+    prevDatosExcel.current = datosLimpios;
+  }
 }, [
   filteredIndicadores,
   clasificaciones,
   frecuencias,
   tiposCalculo,
-  tiposIndicador,
+  tiposIndicador
 ]);
+
+
 
 
   // Estilos

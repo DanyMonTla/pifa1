@@ -28,34 +28,7 @@ export default function ABCGeneralesPage() {
           Indicadores
         </button>
 
-        <button
-          onClick={() => router.push('/Frecuencia')}
-          style={boton}
-        >
-          Frecuencia
-        </button>
-
-        <button
-          onClick={() => router.push('/Fuente')}
-          style={boton}
-        >
-          Fuente
-        </button>
-
-        <button
-          onClick={() => router.push('/TipoCalculo')}
-          style={boton}
-        >
-          Tipo Cálculo
-        </button>
-
-        <button
-          onClick={() => router.push('/TipoIndicador')}
-          style={boton}
-        >
-          Tipo Indicador
-        </button>
-
+    
         <button
 
           onClick={() => router.push('/AreasResponsables')}
