@@ -1,5 +1,5 @@
 export interface Usuario {
-  cid_usuario: string;
+  cid_usuario: number | string;
   cnombre_usuario: string;
   rfc: string; // ← nuevo campo
   capellido_p_usuario: string;

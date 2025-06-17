@@ -9,7 +9,10 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 const TITULOS_POR_RUTA: Record<string, string> = {
   '/indicadores': 'Listado de Indicadores',
-  '/usuarios': 'Gestión de Usuarios',
+  '/Usuarios': 'Cátalogo de Usuarios',
+  '/Roles': 'Cátalogo de roles',
+  '/AreasResponsables': 'Catálogo de Áreas Responsables',
+  '/ProgramaPresupuestal': 'Catálogo de Programas Presupuestales',
   // ...
 };
 

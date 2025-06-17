@@ -13,7 +13,7 @@ type Props = {
 };
 
 export default function UsuariosFormulario({ form, modo, areas, roles, onChange, onSubmit }: Props) {
-  const esSoloLectura = modo === null || modo === 'eliminar';
+  const esSoloLectura = modo === null || modo === 'eliminar' 
   const [mostrarPassword, setMostrarPassword] = useState(false);
 
   return (
@@ -28,7 +28,9 @@ export default function UsuariosFormulario({ form, modo, areas, roles, onChange,
         <div>
           <div style={rowStyle}>
             <label style={labelStyle}>ID Usuario:</label>
-            <input name="cid_usuario" autoComplete="off" value={form.cid_usuario} onChange={onChange} style={inputStyle} disabled={esSoloLectura} />
+            <input 
+           name="cid_usuario" autoComplete="off" value={form.cid_usuario} style={inputStyle} disabled />
+
           </div>
           <div style={rowStyle}>
             <label style={labelStyle}>RFC:</label>

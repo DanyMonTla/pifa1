@@ -14,7 +14,7 @@ export default function UsuariosCrud() {
 
 
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [busquedaId, setBusquedaId] = useState('');
+  const [busquedaNombre, setBusquedaNombre] = useState('');
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
   const [areas, setAreas] = useState<Area[]>([]);
@@ -84,180 +84,152 @@ export default function UsuariosCrud() {
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm((prev: Usuario) => ({ ...prev, [name]: value }));
-  };
+  const { name, value } = e.target;
+  setForm((prev: Usuario) => ({ ...prev, [name]: value }));
+};
 
-  const handleBuscar = () => {
-    if (!busquedaId.trim()) {
-      setMensaje('❌ Ingresa un ID para buscar');
-      setEsError(true);
-      setTimeout(() => setMensaje(''), 2000);
-      return;
-    }
-
-    const encontrado = usuarios.find(u => u.cid_usuario === busquedaId.trim());
-
-    if (encontrado) {
-      setForm({
-        cid_usuario: encontrado.cid_usuario ?? '',
-        cnombre_usuario: encontrado.cnombre_usuario ?? '',
-        rfc: encontrado.rfc ?? '',
-        capellido_p_usuario: encontrado.capellido_p_usuario ?? '',
-        capellido_m_usuario: encontrado.capellido_m_usuario ?? '',
-        ccargo_usuario: encontrado.ccargo_usuario ?? '',
-        chashed_password: encontrado.chashed_password ?? '',
-        nid_area: (encontrado.nid_area ?? '').toString(),
-        nid_rol: (encontrado.nid_rol ?? '').toString(),
-        btitulo_usuario: encontrado.btitulo_usuario ?? '',
-        bhabilitado: !!encontrado.bhabilitado,
-        dfecha_alta: encontrado.dfecha_alta?.slice(0, 10) ?? '',
-        dfecha_baja: encontrado.dfecha_baja?.slice(0, 10) ?? '',
-      });
-      setContrasenaOriginal(encontrado.chashed_password ?? '');
-      setMensaje('✅ Usuario encontrado');
-      setEsError(false);
-    } else {
-      setMensaje('❌ Usuario no encontrado');
-      setEsError(true);
-    }
-
-    setTimeout(() => setMensaje(''), 2000);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const confirmMsg =
-      modo === 'agregar'
-        ? '¿Agregar usuario?'
-        : modo === 'modificar'
-        ? '¿Actualizar usuario?'
-        : '¿Desactivar usuario?';
+  e.preventDefault();
 
-    if (!confirm(confirmMsg)) return;
+  const confirmMsg =
+    modo === 'agregar'
+      ? '¿Agregar usuario?'
+      : modo === 'modificar'
+      ? '¿Actualizar usuario?'
+      : '¿Desactivar usuario?';
 
-    const longitudes = [
-      { campo: 'cid_usuario', valor: form.cid_usuario, max: 6 },
-      { campo: 'cnombre_usuario', valor: form.cnombre_usuario, max: 50 },
-      { campo: 'capellido_p_usuario', valor: form.capellido_p_usuario, max: 25 },
-      { campo: 'capellido_m_usuario', valor: form.capellido_m_usuario, max: 25 },
-      { campo: 'ccargo_usuario', valor: form.ccargo_usuario, max: 20 },
-      { campo: 'chashed_password', valor: form.chashed_password, max: 255 },
-      { campo: 'btitulo_usuario', valor: form.btitulo_usuario, max: 10 },
-      { campo: 'rfc', valor: form.rfc, max: 13 },
+  if (!confirm(confirmMsg)) return;
 
-    ];
+  const longitudes = [
 
-    for (const campo of longitudes) {
-      if (campo.valor && campo.valor.length > campo.max) {
-        setMensaje(`❌ El campo "${campo.campo}" excede el límite de ${campo.max} caracteres.`);
-        setEsError(true);
-        return;
-      }
-    }
+    { campo: 'cnombre_usuario', valor: form.cnombre_usuario, max: 50 },
+    { campo: 'capellido_p_usuario', valor: form.capellido_p_usuario, max: 25 },
+    { campo: 'capellido_m_usuario', valor: form.capellido_m_usuario, max: 25 },
+    { campo: 'ccargo_usuario', valor: form.ccargo_usuario, max: 20 },
+    { campo: 'chashed_password', valor: form.chashed_password, max: 255 },
+    { campo: 'btitulo_usuario', valor: form.btitulo_usuario, max: 10 },
+    { campo: 'rfc', valor: form.rfc, max: 13 },
+  ];
 
-    if (modo === 'agregar') {
-      if (!form.chashed_password || form.chashed_password.length !== 15) {
-        setMensaje('❌ La contraseña debe tener exactamente 15 caracteres.');
-        setEsError(true);
-        return;
-      }
-    }
+ for (const campo of longitudes) {
+  if (typeof campo.valor === 'string' && campo.valor.length > campo.max) {
+    setMensaje(`❌ El campo "${campo.campo}" excede el límite de ${campo.max} caracteres.`);
+    setEsError(true);
+    return;
+  }
+}
 
-    if (modo === 'modificar') {
-      const haCambiado = form.chashed_password !== contrasenaOriginal;
-      if (haCambiado && form.chashed_password.length !== 15) {
-        setMensaje('❌ La nueva contraseña debe tener exactamente 15 caracteres.');
-        setEsError(true);
-        return;
-      }
-    }
 
-    const parsedArea = parseInt(form.nid_area);
-    const parsedRol = parseInt(form.nid_rol);
-
-    if (isNaN(parsedArea) || isNaN(parsedRol)) {
-      setMensaje('❌ Selecciona un área y un rol válidos.');
+  if (modo === 'agregar') {
+    if (!form.chashed_password || form.chashed_password.length !== 15) {
+      setMensaje('❌ La contraseña debe tener exactamente 15 caracteres.');
       setEsError(true);
       return;
     }
+  }
 
-    const datos = {
-      ...form,
-      nid_area: parsedArea,
-      nid_rol: parsedRol,
-      dfecha_alta: form.dfecha_alta || new Date().toISOString().slice(0, 10),
-      dfecha_baja: modo === 'eliminar' ? new Date().toISOString().slice(0, 10) : form.dfecha_baja || null,
-      bhabilitado: modo === 'eliminar' ? false : true,
-    };
+  if (modo === 'modificar') {
+    const haCambiado = form.chashed_password !== contrasenaOriginal;
+    if (haCambiado && form.chashed_password.length !== 15) {
+      setMensaje('❌ La nueva contraseña debe tener exactamente 15 caracteres.');
+      setEsError(true);
+      return;
+    }
+  }
 
-    try {
-      if (modo === 'agregar') {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(datos),
-        });
+  const parsedArea = parseInt(form.nid_area);
+  const parsedRol = parseInt(form.nid_rol);
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('❌ Error al agregar usuario:', errorText);
-          setMensaje('Error al agregar usuario (ID duplicado o inválido)');
-          setEsError(true);
-          return;
-        }
+  if (isNaN(parsedArea) || isNaN(parsedRol)) {
+    setMensaje('❌ Selecciona un área y un rol válidos.');
+    setEsError(true);
+    return;
+  }
 
-        setMensaje('Usuario agregado');
-        setEsError(false);
-      } else if (modo === 'modificar') {
-        const res = await fetch(`${API_URL}/${form.cid_usuario}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(datos),
-        });
+  const datos = {
+  ...(modo !== 'agregar' ? { cid_usuario: form.cid_usuario } : {}), // solo si no es agregar
+  cnombre_usuario: form.cnombre_usuario,
+  capellido_p_usuario: form.capellido_p_usuario,
+  capellido_m_usuario: form.capellido_m_usuario,
+  ccargo_usuario: form.ccargo_usuario,
+  chashed_password: form.chashed_password,
+  nid_area: parsedArea,
+  nid_rol: parsedRol,
+  btitulo_usuario: form.btitulo_usuario,
+  rfc: form.rfc,
+  bhabilitado: modo === 'eliminar' ? false : true,
+  dfecha_alta: form.dfecha_alta || new Date().toISOString().slice(0, 10),
+  dfecha_baja: modo === 'eliminar' ? new Date().toISOString().slice(0, 10) : form.dfecha_baja || null,
+};
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('❌ Error al actualizar usuario:', errorText);
-          setMensaje('Error al actualizar usuario');
-          setEsError(true);
-          return;
-        }
 
-        setMensaje('Usuario actualizado');
-        setEsError(false);
-      } else if (modo === 'eliminar') {
-        const res = await fetch(`${API_URL}/estado/${form.cid_usuario}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bhabilitado: false,
-            dfecha_baja: new Date().toISOString().slice(0, 10),
-          }),
-        });
+  try {
+    if (modo === 'agregar') {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      });
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('❌ Error al desactivar usuario:', errorText);
-          setMensaje('Error al desactivar usuario');
-          setEsError(true);
-          return;
-        }
-
-        setMensaje('Usuario desactivado');
-        setEsError(false);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('❌ Error al agregar usuario:', errorText);
+        setMensaje('Error al agregar usuario (ID duplicado o inválido)');
+        setEsError(true);
+        return;
       }
 
-      await fetchUsuarios();
-      resetForm();
-      setTimeout(() => setMensaje(''), 3000);
+      setMensaje('✅ Usuario agregado');
+      setEsError(false);
+    } else if (modo === 'modificar') {
+      const res = await fetch(`${API_URL}/${form.cid_usuario}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      });
 
-    } catch (err: any) {
-      console.error("❌ Error en la operación:", err);
-      setMensaje('Error inesperado al procesar la operación');
-      setEsError(true);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('❌ Error al actualizar usuario:', errorText);
+        setMensaje('Error al actualizar usuario');
+        setEsError(true);
+        return;
+      }
+
+      setMensaje('✅ Usuario actualizado');
+      setEsError(false);
+    } else if (modo === 'eliminar') {
+      const res = await fetch(`${API_URL}/estado/${form.cid_usuario}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bhabilitado: false,
+          dfecha_baja: new Date().toISOString().slice(0, 10),
+        }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('❌ Error al desactivar usuario:', errorText);
+        setMensaje('Error al desactivar usuario');
+        setEsError(true);
+        return;
+      }
+
+      setMensaje('✅ Usuario desactivado');
+      setEsError(false);
     }
-  };
+
+    await fetchUsuarios();
+    resetForm();
+    setTimeout(() => setMensaje(''), 3000);
+  } catch (err) {
+    console.error("❌ Error en la operación:", err);
+    setMensaje('Error inesperado al procesar la operación');
+    setEsError(true);
+  }
+};
 
   const handleReactivar = async () => {
     if (!form.cid_usuario) return;
@@ -287,12 +259,12 @@ export default function UsuariosCrud() {
 
     setContrasenaOriginal('');
     setModo(null);
-    setBusquedaId('');
+    setBusquedaNombre('');
   };
 
   return (
     <div style={{ backgroundColor: '#222', color: 'white', padding: '2rem', position: 'relative' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>Catálogo de Usuarios</h2>
+    
 
       {mensaje && (
         <div style={{
@@ -311,18 +283,17 @@ export default function UsuariosCrud() {
       )}
 
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleBuscar();
-        }}
+      onSubmit={(e) => e.preventDefault()}
+
         style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center' }}
       >
-        <input
-          placeholder="Buscar por ID"
-          value={busquedaId}
-          onChange={(e) => setBusquedaId(e.target.value)}
+       <input
+          placeholder="Buscar por nombre"
+          value={busquedaNombre}
+          onChange={(e) => setBusquedaNombre(e.target.value)}
           style={{ flex: 1, padding: '0.5rem' }}
         />
+
 
         <button type="submit" style={{ backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' }}>
           Buscar
@@ -395,7 +366,7 @@ export default function UsuariosCrud() {
         />
       )}
 
-      <UsuariosTabla usuarios={usuarios} areas={areas} roles={roles} mostrarInactivos={mostrarInactivos} />
+      <UsuariosTabla usuarios={usuarios} areas={areas} roles={roles} mostrarInactivos={mostrarInactivos} busquedaNombre={busquedaNombre}/>
     </div>
   );
 }

@@ -164,7 +164,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   return (
     <div style={{ backgroundColor: '#222', color: 'white', padding: '2rem' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>{obtenerTitulo()}</h2>
+      
 
       {mensaje && (
         <div style={{

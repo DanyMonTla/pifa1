@@ -248,7 +248,7 @@ export default function AreasResponsablesCrud() {
 
   return (
     <div style={{ backgroundColor: "#222", color: "white", padding: "2rem" }}>
-      <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>{obtenerTitulo()}</h2>
+
 
       {mensaje && (
         <div style={{

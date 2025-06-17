@@ -8,12 +8,16 @@ type Props = {
   areas: Area[];
   roles: Rol[];
   mostrarInactivos: boolean;
+  busquedaNombre: string;
 };
 
-export default function UsuariosTabla({ usuarios, areas, roles, mostrarInactivos }: Props) {
-  const usuariosFiltrados = mostrarInactivos
-    ? usuarios
-    : usuarios.filter(u => String(u.bhabilitado).toLowerCase() === 'true');
+export default function UsuariosTabla({ usuarios, areas, roles, mostrarInactivos, busquedaNombre }: Props) {
+  const usuariosFiltrados = usuarios
+    .filter(u => mostrarInactivos || u.bhabilitado)
+    .filter(u =>
+      (u.cnombre_usuario ?? '').toLowerCase().includes((busquedaNombre ?? '').toLowerCase())
+    );
+
 
   return (
     <table style={{
