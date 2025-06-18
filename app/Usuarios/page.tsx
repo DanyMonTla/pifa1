@@ -1,211 +1,408 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, ChangeEvent } from "react";
-import FormularioUsuario from "../components/FormularioUsuario"; // ruta correcta
-
-type Usuario = {
-  id_usuario: string;
-  usuario: string;
-  nombre_usuario: string;
-  apellidoP: string;
-  apellidoM: string;
-  cargoUsuario: string;
-  hashed_password: string;
-  id_area: string;
-  id_rol: string;
-  correo_usuario: string;
-  estado?: "activo" | "inactivo";
-};
-
-type Area = {
-  idArea: string;
-  unidad: string;
-};
-
-type Rol = {
-  id_rol: string;
-  rol: string;
-};
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import UsuariosFormulario from '../components/UsuariosFormulario';
+import UsuariosTabla from '../components/UsuariosTabla';
+import { Usuario, Area, Rol } from '../components/tiposUsuarios';
 
 export default function UsuariosCrud() {
   const [form, setForm] = useState<Usuario>({
-    id_usuario: "",
-    usuario: "",
-    nombre_usuario: "",
-    apellidoP: "",
-    apellidoM: "",
-    cargoUsuario: "",
-    hashed_password: "",
-    id_area: "",
-    id_rol: "",
-    correo_usuario: "",
-    estado: "activo",
-  });
+  cid_usuario: '',cnombre_usuario: '',rfc: '',capellido_p_usuario: '',capellido_m_usuario: '',ccargo_usuario: '',chashed_password: '',
+  nid_area: '', nid_rol: '', btitulo_usuario: '', bhabilitado: true, dfecha_alta: '', dfecha_baja: '',});
+
+
 
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [areas] = useState<Area[]>([
-    { idArea: "1", unidad: "Recursos Humanos" },
-    { idArea: "2", unidad: "Finanzas" },
-  ]);
-  const [roles] = useState<Rol[]>([
-    { id_rol: "1", rol: "Admin" },
-    { id_rol: "2", rol: "User" },
-  ]);
-
-  const [busquedaId, setBusquedaId] = useState("");
+  const [busquedaNombre, setBusquedaNombre] = useState('');
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
-  const [modo, setModo] = useState<"agregar" | "modificar" | "eliminar" | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [modo, setModo] = useState<'agregar' | 'modificar' | 'eliminar' | null>(null);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [roles, setRoles] = useState<Rol[]>([]);
+  const [mensaje, setMensaje] = useState('');
+  const [esError, setEsError] = useState(false);
+  const [contrasenaOriginal, setContrasenaOriginal] = useState('');
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // --- NUEVO: FUNCIÓN DE MAPEADO ---
-  function mapUsuarioFormToApi(usuarioForm: Usuario) {
-    return {
-      nombreUsuario: usuarioForm.nombre_usuario,
-      apellidoPaterno: usuarioForm.apellidoP,
-      apellidoMaterno: usuarioForm.apellidoM,
-      cargoUsuario: usuarioForm.cargoUsuario,
-      hashedPassword: usuarioForm.hashed_password,
-      idArea: Number(usuarioForm.id_area),
-      idRol: Number(usuarioForm.id_rol),
-    };
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    let mensajeConfirmacion = "";
-    if (modo === "agregar") mensajeConfirmacion = "¿Estás seguro de que deseas agregar este usuario?";
-    if (modo === "modificar") mensajeConfirmacion = "¿Deseas realmente actualizar este usuario?";
-    if (modo === "eliminar") mensajeConfirmacion = "¿Estás seguro de que deseas desactivar este usuario?";
-
-    const confirmar = confirm(mensajeConfirmacion);
-    if (!confirmar) return;
-
-    if (modo === "modificar") {
-      actualizarUsuario();
-    } else if (modo === "eliminar") {
-      eliminarUsuario();
-    } else if (modo === "agregar") {
-      crearUsuario();
-    }
-
-    setForm({
-      id_usuario: "",
-      usuario: "",
-      nombre_usuario: "",
-      apellidoP: "",
-      apellidoM: "",
-      cargoUsuario: "",
-      hashed_password: "",
-      id_area: "",
-      id_rol: "",
-      correo_usuario: "",
-      estado: "activo",
-    });
-    setModo(null);
-
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
-  };
-
-  const fetchUsuarios = async () => {
-    try {
-      const response = await fetch("http://localhost:3001/usuarios");
-      const data = await response.json();
-      setUsuarios(data);
-    } catch (error) {
-      console.error("Error al obtener usuarios:", error);
-    }
-  };
-
-  // --- CORRIGE AQUÍ: usa el objeto mapeado ---
-  const crearUsuario = async () => {
-    try {
-      const usuarioParaApi = mapUsuarioFormToApi(form);
-      const response = await fetch("http://localhost:3001/usuarios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(usuarioParaApi),
-      });
-      if (!response.ok) throw new Error("Error al crear usuario");
-      fetchUsuarios();
-    } catch (error) {
-      console.error("Error al agregar:", error);
-    }
-  };
-
-  // --- También aquí para actualizar ---
-  const actualizarUsuario = async () => {
-    try {
-      const usuarioParaApi = mapUsuarioFormToApi(form);
-      const response = await fetch(`http://localhost:3001/usuarios/${form.id_usuario}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(usuarioParaApi),
-      });
-      if (!response.ok) throw new Error("Error al actualizar");
-      fetchUsuarios();
-    } catch (error) {
-      console.error("Error al modificar:", error);
-    }
-  };
-
-  const eliminarUsuario = async () => {
-    try {
-      const response = await fetch(`http://localhost:3001/usuarios/${form.id_usuario}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Error al eliminar");
-      fetchUsuarios();
-    } catch (error) {
-      console.error("Error al eliminar:", error);
-    }
-  };
+  const API_URL = "http://localhost:3001/usuarios";
+  const AREAS_URL = "http://localhost:3001/areas-responsables";
+  const ROLES_URL = "http://localhost:3001/roles";
 
   useEffect(() => {
     fetchUsuarios();
+    fetchAreas();
+    fetchRoles();
   }, []);
 
+  const fetchUsuarios = async () => {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+
+      const normalizados = Array.isArray(data)
+        ? data
+            .map((u: any) => ({
+              ...u,
+              rfc: u.rfc ?? '',
+              bhabilitado: String(u.bhabilitado).toLowerCase() === 'true' || u.bhabilitado === true || u.bhabilitado === 1,
+            }))
+            .sort((a, b) => parseInt(a.cid_usuario) - parseInt(b.cid_usuario)) // 👈 aquí se ordenan por ID numérico
+        : [];
+
+
+      setUsuarios(normalizados);
+    } catch (err) {
+      console.error("Error al cargar usuarios:", err);
+    }
+  };
+
+  const fetchAreas = async () => {
+    try {
+      const res = await fetch(AREAS_URL);
+      const data = await res.json();
+      setAreas(data.map((a: any) => ({
+        idArea: a.nid_area.toString(),
+        unidad: `${a.nid_area} - ${a.cunidad_responsable}`,
+        rawUnidad: a.cunidad_responsable,
+      })));
+    } catch (err) {
+      console.error("Error al cargar áreas:", err);
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const res = await fetch(ROLES_URL);
+      const data = await res.json();
+      setRoles(data.map((r: any) => ({
+        id_rol: r.nidRol.toString(),
+        rol: `${r.nidRol} - ${r.crol}`,
+        rawRol: r.crol,
+      })));
+    } catch (err) {
+      console.error("Error al cargar roles:", err);
+    }
+  };
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const { name, value } = e.target;
+  setForm((prev: Usuario) => ({ ...prev, [name]: value }));
+};
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const confirmMsg =
+    modo === 'agregar'
+      ? '¿Agregar usuario?'
+      : modo === 'modificar'
+      ? '¿Actualizar usuario?'
+      : '¿Desactivar usuario?';
+
+  if (!confirm(confirmMsg)) return;
+
+  const longitudes = [
+
+    { campo: 'cnombre_usuario', valor: form.cnombre_usuario, max: 50 },
+    { campo: 'capellido_p_usuario', valor: form.capellido_p_usuario, max: 25 },
+    { campo: 'capellido_m_usuario', valor: form.capellido_m_usuario, max: 25 },
+    { campo: 'ccargo_usuario', valor: form.ccargo_usuario, max: 20 },
+    { campo: 'chashed_password', valor: form.chashed_password, max: 255 },
+    { campo: 'btitulo_usuario', valor: form.btitulo_usuario, max: 10 },
+    { campo: 'rfc', valor: form.rfc, max: 13 },
+  ];
+
+ for (const campo of longitudes) {
+  if (typeof campo.valor === 'string' && campo.valor.length > campo.max) {
+    setMensaje(`❌ El campo "${campo.campo}" excede el límite de ${campo.max} caracteres.`);
+    setEsError(true);
+    return;
+  }
+}
+
+
+  if (modo === 'agregar') {
+    if (!form.chashed_password || form.chashed_password.length !== 15) {
+      setMensaje('❌ La contraseña debe tener exactamente 15 caracteres.');
+      setEsError(true);
+      return;
+    }
+  }
+
+  if (modo === 'modificar') {
+    const haCambiado = form.chashed_password !== contrasenaOriginal;
+    if (haCambiado && form.chashed_password.length !== 15) {
+      setMensaje('❌ La nueva contraseña debe tener exactamente 15 caracteres.');
+      setEsError(true);
+      return;
+    }
+  }
+
+  const parsedArea = parseInt(form.nid_area);
+  const parsedRol = parseInt(form.nid_rol);
+
+  if (isNaN(parsedArea) || isNaN(parsedRol)) {
+    setMensaje('❌ Selecciona un área y un rol válidos.');
+    setEsError(true);
+    return;
+  }
+
+  const datos = {
+    cnombre_usuario: form.cnombre_usuario,
+    rfc: form.rfc,
+    capellido_p_usuario: form.capellido_p_usuario,
+    capellido_m_usuario: form.capellido_m_usuario,
+    ccargo_usuario: form.ccargo_usuario,
+    chashed_password: form.chashed_password,
+    nid_area: parsedArea,
+    nid_rol: parsedRol,
+    btitulo_usuario: form.btitulo_usuario,
+    dfecha_alta: form.dfecha_alta || new Date().toISOString().slice(0, 10),
+    dfecha_baja: modo === 'eliminar' ? new Date().toISOString().slice(0, 10) : form.dfecha_baja || null,
+    bhabilitado: modo === 'eliminar' ? false : true,
+  };
+
+
+
+  try {
+    if (modo === 'agregar') {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('❌ Error al agregar usuario:', errorText);
+        setMensaje('Error al agregar usuario (ID duplicado o inválido)');
+        setEsError(true);
+        return;
+      }
+
+      setMensaje('✅ Usuario agregado');
+      setEsError(false);
+    } else if (modo === 'modificar') {
+      const res = await fetch(`${API_URL}/${form.cid_usuario}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('❌ Error al actualizar usuario:', errorText);
+        setMensaje('Error al actualizar usuario');
+        setEsError(true);
+        return;
+      }
+
+      setMensaje('✅ Usuario actualizado');
+      setEsError(false);
+    } else if (modo === 'eliminar') {
+      const res = await fetch(`${API_URL}/estado/${form.cid_usuario}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bhabilitado: false,
+          dfecha_baja: new Date().toISOString().slice(0, 10),
+        }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('❌ Error al desactivar usuario:', errorText);
+        setMensaje('Error al desactivar usuario');
+        setEsError(true);
+        return;
+      }
+
+      setMensaje('✅ Usuario desactivado');
+      setEsError(false);
+    }
+
+    await fetchUsuarios();
+    resetForm();
+    setTimeout(() => setMensaje(''), 3000);
+  } catch (err) {
+    console.error("❌ Error en la operación:", err);
+    setMensaje('Error inesperado al procesar la operación');
+    setEsError(true);
+  }
+};
+
+  const handleReactivar = async () => {
+    if (!form.cid_usuario) return;
+    if (!confirm('¿Deseas reactivar este usuario?')) return;
+    try {
+      const res = await fetch(`${API_URL}/reactivar/${form.cid_usuario}`, {
+        method: 'PATCH',
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setMensaje('✅ Usuario reactivado');
+      setEsError(false);
+      await fetchUsuarios();
+      resetForm();
+    } catch (err) {
+      console.error('❌ Error al reactivar:', err);
+      setMensaje('Error al reactivar usuario');
+      setEsError(true);
+    }
+    setTimeout(() => setMensaje(''), 2000);
+  };
+
+  const resetForm = () => {
+  setForm({
+    cid_usuario: '',cnombre_usuario: '',rfc: '',capellido_p_usuario: '',capellido_m_usuario: '',
+    ccargo_usuario: '',chashed_password: '',nid_area: '',nid_rol: '',btitulo_usuario: '',bhabilitado: true, dfecha_alta: '', dfecha_baja: '',
+  });
+  setContrasenaOriginal('');
+  setModo(null);
+  setBusquedaNombre('');
+};
+
+
   return (
-    <div style={{ backgroundColor: "#222", color: "white", padding: "2rem" }}>
-      <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>
-        {modo === "agregar" ? "Agregar nuevo usuario" :
-         modo === "modificar" ? "Modificar usuario" :
-         modo === "eliminar" ? "Eliminar usuario" :
-         "Catálogo de Usuarios"}
-      </h2>
+    <div style={{ backgroundColor: '#222', color: 'white', padding: '2rem', position: 'relative' }}>
+    
 
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+      {mensaje && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: esError ? 'darkred' : 'green',
+          color: 'white',
+          padding: '1rem 2rem',
+          borderRadius: '8px',
+          zIndex: 1000,
+        }}>
+          {esError ? '⚠️' : '✅'} {mensaje}
+        </div>
+      )}
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const coincidencia = usuarios.find(
+          (u) => u.cnombre_usuario.toLowerCase() === busquedaNombre.toLowerCase()
+        );
+        if (coincidencia) {
+          setForm({
+            ...coincidencia,
+            nid_area: coincidencia.nid_area?.toString() ?? '',
+            nid_rol: coincidencia.nid_rol?.toString() ?? '',
+            dfecha_alta: coincidencia.dfecha_alta?.slice(0, 10) ?? '',
+            dfecha_baja: coincidencia.dfecha_baja?.slice(0, 10) ?? '',
+          });
+          setContrasenaOriginal(coincidencia.chashed_password);
+          setMensaje('✅ Usuario encontrado');
+          setEsError(false);
+        } else {
+          setMensaje('❌ Usuario no encontrado');
+          setEsError(true);
+        }
+        setTimeout(() => setMensaje(''), 2000);
+      }}
+      style={{
+        display: 'flex',
+        gap: '1rem',
+        marginBottom: '1.5rem',
+        alignItems: 'center',
+      }}
+    >
+      <input
+        list="lista-nombres"
+        placeholder="Buscar por nombre"
+        value={busquedaNombre}
+        onChange={(e) => setBusquedaNombre(e.target.value)}
+        style={{ flex: 1, padding: '0.5rem' }}
+      />
+
+      <datalist id="lista-nombres">
+        {usuarios
+          .filter((u) =>
+            busquedaNombre.length > 0 &&
+            u.cnombre_usuario.toLowerCase().includes(busquedaNombre.toLowerCase())
+          )
+          .map((u, i) => (
+            <option key={i} value={u.cnombre_usuario} />
+          ))}
+      </datalist>
+
+      <button type="submit" style={{ backgroundColor: '#0077b6', color: 'white', padding: '0.5rem 1rem' }}>
+        Buscar
+      </button>
+
+      <button
+        onClick={() => {
+          resetForm();
+          setModo('agregar');
+        }}
+        type="button"
+        style={{ backgroundColor: '#004c75', color: 'white', padding: '0.5rem 1rem' }}
+      >
+        Agregar
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setModo('modificar')}
+        disabled={form.cid_usuario !== '' && form.bhabilitado === false}
+        style={{
+          backgroundColor: '#004c75',
+          color: 'white',
+          padding: '0.5rem 1rem',
+          opacity: form.cid_usuario !== '' && form.bhabilitado === false ? 0.5 : 1,
+          cursor: form.cid_usuario !== '' && form.bhabilitado === false ? 'not-allowed' : 'pointer',
+        }}
+      >
+        Modificar
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setModo('eliminar')}
+        disabled={form.cid_usuario !== '' && form.bhabilitado === false}
+        style={{
+          backgroundColor: '#8B0000',
+          color: 'white',
+          padding: '0.5rem 1rem',
+          opacity: form.cid_usuario !== '' && form.bhabilitado === false ? 0.5 : 1,
+          cursor: form.cid_usuario !== '' && form.bhabilitado === false ? 'not-allowed' : 'pointer',
+        }}
+      >
+        Desactivar
+      </button>
+
+      {form.cid_usuario && form.bhabilitado === false && (
+        <button
+          type="button"
+          onClick={handleReactivar}
+          style={{
+            backgroundColor: '#006400',
+            color: 'white',
+            padding: '0.5rem 1rem',
+            border: 'none',
+          }}
+        >
+          Reactivar
+        </button>
+      )}
+
+      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white' }}>
         <input
-          placeholder="Buscar por ID"
-          value={busquedaId}
-          onChange={(e) => setBusquedaId(e.target.value)}
-          style={{ flex: 1, padding: "0.5rem" }}
+          type="checkbox"
+          checked={mostrarInactivos}
+          onChange={() => setMostrarInactivos((p) => !p)}
         />
-        <button onClick={() => {
-          const user = usuarios.find(u => u.id_usuario === busquedaId.trim());
-          if (user) setForm(user);
-          else alert("No se encontró un usuario con ese ID");
-        }} style={btnStyle("#0077b6")}>Buscar</button>
-        <button onClick={() => setModo("agregar")} style={btnStyle("#004c75")}>Agregar</button>
-        <button onClick={() => setModo("modificar")} style={btnStyle("#004c75")}>Modificar</button>
-        <button onClick={() => setModo("eliminar")} style={btnStyle("#8B0000")}>Eliminar</button>
-        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <input
-            type="checkbox"
-            checked={mostrarInactivos}
-            onChange={() => setMostrarInactivos(prev => !prev)}
-          /> Ver inactivos
-        </label>
-      </div>
+        Ver inhabilitados
+      </label>
+    </form>
 
-      {modo && (
-        <FormularioUsuario
+
+
+      {(modo !== null || form.cid_usuario !== '') && (
+        <UsuariosFormulario
           form={form}
           modo={modo}
           areas={areas}
@@ -215,82 +412,7 @@ export default function UsuariosCrud() {
         />
       )}
 
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th style={thStyle}>ID</th>
-            <th style={thStyle}>Usuario</th>
-            <th style={thStyle}>Nombre</th>
-            <th style={thStyle}>Apellido P</th>
-            <th style={thStyle}>Apellido M</th>
-            <th style={thStyle}>Cargo</th>
-            <th style={thStyle}>ID Área</th>
-            <th style={thStyle}>ID Rol</th>
-            <th style={thStyle}>Correo</th>
-            <th style={thStyle}>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios
-           .filter(u => mostrarInactivos || u.estado !== "inactivo")
-.map((u, i) => (
-  <tr key={u.id_usuario || i} style={u.estado === "inactivo" ? { opacity: 0.5 } : {}}>
-    <td style={tdStyle}>{u.id_usuario}</td>
-    <td style={tdStyle}>{u.usuario}</td>
-    <td style={tdStyle}>{u.nombre_usuario}</td>
-    <td style={tdStyle}>{u.apellidoP}</td>
-    <td style={tdStyle}>{u.apellidoM}</td>
-    <td style={tdStyle}>{u.cargoUsuario}</td>
-    <td style={tdStyle}>{u.id_area}</td>
-    <td style={tdStyle}>{u.id_rol}</td>
-    <td style={tdStyle}>{u.correo_usuario}</td>
-    <td style={tdStyle}>{u.estado}</td>
-  </tr>
-))}
-</tbody>
-      </table>
-
-      {showSuccess && (
-        <div style={{
-          position: "fixed",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          backgroundColor: "#28a745",
-          color: "white",
-          padding: "1rem 2rem",
-          borderRadius: "8px",
-          zIndex: 1000,
-          fontSize: "1.2rem",
-          boxShadow: "0 0 10px rgba(0,0,0,0.5)"
-        }}>
-          Operación exitosa
-        </div>
-      )}
+      <UsuariosTabla usuarios={usuarios} areas={areas} roles={roles} mostrarInactivos={mostrarInactivos} busquedaNombre={busquedaNombre}/>
     </div>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  border: "1px solid #ccc",
-  padding: "8px",
-  backgroundColor: "#003B5C",
-  color: "white",
-};
-
-const tdStyle: React.CSSProperties = {
-  border: "1px solid #ccc",
-  padding: "8px",
-  backgroundColor: "#fff",
-  color: "#000",
-};
-
-const btnStyle = (color: string, fullWidth = false): React.CSSProperties => ({
-  backgroundColor: color,
-  color: "white",
-  padding: "0.5rem 1rem",
-  border: "none",
-  cursor: "pointer",
-  width: fullWidth ? "100%" : undefined,
-  marginTop: fullWidth ? "1rem" : undefined,
-});
