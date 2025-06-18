@@ -1,285 +1,311 @@
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
+import AreasRespFormulario from "../components/AreasRespFormulario";
+import AreasRespTabla from "../components/AreasRespTabla";
+import AreasRespAcciones from "../components/AreasRespAcciones";
 
 type AreaResponsable = {
-  idArea: string;
-  unidad: string;
-  reportaA: string;
-  correo: string;
-  titulo: string;
-  nombre_responsable: string;
-  apellidoP_responsable: string;
-  apellidoM_responsable: string;
-  cargo_responsable: string;
-  idPrograma: string;
-  activo: boolean;
-};
-
-type Programa = {
-  id_programa: string;
-  nombre_programa: string;
-  id_tipo_programa: string;
-  objetivo_pp: string;
-  activo: boolean;
+  nid_area: string;
+  cunidad_responsable: string;
+  creporta_a: string;
+  ccorreo_electronico_ur: string;
+  bhabilitado: boolean;
+  dfecha_alta: string;
+  dfecha_baja: string;
 };
 
 export default function AreasResponsablesCrud() {
   const [form, setForm] = useState<AreaResponsable>({
-    idArea: "",
-    unidad: "",
-    reportaA: "",
-    correo: "",
-    titulo: "",
-    nombre_responsable: "",
-    apellidoP_responsable: "",
-    apellidoM_responsable: "",
-    cargo_responsable: "",
-    idPrograma: "",
-    activo: true,
+    nid_area: "",
+    cunidad_responsable: "",
+    creporta_a: "",
+    ccorreo_electronico_ur: "",
+    bhabilitado: true,
+    dfecha_alta: "",
+    dfecha_baja: "",
   });
 
   const [modo, setModo] = useState<"agregar" | "modificar" | "eliminar" | null>(null);
   const [areas, setAreas] = useState<AreaResponsable[]>([]);
   const [busquedaId, setBusquedaId] = useState("");
   const [verInactivos, setVerInactivos] = useState(false);
+  const [soloVisualizacion, setSoloVisualizacion] = useState(false);
+  const [mensaje, setMensaje] = useState("");
+  const [error, setError] = useState("");
+  const [idBuscadoMostrado, setIdBuscadoMostrado] = useState<string | null>(null);
 
-  const [programas] = useState<Programa[]>([
-    { id_programa: "P1", nombre_programa: "Programa A", id_tipo_programa: "1", objetivo_pp: "Objetivo A", activo: true },
-    { id_programa: "P2", nombre_programa: "Programa B", id_tipo_programa: "2", objetivo_pp: "Objetivo B", activo: true },
-  ]);
+  const API_URL = "http://localhost:3001/areas-responsables";
 
-  const [asignaciones, setAsignaciones] = useState<{ [areaId: string]: string[] }>({});
-  const [showModal, setShowModal] = useState(false);
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+  const encabezados: { [key: string]: string } = {
+    nid_area: "ID Área",
+    cunidad_responsable: "Unidad Responsable",
+    creporta_a: "Reporta A",
+    ccorreo_electronico_ur: "Correo Electrónico",
+    dfecha_alta: "Fecha Alta",
+    bhabilitado: "Activo",
+    dfecha_baja: "Fecha Baja",
   };
 
-  const handleBuscarPorId = () => {
-    const areaSeleccionada = areas.find(a => a.idArea === busquedaId.trim());
-    if (areaSeleccionada) {
-      setForm(areaSeleccionada);
-    } else {
-      alert("No se encontró un área con ese ID");
+  useEffect(() => {
+    obtenerAreas();
+  }, []);
+
+  const obtenerAreas = async () => {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const areasConvertidas = (Array.isArray(data) ? data : data.areas || []).map((a: any) => ({
+        ...a,
+        bhabilitado: typeof a.bhabilitado === "object"
+          ? a.bhabilitado?.data?.[0] === 1
+          : Boolean(a.bhabilitado),
+      }));
+      setAreas(areasConvertidas);
+    } catch (err) {
+      console.error(err);
+      alert("No se pudieron cargar las áreas desde el servidor.");
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const camposVacios = Object.entries(form).filter(([key, val]) => key !== "activo")
+    const camposVacios = Object.entries(form)
+      .filter(([key]) => key !== "bhabilitado" && key !== "dfecha_baja")
       .some(([, val]) => typeof val === "string" && val.trim() === "");
     if (camposVacios) return alert("Por favor, completa todos los campos.");
 
-    if (modo === "modificar") {
-      const confirmar = confirm("¿Deseas actualizar esta área responsable?");
-      if (!confirmar) return;
-      setAreas(prev => prev.map(a => a.idArea === form.idArea ? { ...form } : a));
-    } else if (modo === "eliminar") {
-      const confirmar = confirm("¿Deseas marcar como inactiva esta área responsable?");
-      if (!confirmar) return;
-      setAreas(prev => prev.map(a => a.idArea === form.idArea ? { ...a, activo: false } : a));
-    } else if (modo === "agregar") {
-      setAreas(prev => [...prev, { ...form, activo: true }]);
+    try {
+      if (modo === "modificar") {
+        const confirmar = confirm("¿Deseas actualizar esta área responsable?");
+        if (!confirmar) return;
+
+        const { nid_area, ...restoForm } = form;
+
+        await fetch(`${API_URL}/${Number(nid_area)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(restoForm),
+        });
+
+        setMensaje("Área modificada exitosamente");
+
+      } else if (modo === "eliminar") {
+        if (!form.bhabilitado) {
+          setError("Esta área ya está inactiva.");
+          setTimeout(() => setError(""), 2000);
+          return;
+        }
+
+        const confirmar = confirm("¿Deseas marcar como inactiva esta área responsable?");
+        if (!confirmar) return;
+
+        const fechaBaja = new Date().toISOString().slice(0, 10);
+
+        await fetch(`${API_URL}/estado/${form.nid_area}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bhabilitado: false,
+            dfecha_baja: fechaBaja,
+          }),
+        });
+
+        setMensaje("Área marcada como inactiva");
+
+      } else if (modo === "agregar") {
+  const formAEnviar = {
+    ...form,
+    nid_area: Number(form.nid_area), // 🟢 Asegurar que vaya como número
+    dfecha_alta: new Date(form.dfecha_alta), // 🟢 Convertir a Date si es string
+    dfecha_baja: null // 🟢 No se debe enviar en alta
+  };
+
+  await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formAEnviar),
+  });
+
+  setMensaje("Área agregada exitosamente");
+}
+
+
+
+      await obtenerAreas();
+      resetForm();
+      setModo(null);
+      setSoloVisualizacion(false);
+      setIdBuscadoMostrado(null);
+      setTimeout(() => setMensaje(""), 3000);
+    } catch (err) {
+      console.error(err);
+      alert("Error al realizar la operación.");
+    }
+  };
+
+  const reactivarArea = async () => {
+    if (!form.nid_area) {
+      setError("No hay área seleccionada.");
+      return;
     }
 
+    if (form.bhabilitado) {
+      setError("El área ya está activa.");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
+
+    const confirmar = confirm("¿Deseas reactivar esta área responsable?");
+    if (!confirmar) return;
+
+    try {
+      const res = await fetch(`${API_URL}/reactivar/${form.nid_area}`, {
+        method: "PATCH",
+      });
+
+      if (!res.ok) {
+        const errorBody = await res.json();
+        throw new Error(errorBody.message || "Error al reactivar");
+      }
+
+      setMensaje("Área reactivada exitosamente");
+      await obtenerAreas();
+
+      setForm(prev => ({
+        ...prev,
+        bhabilitado: true,
+        dfecha_baja: "",
+      }));
+
+      setModo(null);
+      setSoloVisualizacion(false);
+      setIdBuscadoMostrado(null);
+      setTimeout(() => setMensaje(""), 3000);
+    } catch (err: any) {
+      console.error("Error al reactivar:", err);
+      setError(err.message || "Error inesperado al reactivar");
+      setTimeout(() => setError(""), 3000);
+    }
+  };
+
+
+  const resetForm = () => {
     setForm({
-      idArea: "",
-      unidad: "",
-      reportaA: "",
-      correo: "",
-      titulo: "",
-      nombre_responsable: "",
-      apellidoP_responsable: "",
-      apellidoM_responsable: "",
-      cargo_responsable: "",
-      idPrograma: "",
-      activo: true,
+      nid_area: "",
+      cunidad_responsable: "",
+      creporta_a: "",
+      ccorreo_electronico_ur: "",
+      bhabilitado: true,
+      dfecha_alta: "",
+      dfecha_baja: "",
     });
     setModo(null);
+    setSoloVisualizacion(false);
+    setIdBuscadoMostrado(null);
+    setBusquedaId("");
   };
 
-  const handleCheckboxChange = (areaId: string, programaId: string) => {
-    setAsignaciones(prev => {
-      const current = prev[areaId] || [];
-      if (current.includes(programaId)) {
-        return { ...prev, [areaId]: current.filter(id => id !== programaId) };
+  const handleBuscarPorId = () => {
+    const idBuscado = parseInt(busquedaId.trim());
+    const areaSeleccionada = areas.find(a => parseInt(a.nid_area) === idBuscado);
+
+    if (areaSeleccionada) {
+      setForm({
+        ...areaSeleccionada,
+        nid_area: String(areaSeleccionada.nid_area),
+      });
+
+      if (modo === "modificar" || modo === "eliminar") {
+        setSoloVisualizacion(false);
       } else {
-        return { ...prev, [areaId]: [...current, programaId] };
+        setModo(null);
+        setSoloVisualizacion(true);
       }
-    });
-  };
 
-  const handleGuardarAsignaciones = () => {
-    console.log("Asignaciones guardadas:", asignaciones);
-    setShowModal(false);
+      setIdBuscadoMostrado(busquedaId.trim());
+    } else {
+      alert("No se encontró un área con ese ID");
+      setIdBuscadoMostrado(null);
+    }
   };
 
   const obtenerTitulo = () => {
     if (modo === "agregar") return "Agregar área responsable";
     if (modo === "modificar") return "Modificar área responsable";
     if (modo === "eliminar") return "Eliminar área responsable";
+    if (soloVisualizacion) return "Visualización de área responsable";
     return "Catálogo de Áreas Responsables";
   };
 
-  const encabezados: { [key: string]: string } = {
-    idArea: "ID Área",
-    unidad: "Unidad",
-    reportaA: "Reporta A",
-    correo: "Correo Electrónico",
-    titulo: "Título",
-    nombre_responsable: "Nombre Responsable",
-    apellidoP_responsable: "Apellido P Responsable",
-    apellidoM_responsable: "Apellido M Responsable",
-    cargo_responsable: "Cargo Responsable",
-    idPrograma: "ID Programa",
-  };
   return (
     <div style={{ backgroundColor: "#222", color: "white", padding: "2rem" }}>
-      <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>{obtenerTitulo()}</h2>
 
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-        <input
-          placeholder="Buscar por ID"
-          value={busquedaId}
-          onChange={(e) => setBusquedaId(e.target.value)}
-          style={{ flex: 1, padding: "0.5rem" }}
-        />
-        <button onClick={handleBuscarPorId} style={btnStyle("#0077b6")}>Buscar</button>
-        <button onClick={() => setModo("agregar")} style={btnStyle("#004c75")}>Agregar</button>
-        <button onClick={() => setModo("modificar")} style={btnStyle("#004c75")}>Modificar</button>
-        <button onClick={() => setShowModal(true)} style={btnStyle("#006400")}>AresResp_ProgramaPresu</button>
-        <button onClick={() => setModo("eliminar")} style={btnStyle("#8B0000")}>Eliminar</button>
-        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <input
-            type="checkbox"
-            checked={verInactivos}
-            onChange={() => setVerInactivos(!verInactivos)}
-          />
-          Ver inactivos
-        </label>
-      </div>
 
-      {modo && (
-        <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
-          {Object.entries(form).map(([key, value]) => (
-            key !== "activo" && (
-              <input
-                key={key}
-                name={key}
-                placeholder={(encabezados[key] || key).toUpperCase()}
-                value={typeof value === 'string' ? value : ''}
-                onChange={handleChange}
-                style={{ width: "100%", marginBottom: "0.5rem", padding: "0.5rem" }}
-                readOnly={modo === "eliminar" && key !== "idArea"}
-              />
-            )
-          ))}
-          <button type="submit" style={btnStyle(modo === "eliminar" ? "#8B0000" : "#0077b6", true)}>
-            {modo === "modificar" ? "Actualizar" : modo === "eliminar" ? "Marcar inactivo" : "Guardar"}
-          </button>
-        </form>
-      )}
-
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            {Object.keys(form).filter(k => k !== "activo").map((key) => (
-              <th key={key} style={thStyle}>{encabezados[key] || key.toUpperCase()}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {areas.filter(a => verInactivos || a.activo).map((a) => (
-            <tr key={a.idArea} style={{ opacity: a.activo ? 1 : 0.5 }}>
-              {Object.entries(a).filter(([k]) => k !== "activo").map(([key, val]) => (
-                <td key={key} style={tdStyle}>{val}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Modal de Asignaciones */}
-      {showModal && (
-        <div style={modalOverlayStyle}>
-          <div style={modalContentStyle}>
-  <h3 style={{ textAlign: "center", marginBottom: "1rem" }}>Asignar Programas a Áreas</h3>
-  <div style={{ maxHeight: "300px", overflowY: "auto", marginBottom: "1rem" }}>
-    {areas.length === 0 ? (
-      <p>No hay áreas registradas.</p>
-    ) : (
-      areas.map(area => (
-        <div key={area.idArea} style={{ marginBottom: "1rem", borderBottom: "1px solid #ccc" }}>
-          <strong style={{ color: "#003B5C" }}>{area.unidad}</strong>
-          {programas.map(prog => (
-            <div key={prog.id_programa}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={asignaciones[area.idArea]?.includes(prog.id_programa) || false}
-                  onChange={() => handleCheckboxChange(area.idArea, prog.id_programa)}
-                />
-                {prog.nombre_programa}
-              </label>
-            </div>
-          ))}
-        </div>
-      ))
-    )}
-  </div>
-  <button onClick={handleGuardarAsignaciones} style={btnStyle("#0077b6")}>Guardar Cambios</button>
-  <button onClick={() => setShowModal(false)} style={btnStyle("#8B0000")}>Cancelar</button>
-</div>
-
+      {mensaje && (
+        <div style={{
+          backgroundColor: "green",
+          padding: "1rem",
+          color: "white",
+          textAlign: "center",
+          borderRadius: "8px",
+          marginBottom: "1rem"
+        }}>
+          ✅ {mensaje}
         </div>
       )}
+
+      {error && (
+        <div style={{
+          backgroundColor: "#8B0000",
+          padding: "1rem",
+          color: "white",
+          textAlign: "center",
+          borderRadius: "8px",
+          marginBottom: "1rem",
+          fontWeight: "bold"
+        }}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      <AreasRespAcciones
+        form={form}
+        setModo={setModo}
+        resetForm={resetForm}
+        setSoloVisualizacion={setSoloVisualizacion}
+        setError={setError}
+        verInactivos={verInactivos}
+        setVerInactivos={setVerInactivos}
+        handleBuscar={handleBuscarPorId}
+        busquedaId={busquedaId}
+        setBusquedaId={setBusquedaId}
+        puedeReactivar={verInactivos && !form.bhabilitado}
+        reactivarArea={reactivarArea}
+      />
+
+      <AreasRespFormulario
+        form={form}
+        modo={modo}
+        soloVisualizacion={soloVisualizacion}
+        encabezados={encabezados}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+      />
+
+      <AreasRespTabla
+        areas={areas}
+        verInactivos={verInactivos}
+        encabezados={encabezados}
+      />
     </div>
   );
 }
-const thStyle: React.CSSProperties = {
-  border: "1px solid #ccc",
-  padding: "8px",
-  backgroundColor: "#003B5C",
-  color: "white",
-};
-
-const tdStyle: React.CSSProperties = {
-  border: "1px solid #ccc",
-  padding: "8px",
-  backgroundColor: "#fff",
-  color: "#000",
-};
-
-const modalOverlayStyle: React.CSSProperties = {
-  position: "fixed",
-  top: 0,
-  left: 0,
-  width: "100vw",
-  height: "100vh",
-  backgroundColor: "rgba(0,0,0,0.7)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 1000,
-};
-
-const modalContentStyle: React.CSSProperties = {
-  backgroundColor: "white",
-  color: "black",
-  padding: "2rem",
-  borderRadius: "8px",
-  width: "400px",
-  maxHeight: "80vh",
-  overflowY: "auto",
-};
-
-const btnStyle = (color: string, fullWidth = false): React.CSSProperties => ({
-  backgroundColor: color,
-  color: "white",
-  padding: "0.5rem 1rem",
-  border: "none",
-  cursor: "pointer",
-  width: fullWidth ? "100%" : undefined,
-  marginTop: fullWidth ? "1rem" : undefined,
-});

@@ -8,9 +8,37 @@ export default function HomePage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [advertencia, setAdvertencia] = useState('')
 
-  const handleLogin = () => {
+ const handleLogin = async () => {
+  setAdvertencia('')
+  try {
+    const res = await fetch('http://localhost:3001/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rfc: username, password }), // ✅ Campo corregido aquí
+    })
+
+    if (!res.ok) throw new Error('Credenciales incorrectas')
+
+    const data = await res.json()
+    console.log('✅ Login exitoso:', data)
+
+    const nombreCompleto = `${data.cnombre_usuario} ${data.capellido_p_usuario}`
+    localStorage.setItem('nombre_usuario', nombreCompleto)
+
     setIsLoggedIn(true)
+  } catch {
+    setAdvertencia('❌ Usuario o contraseña incorrectos')
+  }
+}
+
+
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleLogin()
+    }
   }
 
   if (!isLoggedIn) {
@@ -21,9 +49,8 @@ export default function HomePage() {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        overflow: 'hidden' // <- evita líneas abajo
+        overflow: 'hidden'
       }}>
-      
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -31,25 +58,14 @@ export default function HomePage() {
           flexWrap: 'wrap',
           justifyContent: 'center'
         }}>
-         <div style={{ textAlign: 'left', lineHeight: '1.6', maxWidth: '600px' }}>
-          <h1 style={{
-            color: '#1f2e52',
-            fontWeight: '900',
-            margin: 0,
-            fontSize: '2.6rem'
-          }}>
-            Bienvenido al sistema<br />de
-          </h1>
-          <h1 style={{
-            color: '#c89700',
-            fontWeight: '900',
-            margin: 0,
-            fontSize: '2.6rem'
-          }}>
-            Seguimiento Programático<br />de la FES ACATLÁN
-          </h1>
-        </div>
-
+          <div style={{ textAlign: 'left', lineHeight: '1.6', maxWidth: '600px' }}>
+            <h1 style={{ color: '#1f2e52', fontWeight: '900', margin: 0, fontSize: '2.6rem' }}>
+              Bienvenido al sistema<br />de
+            </h1>
+            <h1 style={{ color: '#c89700', fontWeight: '900', margin: 0, fontSize: '2.6rem' }}>
+              Seguimiento Programático<br />de la FES ACATLÁN
+            </h1>
+          </div>
 
           {/* Formulario */}
           <div style={{
@@ -90,6 +106,7 @@ export default function HomePage() {
                   placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
@@ -122,6 +139,8 @@ export default function HomePage() {
               </div>
             </div>
 
+            {advertencia && <div style={{ color: 'red', textAlign: 'center' }}>{advertencia}</div>}
+
             <button
               onClick={handleLogin}
               style={{
@@ -143,59 +162,18 @@ export default function HomePage() {
     )
   }
 
-  // 👇 Contenido principal ya autenticado
+  // Vista tras login exitoso (sin el mensaje ni botón de salir)
   return (
-    <div className="home-container">
-      <h1>Bienvenido al Sistema de Indicadores</h1>
-
-
+    <div style={{ textAlign: 'center', marginTop: '3rem' }}>
       <div className="navigation-buttons">
-        <button
-          className="primary-button"
-          onClick={() => router.push('/Logros')}>
-          Ver Logros
-        </button>
-
-        <button 
-          className="primary-button"
-          onClick={() => router.push('/Fechas')}>
-          Fechas
-        </button>
-
-        <button
-          className="primary-button"
-          onClick={() => router.push('/ABC')}>
-          CATÁLOGOS
-        </button>
-
-        <button
-          className="primary-button"
-          onClick={() => router.push('/Excel')}>
-          Ver excel
-        </button>
-
-        <button
-          className="primary-button"
-          onClick={() => router.push('/Ind_seg')}>
-         Ver segmentados
-        </button>
-
-
-        <button
-          className="primary-button"
-          onClick={() => router.push('/p31-actividades')}
-        >
-          P31 Actividades
-        </button>
-        <button
-          className="primary-button"
-          onClick={() => router.push('/proyectos')}
-        >
-          Registrar Proyecto
-        </button>
+        <button className="primary-button" onClick={() => router.push('/Logros')}>Ver Logros</button>
+        <button className="primary-button" onClick={() => router.push('/Fechas')}>Fechas</button>
+        <button className="primary-button" onClick={() => router.push('/ABC')}>CATÁLOGOS</button>
+        <button className="primary-button" onClick={() => router.push('/Excel')}>Ver excel</button>
+        <button className="primary-button" onClick={() => router.push('/Ind_seg')}>Ver segmentados</button>
+        <button className="primary-button" onClick={() => router.push('/p31-actividades')}>P31 Actividades</button>
+        <button className="primary-button" onClick={() => router.push('/proyectos')}>Registrar Proyecto</button>
       </div>
     </div>
-
-    
   )
 }
