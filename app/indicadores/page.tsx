@@ -14,7 +14,11 @@ export default function IndicadoresPage() {
   const [actualizar, setActualizar] = useState(0);
   const [mostrarSoloInhabilitados, setMostrarSoloInhabilitados] = useState(false);
  const recargarAction = () => setActualizar(a => a + 1);
-  const [indicadorSeleccionado, setIndicadorSeleccionado] = useState(null);
+  type Indicador = {
+    nid_indicador: number;
+    [key: string]: any;
+  };
+  const [indicadorSeleccionado, setIndicadorSeleccionado] = useState<Indicador | null>(null);
   const [datosExcel, setDatosExcel] = useState<any[]>([]);
   const cargarIndicadores = async () => {
   try {
@@ -37,6 +41,13 @@ export default function IndicadoresPage() {
   // Cargar indicadores al iniciar
   useEffect(() => { cargarIndicadores(); }, [actualizar]);
     
+  const seleccionarIndicador = (ind: any) => {
+  setIndicadorSeleccionado(ind);
+  console.log("✅ Indicador seleccionado:", ind);
+};
+
+
+
   return (
   <div className="ProgPresNumNom" style={{ paddingTop: 0, marginTop: 0 }}>
     <IndicadoresActions
@@ -52,7 +63,7 @@ export default function IndicadoresPage() {
     <IndicadoresTabla
       setDatosExcelAction={setDatosExcel}
       indicadores={indicadores}
-      onSeleccionarAction={setIndicadorSeleccionado}
+      onSeleccionarAction={seleccionarIndicador} // ✅ usa la función definida arriba
       indicadorSeleccionado={indicadorSeleccionado}
       mostrarSoloInhabilitados={mostrarSoloInhabilitados}
     />

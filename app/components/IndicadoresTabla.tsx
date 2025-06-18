@@ -1,10 +1,12 @@
 'use client';
 import React, { useEffect, useState, useRef } from 'react';
+import styled from 'styled-components';
 
 type Frecuencia = { nid_frecuencia: number; cfrecuencia: string; };
 type TipoCalculo = { nid_tipo_calculo: number; ctipo_calculo: string; };
 type TipoIndicador = { nid_tipo_indicador: number; ccolor_indicador: string; };
 type Clasificacion = { nid_clasificacion: number; cnombre_clasificacion: string; };
+type Programa = { nid_programa_presupuestal: number; cprograma_presupuestal: string };
 
 type IndicadoresTablaProps = {
   indicadores: any[];
@@ -23,14 +25,17 @@ const defaultColumns = [
   { key: "cfuente", label: "Fuente", width: 100 },
   { key: "tipo_calculo", label: "Tipo Cálculo", width: 120 },
   { key: "tipo_indicador", label: "Tipo Indicador", width: 130 },
+  { key: "programa", label: "Programa Presupuestal", width: 180 }, 
   { key: "bhabilitado", label: "Eliminado", width: 110 },
 ];
+
 
 const API = {
   frecuencias: 'http://localhost:3001/frecuencias',
   tiposCalculo: 'http://localhost:3001/tipo-calculo',
   tiposIndicador: 'http://localhost:3001/tipo-indicador',
   clasificaciones: 'http://localhost:3001/clasificacion',
+  programasPresupuestales: 'http://localhost:3001/programa-presupuestal'
 };
 
 function extraeLista<T>(data: any): T[] {
@@ -40,6 +45,16 @@ function extraeLista<T>(data: any): T[] {
   if (Array.isArray(data.items)) return data.items;
   return [];
 }
+
+const StyledTableRow = styled.tr<{ $isSelected: boolean }>`
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  background-color: ${props => props.$isSelected ? '#ffe082' : 'transparent'};
+  
+  &:hover {
+    background-color: ${props => props.$isSelected ? '#ffd54f' : '#f5f5f5'};
+  }
+`;
 
 export default function IndicadoresTabla({
   indicadores,
@@ -53,9 +68,9 @@ export default function IndicadoresTabla({
   const [tiposCalculo, setTiposCalculo] = useState<TipoCalculo[]>([]);
   const [tiposIndicador, setTiposIndicador] = useState<TipoIndicador[]>([]);
   const [clasificaciones, setClasificaciones] = useState<Clasificacion[]>([]);
+  const [programas, setProgramas] = useState<Programa[]>([]);
 
   // Columnas y filtros
-  const [columns] = useState(defaultColumns);
   const [columnWidths, setColumnWidths] = useState<{ [k: string]: number }>(
     Object.fromEntries(defaultColumns.map(c => [c.key, c.width]))
   );
@@ -64,18 +79,26 @@ export default function IndicadoresTabla({
 
   // Cargar catálogos
   useEffect(() => {
-    fetch(API.tiposCalculo)
-      .then(r => r.json())
-      .then(data => setTiposCalculo(extraeLista<TipoCalculo>(data)));
-    fetch(API.tiposIndicador)
-      .then(r => r.json())
-      .then(data => setTiposIndicador(extraeLista<TipoIndicador>(data)));
-    fetch(API.frecuencias)
-      .then(r => r.json())
-      .then(data => setFrecuencias(extraeLista<Frecuencia>(data)));
-    fetch(API.clasificaciones)
-      .then(r => r.json())
-      .then(data => setClasificaciones(extraeLista<Clasificacion>(data)));
+    const fetchData = async () => {
+      try {
+    const [tiposCalcRes, tiposIndRes, frecRes, clasRes, programasRes] = await Promise.all([
+      fetch(API.tiposCalculo).then(r => r.json()),
+      fetch(API.tiposIndicador).then(r => r.json()),
+      fetch(API.frecuencias).then(r => r.json()),
+      fetch(API.clasificaciones).then(r => r.json()),
+      fetch(API.programasPresupuestales).then(r => r.json())
+    ]);
+    setTiposCalculo(extraeLista<TipoCalculo>(tiposCalcRes));
+    setTiposIndicador(extraeLista<TipoIndicador>(tiposIndRes));
+    setFrecuencias(extraeLista<Frecuencia>(frecRes));
+    setClasificaciones(extraeLista<Clasificacion>(clasRes));
+    setProgramas(extraeLista<Programa>(programasRes));
+      } catch (error) {
+        console.error("Error cargando catálogos:", error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   // Resize columnas
@@ -109,62 +132,56 @@ export default function IndicadoresTabla({
 
   // Filtros y valores de columna
   const getColValue = (ind: any, key: string) => {
-    if (key === "bhabilitado")
-    return ind.bhabilitado ? "No" : "Sí"; // O muestra un ícono/check/cross
-    if (key === "clasificacion")
+    if (key === "bhabilitado") return ind.bhabilitado ? "No" : "Sí";
+    if (key === "clasificacion") 
       return clasificaciones.find(c => c.nid_clasificacion === ind.nid_clasificacion)?.cnombre_clasificacion ?? "";
-    if (key === "frecuencia")
+    if (key === "frecuencia") 
       return frecuencias.find(f => Number(f.nid_frecuencia) === Number(ind.nid_frecuencia))?.cfrecuencia ?? "";
-    if (key === "tipo_calculo")
+    if (key === "tipo_calculo") 
       return tiposCalculo.find(tc => tc.nid_tipo_calculo === ind.nid_tipo_calculo)?.ctipo_calculo ?? "";
-    if (key === "tipo_indicador")
+    if (key === "tipo_indicador") 
       return tiposIndicador.find(ti => ti.nid_tipo_indicador === ind.nid_tipo_indicador)?.ccolor_indicador ?? "";
-    return (ind as any)[key] ?? "";
+    if (key === "programa")
+    return programas.find(p => Number(p.nid_programa_presupuestal) === Number(ind.nid_programa_presupuestal))?.cprograma_presupuestal ?? "";
+
+  return (ind as any)[key] ?? "";
   };
 
   // Filtrado
   const indicadoresFiltrados = mostrarSoloInhabilitados
-  ? indicadores.filter(ind => ind.bhabilitado === 0)
-  : indicadores.filter(ind => ind.bhabilitado !== 0); // <--- SOLO los activos por default
+    ? indicadores.filter(ind => ind.bhabilitado === 0)
+    : indicadores.filter(ind => ind.bhabilitado !== 0);
 
+  const filteredIndicadores = indicadoresFiltrados.filter(ind =>
+    defaultColumns.every(col =>
+      !filters[col.key] ||
+      String(getColValue(ind, col.key)).toLowerCase().includes(filters[col.key].toLowerCase())
+    )
+  );
 
- // Filtrado de indicadores
-const filteredIndicadores = indicadoresFiltrados.filter(ind =>
-  columns.every(col =>
-    !filters[col.key] ||
-    String(getColValue(ind, col.key)).toLowerCase().includes(filters[col.key].toLowerCase())
-  )
-);
-  // Exportación: mapea los datos visibles (sin IDs)
-// Solo actualiza si realmente cambió usando un ref para comparar:
-const prevDatosExcel = useRef<any[]>([]);
+  // Exportación a Excel
+  const prevDatosExcel = useRef<any[]>([]);
 
-useEffect(() => {
-  const datosLimpios = filteredIndicadores.map(ind => ({
-    Clave: ind.cclave_indicador,
-    Descripción: ind.cdesc_indicador,
-    Definición: ind.cdefinicion_indicador,
-    Clasificación: getColValue(ind, 'clasificacion'),
-    Frecuencia: getColValue(ind, 'frecuencia'),
-    Fuente: ind.cfuente,
-    "Tipo Cálculo": getColValue(ind, 'tipo_calculo'),
-    "Tipo Indicador": getColValue(ind, 'tipo_indicador'),
-  }));
+  useEffect(() => {
+    const datosLimpios = filteredIndicadores.map(ind => ({
+      Clave: ind.cclave_indicador,
+      Descripción: ind.cdesc_indicador,
+      Definición: ind.cdefinicion_indicador,
+      ProgramaPresupuestal: getColValue(ind, 'programa'),
 
-  if (JSON.stringify(prevDatosExcel.current) !== JSON.stringify(datosLimpios)) {
-    setDatosExcelAction(datosLimpios);
-    prevDatosExcel.current = datosLimpios;
-  }
-}, [
-  filteredIndicadores,
-  clasificaciones,
-  frecuencias,
-  tiposCalculo,
-  tiposIndicador
-]);
+      Clasificación: getColValue(ind, 'clasificacion'),
+      Frecuencia: getColValue(ind, 'frecuencia'),
+      Fuente: ind.cfuente,
+      "Tipo Cálculo": getColValue(ind, 'tipo_calculo'),
+      "Tipo Indicador": getColValue(ind, 'tipo_indicador'),
+      Eliminado: ind.bhabilitado ? "No" : "Sí"
+    }));
 
-
-
+    if (JSON.stringify(prevDatosExcel.current) !== JSON.stringify(datosLimpios)) {
+      setDatosExcelAction(datosLimpios);
+      prevDatosExcel.current = datosLimpios;
+    }
+  }, [filteredIndicadores, clasificaciones, frecuencias, tiposCalculo, tiposIndicador]);
 
   // Estilos
   const thtdStyle: React.CSSProperties = {
@@ -174,12 +191,16 @@ useEffect(() => {
     background: '#f7fafc'
   };
 
-  // Render tabla
   return (
     <div style={{ maxWidth: 1200, margin: '2rem auto' }}>
       <h2>Indicadores registrados</h2>
       <button
-        onClick={() => setShowFilters(f => !f)}
+        onClick={() => {
+          setShowFilters(prev => {
+            if (prev) setFilters({});
+            return !prev;
+          });
+        }}
         style={{
           marginBottom: 10,
           background: '#003B5C',
@@ -191,87 +212,103 @@ useEffect(() => {
           fontSize: '1rem'
         }}
       >
-        Filtros
+        {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
       </button>
-      <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff',  tableLayout: 'fixed' }}>
-        <thead>
-          <tr>
-            {columns.map(col => (
-              <th
-                key={col.key}
-               style={{
-                ...thtdStyle,
-                width: `${columnWidths[col.key]}px`,      // Siempre en px
-                minWidth: `${columnWidths[col.key]}px`,   // Siempre en px
-                maxWidth: `${columnWidths[col.key]}px`,   // Opcional, para forzar
-                position: 'relative',
-                background: '#003B5C',
-                color: '#fff'
-              }}
-              >
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <span style={{ flex: 1 }}>{col.label}</span>
-                  <div
-                    onMouseDown={e => handleResizeMouseDown(col.key, e)}
-                    style={{
-                      width: 8,
-                      height: "100%",
-                      cursor: "col-resize",
-                      position: "absolute",
-                      right: 0,
-                      top: 0,
-                      zIndex: 2,
-                      background: "#fff6"
-                    }}
-                  />
-                </div>
-              </th>
-            ))}
-          </tr>
-          {showFilters && (
+      
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ 
+          width: '100%', 
+          borderCollapse: 'collapse', 
+          background: '#fff',
+          tableLayout: 'fixed',
+          minWidth: '100%'
+        }}>
+          <thead>
             <tr>
-              {columns.map(col => (
-                <th key={col.key} style={thtdStyle}>
-                  <input
-                    type="text"
-                    placeholder={`Filtrar ${col.label}`}
-                    value={filters[col.key] || ""}
-                    onChange={e =>
-                      setFilters(f => ({ ...f, [col.key]: e.target.value }))
-                    }
-                    style={{
-                      width: "95%",
-                      fontSize: 13,
-                      padding: 2,
-                      margin: 1,
-                    }}
-                  />
+              {defaultColumns.map(col => (
+                <th
+                  key={col.key}
+                  style={{
+                    ...thtdStyle,
+                    width: `${columnWidths[col.key]}px`,
+                    minWidth: `${columnWidths[col.key]}px`,
+                    maxWidth: `${columnWidths[col.key]}px`,
+                    position: 'relative',
+                    background: '#003B5C',
+                    color: '#fff'
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <span style={{ flex: 1 }}>{col.label}</span>
+                    <div
+                      onMouseDown={e => handleResizeMouseDown(col.key, e)}
+                      style={{
+                        width: 8,
+                        height: "100%",
+                        cursor: "col-resize",
+                        position: "absolute",
+                        right: 0,
+                        top: 0,
+                        zIndex: 2,
+                        background: "#ffffff66"
+                      }}
+                    />
+                  </div>
                 </th>
               ))}
             </tr>
-          )}
-        </thead>
-        <tbody>
-        {filteredIndicadores.map(ind => (
-          <tr
-            key={ind.nid_indicador}
-            style={{
-              cursor: "pointer",
-              background: indicadorSeleccionado && indicadorSeleccionado.nid_indicador === ind.nid_indicador
-                ? "#ffe082"
-                : ""
-            }}
-            onClick={() => onSeleccionarAction(ind)}
-          >
-            {columns.map(col => (
-              <td key={col.key} style={thtdStyle}>
-                {getColValue(ind, col.key)}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-      </table>
+            
+            {showFilters && (
+              <tr>
+                {defaultColumns.map(col => (
+                  <th key={col.key} style={thtdStyle}>
+                    <input
+                      type="text"
+                      placeholder={`Filtrar ${col.label}`}
+                      value={filters[col.key] || ""}
+                      onChange={e =>
+                        setFilters(f => ({ ...f, [col.key]: e.target.value }))
+                      }
+                      style={{
+                        width: "95%",
+                        fontSize: 13,
+                        padding: 2,
+                        margin: 1,
+                        border: '1px solid #ddd',
+                        borderRadius: 4
+                      }}
+                    />
+                  </th>
+                ))}
+              </tr>
+            )}
+          </thead>
+          
+          <tbody>
+            {filteredIndicadores.map(ind => {
+              return (
+                <StyledTableRow
+                  key={ind.nid_indicador}
+                  $isSelected={indicadorSeleccionado?.nid_indicador === ind.nid_indicador}
+                  onClick={() => setTimeout(() => onSeleccionarAction(ind), 10)}
+                >
+                  {defaultColumns.map(col => (
+                    <td 
+                      key={col.key} 
+                      style={{
+                        ...thtdStyle,
+                        backgroundColor: 'transparent'
+                      }}
+                    >
+                      {getColValue(ind, col.key)}
+                    </td>
+                  ))}
+                </StyledTableRow>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
