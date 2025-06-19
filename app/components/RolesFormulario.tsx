@@ -67,19 +67,21 @@ export default function RolesFormulario({ form, modo, onChange, onSubmit }: Prop
         />
       </div>
 
-      <div style={fieldRow}>
-        <label htmlFor="dfechaAlta" style={labelStyle}>Fecha Alta:</label>
-        <input
-          id="dfechaAlta"
-          name="dfechaAlta"
-          type="date"
-          value={form.dfechaAlta}
-          onChange={onChange}
-          autoComplete="off"
-          style={inputStyle}
-          readOnly={modo === 'eliminar' || modo === null}
-        />
-      </div>
+      {/* ✅ Mostrar Fecha Alta solo en modo visualización */}
+      {modo === null && (
+        <div style={fieldRow}>
+          <label htmlFor="dfechaAlta" style={labelStyle}>Fecha Alta:</label>
+          <input
+            id="dfechaAlta"
+            name="dfechaAlta"
+            type="date"
+            value={form.dfechaAlta}
+            autoComplete="off"
+            readOnly
+            style={inputStyle}
+          />
+        </div>
+      )}
 
       {(modo === 'eliminar' || modo === null) && form.dfechaBaja && (
         <div style={fieldRow}>
@@ -90,8 +92,8 @@ export default function RolesFormulario({ form, modo, onChange, onSubmit }: Prop
             type="date"
             value={form.dfechaBaja}
             autoComplete="off"
-            style={inputStyle}
             readOnly
+            style={inputStyle}
           />
         </div>
       )}

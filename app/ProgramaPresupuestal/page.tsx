@@ -190,15 +190,17 @@ const handleSubmit = async (e: React.FormEvent) => {
         onChangeBusqueda={(e) => setBusquedaId(e.target.value)}
         onBuscar={handleBuscarPorId}
         onAgregar={() => {
+          const hoy = new Date().toISOString().split('T')[0];
           setForm({
             nid_programa_presupuestal: '',
             cprograma_presupuestal: '',
             cdefinicion_programa_presupuestal: '',
-            bhabilitado: true,
-            dfecha_alta: '',
+            dfecha_alta: hoy, // 👈 se asigna automáticamente
             dfecha_baja: '',
+            bhabilitado: true,
           });
           setModo('agregar');
+
         }}
         onModificar={() => {
           if (!form.bhabilitado) {

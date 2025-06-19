@@ -61,6 +61,7 @@ export default function AreasResponsablesCrud() {
           ? a.bhabilitado?.data?.[0] === 1
           : Boolean(a.bhabilitado),
       }));
+
       setAreas(areasConvertidas);
     } catch (err) {
       console.error(err);
@@ -68,8 +69,8 @@ export default function AreasResponsablesCrud() {
     }
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type, checked } = e.target as HTMLInputElement;
     setForm(prev => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -97,7 +98,6 @@ export default function AreasResponsablesCrud() {
         });
 
         setMensaje("Área modificada exitosamente");
-
       } else if (modo === "eliminar") {
         if (!form.bhabilitado) {
           setError("Esta área ya está inactiva.");
@@ -120,25 +120,22 @@ export default function AreasResponsablesCrud() {
         });
 
         setMensaje("Área marcada como inactiva");
-
       } else if (modo === "agregar") {
-  const formAEnviar = {
-    ...form,
-    nid_area: Number(form.nid_area), // 🟢 Asegurar que vaya como número
-    dfecha_alta: new Date(form.dfecha_alta), // 🟢 Convertir a Date si es string
-    dfecha_baja: null // 🟢 No se debe enviar en alta
-  };
+        const formAEnviar = {
+          ...form,
+          nid_area: Number(form.nid_area),
+          dfecha_alta: new Date(form.dfecha_alta),
+          dfecha_baja: null
+        };
 
-  await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(formAEnviar),
-  });
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formAEnviar),
+        });
 
-  setMensaje("Área agregada exitosamente");
-}
-
-
+        setMensaje("Área agregada exitosamente");
+      }
 
       await obtenerAreas();
       resetForm();
@@ -197,15 +194,15 @@ export default function AreasResponsablesCrud() {
     }
   };
 
-
   const resetForm = () => {
+    const hoy = new Date().toISOString().split("T")[0];
     setForm({
       nid_area: "",
       cunidad_responsable: "",
       creporta_a: "",
       ccorreo_electronico_ur: "",
       bhabilitado: true,
-      dfecha_alta: "",
+      dfecha_alta: hoy,
       dfecha_baja: "",
     });
     setModo(null);
@@ -238,18 +235,8 @@ export default function AreasResponsablesCrud() {
     }
   };
 
-  const obtenerTitulo = () => {
-    if (modo === "agregar") return "Agregar área responsable";
-    if (modo === "modificar") return "Modificar área responsable";
-    if (modo === "eliminar") return "Eliminar área responsable";
-    if (soloVisualizacion) return "Visualización de área responsable";
-    return "Catálogo de Áreas Responsables";
-  };
-
   return (
     <div style={{ backgroundColor: "#222", color: "white", padding: "2rem" }}>
-
-
       {mensaje && (
         <div style={{
           backgroundColor: "green",
@@ -299,6 +286,7 @@ export default function AreasResponsablesCrud() {
         encabezados={encabezados}
         handleChange={handleChange}
         handleSubmit={handleSubmit}
+        areasRegistradas={areas}
       />
 
       <AreasRespTabla

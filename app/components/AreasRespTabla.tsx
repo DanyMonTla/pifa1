@@ -24,6 +24,7 @@ export default function AreasRespTabla({ areas, verInactivos, encabezados }: Pro
       <thead>
         <tr>
           {Object.keys(encabezados).map((key) => {
+            if (key === "dfecha_alta") return null; // 👈 Oculta Fecha Alta siempre
             if (!verInactivos && key === "dfecha_baja") return null;
             return (
               <th key={key} style={thStyle}>
@@ -39,11 +40,11 @@ export default function AreasRespTabla({ areas, verInactivos, encabezados }: Pro
           .map((a) => (
             <tr key={a.nid_area} style={{ opacity: a.bhabilitado ? 1 : 0.5 }}>
               {Object.keys(encabezados).map((key) => {
+                if (key === "dfecha_alta") return null; // 👈 Oculta también en el cuerpo
                 if (!verInactivos && key === "dfecha_baja") return null;
 
                 const val = a[key as keyof AreaResponsable];
-
-                const isFecha = key === "dfecha_alta" || key === "dfecha_baja";
+                const isFecha = key === "dfecha_baja";
                 const isEstado = key === "bhabilitado";
 
                 return (

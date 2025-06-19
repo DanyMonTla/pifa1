@@ -64,18 +64,18 @@ export default function FormularioProgramaPresupuestal({ form, modo, onChange, o
         />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-        <label style={{ width: '200px' }}>Fecha de Alta</label>
-        <input
-          type="date"
-          name="dfecha_alta"
-          value={form.dfecha_alta}
-          onChange={onChange}
-          autoComplete="off"
-          style={inputStyle}
-          readOnly={modo === 'eliminar' || modo === 'visualizar'}
-        />
-      </div>
+      {modo === 'visualizar' && (
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+          <label style={{ width: '200px' }}>Fecha de Alta</label>
+          <input
+            type="date"
+            name="dfecha_alta"
+            value={form.dfecha_alta}
+            readOnly
+            style={inputStyle}
+          />
+        </div>
+      )}
 
       {modo === 'visualizar' && !form.bhabilitado && (
         <>

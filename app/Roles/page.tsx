@@ -133,13 +133,16 @@ export default function RolesCrud() {
 
 
   const resetForm = () => {
+  const hoy = new Date().toISOString().split('T')[0]; // ✅ Fecha automática
+
     setForm({
       nidRol: '',
       crol: '',
       bhabilitado: true,
-      dfechaAlta: '',
+      dfechaAlta: hoy, // ✅ Se asigna automáticamente
       dfechaBaja: '',
     });
+
     setModo(null);
     setBusquedaId('');
   };
@@ -233,7 +236,7 @@ export default function RolesCrud() {
           <tr>
             <th style={headerEstilo}>ID Rol</th>
             <th style={headerEstilo}>Rol</th>
-            <th style={headerEstilo}>Fecha Alta</th>
+            {/* <th style={headerEstilo}>Fecha Alta</th> 👈 Eliminado */}
             <th style={headerEstilo}>Activo</th>
             {mostrarInactivos && (
               <th style={headerEstilo}>Fecha Baja</th>
@@ -247,7 +250,7 @@ export default function RolesCrud() {
               <tr key={r.nidRol} style={{ backgroundColor: r.bhabilitado ? 'white' : '#888', color: '#000' }}>
                 <td style={celdaEstilo}>{r.nidRol}</td>
                 <td style={celdaEstilo}>{r.crol}</td>
-                <td style={celdaEstilo}>{r.dfechaAlta?.substring(0, 10)}</td>
+                {/* <td style={celdaEstilo}>{r.dfechaAlta?.substring(0, 10)}</td> 👈 Eliminado */}
                 <td style={{ ...celdaEstilo, color: r.bhabilitado ? 'green' : 'red' }}>
                   {r.bhabilitado ? 'Sí' : 'No'}
                 </td>

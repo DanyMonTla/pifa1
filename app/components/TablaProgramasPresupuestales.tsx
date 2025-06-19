@@ -25,7 +25,6 @@ export default function TablaProgramasPresupuestales({ programas, mostrarInactiv
             <th style={{ ...thStyle, width: '60px' }}>ID</th>
             <th style={{ ...thStyle, width: '220px' }}>Programa Presupuestal</th>
             <th style={{ ...thStyle }}>Objetivo</th>
-            <th style={{ ...thStyle, width: '120px', whiteSpace: 'nowrap' }}>Fecha Alta</th>
             <th style={{ ...thStyle, width: '80px' }}>Activo</th>
             {mostrarInactivos && (
               <th style={{ ...thStyle, width: '120px', whiteSpace: 'nowrap' }}>Fecha Baja</th>
@@ -48,7 +47,6 @@ export default function TablaProgramasPresupuestales({ programas, mostrarInactiv
                 <td style={{ ...tdStyle, textAlign: 'justify', whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
                   {p.cdefinicion_programa_presupuestal}
                 </td>
-                <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{p.dfecha_alta?.split('T')[0]}</td>
                 <td style={{ ...tdStyle, color: p.bhabilitado ? 'green' : 'red' }}>
                   {p.bhabilitado ? 'Sí' : 'No'}
                 </td>
