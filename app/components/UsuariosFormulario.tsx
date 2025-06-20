@@ -54,63 +54,61 @@ export default function UsuariosFormulario({ form, modo, areas, roles, onChange,
           </div>
           
           <div style={rowStyle}>
-  <label style={labelStyle}>Cargo:</label>
-  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-    <select
-      value={
-        ["Coordinador", "Coordinadora", "Jefe", "Jefa", "Secretaria", "Secretaria General", "Analista"].includes(form.ccargo_usuario)
-          ? form.ccargo_usuario
-          : "Otro"
-      }
-      onChange={(e) => {
-        const valor = e.target.value;
-        if (valor === "Otro") {
-          onChange({
-            target: {
-              name: "ccargo_usuario",
-              value: "",
-            },
-          } as any);
-        } else {
-          onChange({
-            target: {
-              name: "ccargo_usuario",
-              value: valor,
-            },
-          } as any);
-        }
-      }}
-      disabled={esSoloLectura}
-      style={inputStyle}
-    >
-      <option value="">Seleccione Cargo</option>
-      <option value="Coordinador">Coordinador</option>
-      <option value="Coordinadora">Coordinadora</option>
-      <option value="Jefe">Jefe</option>
-      <option value="Jefa">Jefa</option>
-      <option value="Secretaria">Secretaria</option>
-      <option value="Secretaria General">Secretaria General</option>
-      <option value="Analista">Analista</option>
-      <option value="Otro">Otro</option>
-    </select>
+            <label style={labelStyle}>Cargo:</label>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <select
+                value={
+                  ["Coordinador", "Coordinadora", "Jefe", "Jefa", "Secretaria", "Secretaria General", "Analista"].includes(form.ccargo_usuario)
+                    ? form.ccargo_usuario
+                    : "Otro"
+                }
+                onChange={(e) => {
+                  const valor = e.target.value;
+                  if (valor === "Otro") {
+                    onChange({
+                      target: {
+                        name: "ccargo_usuario",
+                        value: "",
+                      },
+                    } as any);
+                  } else {
+                    onChange({
+                      target: {
+                        name: "ccargo_usuario",
+                        value: valor,
+                      },
+                    } as any);
+                  }
+                }}
+                disabled={esSoloLectura}
+                style={inputStyle}
+              >
+                <option value="">Seleccione Cargo</option>
+                <option value="Coordinador">Coordinador</option>
+                <option value="Coordinadora">Coordinadora</option>
+                <option value="Jefe">Jefe</option>
+                <option value="Jefa">Jefa</option>
+                <option value="Secretaria">Secretaria</option>
+                <option value="Secretaria General">Secretaria General</option>
+                <option value="Analista">Analista</option>
+                <option value="Otro">Otro</option>
+              </select>
 
-    {(
-      !["Coordinador", "Coordinadora", "Jefe", "Jefa", "Secretaria", "Secretaria General", "Analista"].includes(form.ccargo_usuario)
-    ) && (
-      <input
-        name="ccargo_usuario"
-        placeholder="Especifique otro cargo"
-        value={form.ccargo_usuario}
-        onChange={onChange}
-        autoComplete="off"
-        disabled={esSoloLectura}
-        style={{ ...inputStyle, marginTop: "0.5rem" }}
-      />
-    )}
-  </div>
-</div>
-
-
+              {(
+                !["Coordinador", "Coordinadora", "Jefe", "Jefa", "Secretaria", "Secretaria General", "Analista"].includes(form.ccargo_usuario)
+              ) && (
+                <input
+                  name="ccargo_usuario"
+                  placeholder="Especifique otro cargo"
+                  value={form.ccargo_usuario}
+                  onChange={onChange}
+                  autoComplete="off"
+                  disabled={esSoloLectura}
+                  style={{ ...inputStyle, marginTop: "0.5rem" }}
+                />
+              )}
+            </div>
+          </div>
 
           <div style={rowStyle}>
             <label style={labelStyle}>Título:</label>
