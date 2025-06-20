@@ -6,6 +6,7 @@ type Frecuencia = { nid_frecuencia: number; cfrecuencia: string };
 type TipoCalculo = { nid_tipo_calculo: number; ctipo_calculo: string };
 type TipoIndicador = { nid_tipo_indicador: number; ccolor_indicador: string };
 type Clasificacion = { nid_clasificacion: number; cnombre_clasificacion: string };
+type ProgramaPresupuestal = { nid_programa_presupuestal: number; cprograma_presupuestal: string };
 type IndicadoresFormProps = {
   modo?: 'agregar' | 'modificar';
   indicadorInicial?: any;
@@ -22,6 +23,8 @@ interface IndicadorForm {
   nid_tipo_calculo?: number;
   nid_tipo_indicador?: number;
   nid_clasificacion?: number;
+  nid_programa_presupuestal?: number;
+
 }
 
 const API = {
@@ -30,6 +33,7 @@ const API = {
   tiposIndicador: 'http://localhost:3001/tipo-indicador',
   clasificaciones: 'http://localhost:3001/clasificacion',
   indicadores: 'http://localhost:3001/indicadores',
+  programasPresupuestales: 'http://localhost:3001/programa-presupuestal'
 };
 
 function extraeLista<T>(data: any): T[] {
@@ -57,6 +61,7 @@ export default function IndicadoresForm({
     nid_tipo_calculo: undefined,
     nid_tipo_indicador: undefined,
     nid_clasificacion: undefined,
+    nid_programa_presupuestal: undefined
   });
 
   // Estados para los catálogos
@@ -64,6 +69,7 @@ export default function IndicadoresForm({
   const [tiposCalculo, setTiposCalculo] = useState<TipoCalculo[]>([]);
   const [tiposIndicador, setTiposIndicador] = useState<TipoIndicador[]>([]);
   const [clasificaciones, setClasificaciones] = useState<Clasificacion[]>([]);
+  const [programas, setProgramas] = useState<ProgramaPresupuestal[]>([]);
 
   // Cargar catálogos al montar
   useEffect(() => {
@@ -79,6 +85,9 @@ export default function IndicadoresForm({
     fetch(API.clasificaciones)
       .then(r => r.json())
       .then(data => setClasificaciones(extraeLista<Clasificacion>(data)));
+      fetch('http://localhost:3001/programa-presupuestal')
+    .then(r => r.json())
+    .then(data => setProgramas(extraeLista<ProgramaPresupuestal>(data)));
   }, []);
 
   // Cargar datos del indicador a modificar, o limpiar si es nuevo
@@ -93,6 +102,7 @@ export default function IndicadoresForm({
         nid_tipo_calculo: indicadorInicial.nid_tipo_calculo,
         nid_tipo_indicador: indicadorInicial.nid_tipo_indicador,
         nid_clasificacion: indicadorInicial.nid_clasificacion,
+        nid_programa_presupuestal: indicadorInicial.nid_programa_presupuestal,
       });
     } else {
       setForm({
@@ -154,9 +164,11 @@ export default function IndicadoresForm({
                 });
                 // Llama SIEMPRE a onGuardado (ya sea alta o modificación)
                 onGuardado && onGuardado();
-                } else {
-                alert('Error al guardar');
-               }
+                }  else {
+  const errorTexto = await res.text(); // ← captura el texto del backend
+  console.error('🛑 Error al guardar:', errorTexto); // ← lo imprime en consola
+  alert('Error al guardar: ' + errorTexto); // ← se lo muestra al usuario
+}
             } catch (e) {
               alert('Error al enviar: ' + e);
             }
@@ -268,6 +280,31 @@ export default function IndicadoresForm({
           </option>
         ))}
       </select>
+<select
+  name="nid_programa_presupuestal"
+  value={form.nid_programa_presupuestal ?? ''}
+  onChange={handleChange}
+  required
+  style={{
+    width: '100%',
+    padding: '0.7rem',
+    backgroundColor: '#f7fafc',
+    color: '#222',
+    border: '1.5px solid #003B5C99',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    fontWeight: 500,
+    marginBottom: 16,
+  }}
+>
+  <option value="">-- Selecciona programa presupuestal --</option>
+  {programas.map(p => (
+    <option key={p.nid_programa_presupuestal} value={p.nid_programa_presupuestal}>
+      {p.cprograma_presupuestal}
+    </option>
+  ))}
+</select>
+
 
       <select
         style={{
@@ -294,15 +331,25 @@ export default function IndicadoresForm({
           </option>
         ))}
       </select>
+<input
+  name="cfuente"
+  placeholder="Fuente"
+  value={form.cfuente || ""}
+  onChange={handleChange}
+  required
+  style={{
+    width: '100%',
+    padding: '0.7rem',
+    backgroundColor: '#f7fafc',
+    color: '#222',
+    border: '1.5px solid #003B5C99',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    fontWeight: 500,
+    marginBottom: 16,
+  }}
+/>
 
-      <input
-        style={{ width: '100%', padding: '0.7rem', borderRadius: 8, marginBottom: 16, border: '1.5px solid #003B5C99' }}
-        name="cfuente"
-        placeholder="Fuente"
-        value={form.cfuente || ""}
-        onChange={handleChange}
-        required
-      />
 
       <div style={{ display: 'flex', gap: '1.2rem', marginBottom: 20 }}>
         <select

@@ -13,8 +13,12 @@ export default function IndicadoresPage() {
   const [indicadores, setIndicadores] = useState([]);
   const [actualizar, setActualizar] = useState(0);
   const [mostrarSoloInhabilitados, setMostrarSoloInhabilitados] = useState(false);
-  const recargarAction = () => setActualizar(a => a + 1);
-  const [indicadorSeleccionado, setIndicadorSeleccionado] = useState(null);
+ const recargarAction = () => setActualizar(a => a + 1);
+  type Indicador = {
+    nid_indicador: number;
+    [key: string]: any;
+  };
+  const [indicadorSeleccionado, setIndicadorSeleccionado] = useState<Indicador | null>(null);
   const [datosExcel, setDatosExcel] = useState<any[]>([]);
   const cargarIndicadores = async () => {
   try {
@@ -37,21 +41,29 @@ export default function IndicadoresPage() {
   // Cargar indicadores al iniciar
   useEffect(() => { cargarIndicadores(); }, [actualizar]);
     
+  const seleccionarIndicador = (ind: any) => {
+  setIndicadorSeleccionado(ind);
+  console.log("✅ Indicador seleccionado:", ind);
+};
+
+
+
   return (
   <div className="ProgPresNumNom" style={{ paddingTop: 0, marginTop: 0 }}>
     <IndicadoresActions
-      indicadores={indicadores}
-      indicadorSeleccionado={indicadorSeleccionado}
-      setIndicadorSeleccionadoAction={setIndicadorSeleccionado}
-      datosExcel={datosExcel}
-      recargarAction={() => setActualizar(a => a + 1)}
-      mostrarSoloInhabilitados={mostrarSoloInhabilitados}
-      setMostrarSoloInhabilitadosAction={setMostrarSoloInhabilitados}
-    />
+        indicadores={indicadores}
+        indicadorSeleccionado={indicadorSeleccionado}
+        setIndicadorSeleccionadoAction={setIndicadorSeleccionado}
+        datosExcel={datosExcel}
+        //recargarAction={() => setActualizar(a => a + 1)}
+        recargarAction={recargarAction} // <-- ESTA ES LA BUENA
+        mostrarSoloInhabilitados={mostrarSoloInhabilitados}
+        setMostrarSoloInhabilitadosAction={setMostrarSoloInhabilitados}
+      />
     <IndicadoresTabla
       setDatosExcelAction={setDatosExcel}
       indicadores={indicadores}
-      onSeleccionarAction={setIndicadorSeleccionado}
+      onSeleccionarAction={seleccionarIndicador} // ✅ usa la función definida arriba
       indicadorSeleccionado={indicadorSeleccionado}
       mostrarSoloInhabilitados={mostrarSoloInhabilitados}
     />
