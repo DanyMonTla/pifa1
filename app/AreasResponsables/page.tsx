@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, ChangeEvent } from "react";
 import AreasRespFormulario from "../components/AreasRespFormulario";
 import AreasRespTabla from "../components/AreasRespTabla";
 import AreasRespAcciones from "../components/AreasRespAcciones";
+import AreaResPrograPresVinculacion from "../components/AreaResPrograPresVinculacion";
 
 type AreaResponsable = {
   nid_area: string;
@@ -13,6 +14,16 @@ type AreaResponsable = {
   bhabilitado: boolean;
   dfecha_alta: string;
   dfecha_baja: string;
+};
+
+type ProgramaPresupuestal = {
+  nid_programa_presupuestal: string;
+  cprograma_presupuestal: string;
+};
+
+type Vinculacion = {
+  nid_area: string;
+  nid_programa: string;
 };
 
 export default function AreasResponsablesCrud() {
@@ -34,6 +45,7 @@ export default function AreasResponsablesCrud() {
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
   const [idBuscadoMostrado, setIdBuscadoMostrado] = useState<string | null>(null);
+  const [mostrarNotificacion, setMostrarNotificacion] = useState(false);
 
   const API_URL = "http://localhost:3001/areas-responsables";
 
@@ -235,8 +247,63 @@ export default function AreasResponsablesCrud() {
     }
   };
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [vinculaciones, setVinculaciones] = useState<Vinculacion[]>([]);
+  const [programasPresupuestales, setProgramasPresupuestales] = useState<ProgramaPresupuestal[]>([]);
+
+  useEffect(() => {
+    const obtenerProgramas = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/programa-presupuestal');
+        const data = await res.json();
+        const activos = data.filter((p: any) => p.bhabilitado);
+        setProgramasPresupuestales(activos);
+      } catch (error) {
+        console.error("Error al cargar programas presupuestales:", error);
+        alert("No se pudieron cargar los programas presupuestales.");
+      }
+    };
+
+    obtenerProgramas();
+  }, []);
+
+  const toggleVinculacion = (nid_area: string, nid_programa: string) => {
+    const yaExiste = vinculaciones.some(v => v.nid_area === nid_area && v.nid_programa === nid_programa);
+    if (yaExiste) {
+      setVinculaciones(prev => prev.filter(v => !(v.nid_area === nid_area && v.nid_programa === nid_programa)));
+    } else {
+      setVinculaciones(prev => [...prev, { nid_area, nid_programa }]);
+    }
+  };
+
+  const guardarVinculaciones = async () => {
+    setMostrarNotificacion(true);
+    setTimeout(() => setMostrarNotificacion(false), 2000);
+    setModalVisible(false);
+  };
+
   return (
     <div style={{ backgroundColor: "#222", color: "white", padding: "2rem" }}>
+      {mostrarNotificacion && (
+        <div style={{
+          position: 'fixed',
+          top: '2rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: '#4CAF50',
+          color: 'white',
+          padding: '1rem 2rem',
+          borderRadius: '10px',
+          boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+          zIndex: 9999,
+          fontSize: '1rem',
+          fontWeight: 'bold',
+          transition: 'opacity 0.3s ease',
+        }}>
+          ✅ Vinculaciones guardadas correctamente
+        </div>
+      )}
+
       {mensaje && (
         <div style={{
           backgroundColor: "green",
@@ -263,6 +330,15 @@ export default function AreasResponsablesCrud() {
           ⚠️ {error}
         </div>
       )}
+
+      <div style={{ marginBottom: "1rem" }}>
+        <button
+          onClick={() => setModalVisible(true)}
+          style={{ padding: "0.5rem 1rem", backgroundColor: "#006699", color: "white", borderRadius: 5 }}
+        >
+          AreaResponsables-ProgramaPresupuestal
+        </button>
+      </div>
 
       <AreasRespAcciones
         form={form}
@@ -293,6 +369,16 @@ export default function AreasResponsablesCrud() {
         areas={areas}
         verInactivos={verInactivos}
         encabezados={encabezados}
+      />
+
+      <AreaResPrograPresVinculacion
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        areas={areas}
+        programas={programasPresupuestales}
+        vinculaciones={vinculaciones}
+        toggleVinculacion={toggleVinculacion}
+        onGuardar={guardarVinculaciones}
       />
     </div>
   );
