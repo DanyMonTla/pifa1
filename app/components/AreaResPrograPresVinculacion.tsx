@@ -1,19 +1,19 @@
 'use client';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-type AreaResponsable = {
+export type AreaResponsable = {
   nid_area: string;
   cunidad_responsable: string;
 };
 
-type ProgramaPresupuestal = {
+export type ProgramaPresupuestal = {
   nid_programa_presupuestal: string;
   cprograma_presupuestal: string;
 };
 
-type Vinculacion = {
-  nid_area: string;
-  nid_programa_presupuestal: string;
+export type Vinculacion = {
+  nid_area: number;
+  nid_programa_presupuestal: number;
 };
 
 type Props = {
@@ -22,7 +22,7 @@ type Props = {
   areas: AreaResponsable[];
   programas: ProgramaPresupuestal[];
   vinculaciones: Vinculacion[];
-  setVinculaciones: (v: Vinculacion[]) => void;
+  setVinculaciones: React.Dispatch<React.SetStateAction<Vinculacion[]>>;
 };
 
 export default function AreaResPrograPresVinculacion({
@@ -36,55 +36,84 @@ export default function AreaResPrograPresVinculacion({
   const [guardando, setGuardando] = useState(false);
   const [mensajeToast, setMensajeToast] = useState('');
   const [filtro, setFiltro] = useState('');
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!visible) return;
+
     document.body.style.overflow = 'hidden';
     const handleEsc = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', handleEsc);
+
     return () => {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleEsc);
     };
   }, [visible, onClose]);
 
-  const vincSet = useMemo(
-    () =>
-      new Set(
-        vinculaciones.map(v => `${v.nid_area}_${v.nid_programa_presupuestal}`)
-      ),
-    [vinculaciones]
-  );
+  useEffect(() => {
+    if (!visible) return;
 
-  const toggleVinculacion = (nid_area: string, nid_programa_presupuestal: string) => {
+    const el = modalRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      const atTop = el.scrollTop === 0;
+      const atBottom = el.scrollHeight - el.scrollTop === el.clientHeight;
+      if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
+        e.preventDefault();
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['ArrowDown', 'PageDown'].includes(e.key)) {
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight) e.preventDefault();
+      } else if (['ArrowUp', 'PageUp'].includes(e.key)) {
+        if (el.scrollTop === 0) e.preventDefault();
+      }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    el.addEventListener('keydown', handleKeyDown, true);
+
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+      el.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, [visible]);
+
+  const toggleVinculacion = async (nid_area: number, nid_programa_presupuestal: number) => {
     const clave = `${nid_area}_${nid_programa_presupuestal}`;
-    if (vincSet.has(clave)) {
-      setVinculaciones(
-        vinculaciones.filter(
-          v =>
-            !(
-              v.nid_area === nid_area &&
-              v.nid_programa_presupuestal === nid_programa_presupuestal
-            )
-        )
+    const vincSet = new Set(vinculaciones.map(v => `${v.nid_area}_${v.nid_programa_presupuestal}`));
+    const yaMarcada = vincSet.has(clave);
+
+    if (yaMarcada) {
+      setVinculaciones(prev =>
+        prev.filter(v => !(v.nid_area === nid_area && v.nid_programa_presupuestal === nid_programa_presupuestal))
       );
+
+      try {
+        const res = await fetch(
+          `http://localhost:3001/vinculacion-area-programa/${nid_area}/${nid_programa_presupuestal}`,
+          { method: 'DELETE' }
+        );
+        if (!res.ok) throw new Error('Error al eliminar vinculación');
+
+        lanzarToast('❌ Vinculación eliminada');
+      } catch (error) {
+        lanzarToast('⚠️ Esta vinculación ya fue eliminada o no existe');
+      }
     } else {
-      setVinculaciones([
-        ...vinculaciones,
-        { nid_area, nid_programa_presupuestal },
-      ]);
+      setVinculaciones(prev => [...prev, { nid_area, nid_programa_presupuestal }]);
     }
   };
 
   const normalizar = (t: string) =>
-    t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-  const areasFiltradas = useMemo(() => {
-    const txt = normalizar(filtro);
-    return areas.filter(a =>
-      normalizar(a.cunidad_responsable).includes(txt)
-    );
-  }, [filtro, areas]);
+  const areasFiltradas = areas.filter(a =>
+    normalizar(a.cunidad_responsable).includes(normalizar(filtro))
+  );
 
   const handleGuardar = async () => {
     if (!vinculaciones.length) {
@@ -93,8 +122,8 @@ export default function AreaResPrograPresVinculacion({
     }
 
     const payload = vinculaciones.map(v => ({
-      nid_area: Number(v.nid_area),
-      nid_programa_presupuestal: Number(v.nid_programa_presupuestal),
+      nid_area: v.nid_area,
+      nid_programa_presupuestal: v.nid_programa_presupuestal,
     }));
 
     setGuardando(true);
@@ -127,11 +156,13 @@ export default function AreaResPrograPresVinculacion({
 
   if (!visible) return null;
 
+  const vincSet = new Set(vinculaciones.map(v => `${v.nid_area}_${v.nid_programa_presupuestal}`));
+
   return (
     <div style={modalFondo}>
-      <div style={modalContenido}>
+      <div ref={modalRef} style={modalContenido} tabIndex={0}>
         <div style={encabezado}>
-          <h2 style={titulo}>Vincular Áreas con Programas Presupuestales</h2>
+          <h2 style={titulo}>Vincular Áreas Responsables con Programas Presupuestales</h2>
 
           <input
             placeholder="🔍 Buscar área..."
@@ -172,7 +203,9 @@ export default function AreaResPrograPresVinculacion({
                       <input
                         type="checkbox"
                         checked={checked}
-                        onChange={() => toggleVinculacion(area.nid_area, p.nid_programa_presupuestal)}
+                        onChange={() =>
+                          toggleVinculacion(Number(area.nid_area), Number(p.nid_programa_presupuestal))
+                        }
                         style={{ marginRight: 6 }}
                       />
                       {p.cprograma_presupuestal}
@@ -199,7 +232,7 @@ export default function AreaResPrograPresVinculacion({
   );
 }
 
-/* 🎨 Estilos */
+
 const modalFondo = {
   position: 'fixed',
   inset: 0,
@@ -230,8 +263,14 @@ const encabezado = {
   alignItems: 'center',
   justifyContent: 'space-between',
   borderBottom: '1px solid #ddd',
-  paddingBottom: '0.5rem'
+  paddingBottom: '0.5rem',
+  backgroundColor: '#fff',
+  position: 'sticky',
+  top: 0,
+  zIndex: 100,
+  paddingTop: '0.5rem',
 } as React.CSSProperties;
+
 
 const titulo = {
   flex: 1,

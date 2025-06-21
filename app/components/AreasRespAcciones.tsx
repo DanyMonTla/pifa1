@@ -14,6 +14,7 @@ type Props = {
   setBusquedaId: (id: string) => void;
   puedeReactivar: boolean;
   reactivarArea: () => void;
+  abrirModalVinculacion: () => void;
 };
 
 export default function AreasRespAcciones({
@@ -28,7 +29,8 @@ export default function AreasRespAcciones({
   busquedaId,
   setBusquedaId,
   puedeReactivar,
-  reactivarArea
+  reactivarArea,
+  abrirModalVinculacion,
 }: Props) {
   return (
     <form
@@ -36,13 +38,42 @@ export default function AreasRespAcciones({
         e.preventDefault();
         handleBuscar();
       }}
-      style={{ display: "flex", gap: "1rem", marginBottom: "2rem", alignItems: "center" }}
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "0.5rem",
+        marginBottom: "2rem",
+        alignItems: "center",
+      }}
     >
+      <button
+        type="button"
+        onClick={abrirModalVinculacion}
+        style={{
+          backgroundColor: "rgba(255, 165, 0, 0.9)",
+          color: "white",
+          fontWeight: "bold",
+          border: "none",
+          borderRadius: 5,
+          padding: "0.5rem 1rem",
+          cursor: "pointer",
+        }}
+      >
+        AreaResponsables-ProgramaPresupuestal
+      </button>
+
       <input
         placeholder="Buscar por ID"
         value={busquedaId}
         onChange={(e) => setBusquedaId(e.target.value)}
-        style={{ flex: 1, padding: "0.5rem" }}
+        style={{
+          flex: 1,
+          padding: "0.5rem",
+          backgroundColor: "#333",
+          color: "white",
+          border: "1px solid #666",
+          borderRadius: 5,
+        }}
       />
       <button type="submit" style={btnStyle("#0077b6")}>Buscar</button>
 
@@ -101,7 +132,7 @@ export default function AreasRespAcciones({
         </button>
       )}
 
-      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "white" }}>
+      <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", color: "white" }}>
         <input
           type="checkbox"
           checked={verInactivos}
@@ -118,5 +149,6 @@ const btnStyle = (color: string): React.CSSProperties => ({
   color: "white",
   padding: "0.5rem 1rem",
   border: "none",
+  borderRadius: 5,
   cursor: "pointer",
 });

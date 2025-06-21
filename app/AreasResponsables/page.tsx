@@ -25,19 +25,11 @@ type ProgramaPresupuestal = {
 };
 
 type Vinculacion = {
-  nid_area: string;
-  nid_programa_presupuestal: string; // ✅ este es el nombre correcto usado en el backend
+  nid_area: number;
+  nid_programa_presupuestal: number;
 };
 
-
-/* ────────────────────
-   🚀 Componente principal
-────────────────────── */
 export default function AreasResponsablesCrud() {
-
-  /* ╭──────────────────────────────╮
-     │ Estados y valores iniciales  │
-     ╰──────────────────────────────╯ */
   const [form, setForm] = useState<AreaResponsable>({
     nid_area: '',
     cunidad_responsable: '',
@@ -57,15 +49,13 @@ export default function AreasResponsablesCrud() {
   const [error, setError] = useState('');
   const [idBuscadoMostrado, setIdBuscadoMostrado] = useState<string | null>(null);
 
-  /* 🗂 Modal y vinculaciones */
   const [modalVisible, setModalVisible] = useState(false);
   const [vinculaciones, setVinculaciones] = useState<Vinculacion[]>([]);
+  const [vinculacionesCopia, setVinculacionesCopia] = useState<Vinculacion[]>([]);
   const [programasPresupuestales, setProgramasPresupuestales] = useState<ProgramaPresupuestal[]>([]);
 
-  /* 🔗 End-points */
   const API_URL = 'http://localhost:3001/areas-responsables';
 
-  /* Encabezados para la tabla */
   const encabezados: Record<string, string> = {
     nid_area:              'ID Área',
     cunidad_responsable:   'Unidad Responsable',
@@ -76,9 +66,6 @@ export default function AreasResponsablesCrud() {
     dfecha_baja:           'Fecha Baja',
   };
 
-  /* ─────────────────────────────
-     1️⃣  Cargar áreas al iniciar
-  ────────────────────────────── */
   useEffect(() => { obtenerAreas(); }, []);
 
   const obtenerAreas = async () => {
@@ -101,9 +88,6 @@ export default function AreasResponsablesCrud() {
     }
   };
 
-  /* ─────────────────────────────
-     2️⃣  Cargar programas al iniciar
-  ────────────────────────────── */
   useEffect(() => {
     const obtenerProgramas = async () => {
       try {
@@ -119,26 +103,25 @@ export default function AreasResponsablesCrud() {
     obtenerProgramas();
   }, []);
 
-  /* 3️⃣ Cargar vinculaciones actuales desde el backend */
-useEffect(() => {
-  const obtenerVinculaciones = async () => {
-    try {
-      const res = await fetch('http://localhost:3001/vinculacion-area-programa');
-      const data = await res.json();
-      const normalizadas = data.map((v: any) => ({
-      nid_area: String(v.nid_area),
-      nid_programa_presupuestal: String(v.nid_programa_presupuestal),
-    }));
+  useEffect(() => {
+    const obtenerVinculaciones = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/vinculacion-area-programa');
+        const data = await res.json();
+        const normalizadas = data.map((v: any) => ({
+          nid_area: Number(v.nid_area),
+          nid_programa_presupuestal: Number(v.nid_programa_presupuestal),
+        }));
+        setVinculaciones(normalizadas);
+        setVinculacionesCopia(normalizadas);
+      } catch (err) {
+        console.error('Error al cargar vinculaciones:', err);
+        alert('No se pudieron cargar las vinculaciones existentes.');
+      }
+    };
 
-      setVinculaciones(normalizadas);
-    } catch (err) {
-      console.error('Error al cargar vinculaciones:', err);
-      alert('No se pudieron cargar las vinculaciones existentes.');
-    }
-  };
-
-  obtenerVinculaciones();
-}, []);
+    obtenerVinculaciones();
+  }, []);
 
 
   /* ─────────────────────────────
@@ -324,31 +307,25 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Botón para abrir el modal de vinculación */}
-      <div style={{ marginBottom: '1rem' }}>
-        <button
-          onClick={() => setModalVisible(true)}
-          style={{ padding: '0.5rem 1rem', backgroundColor: '#006699', color: 'white', borderRadius: 5 }}
-        >
-          AreaResponsables-ProgramaPresupuestal
-        </button>
-      </div>
+      
 
       {/* Barra de acciones */}
       <AreasRespAcciones
-        form={form}
-        setModo={setModo}
-        resetForm={resetForm}
-        setSoloVisualizacion={setSoloVisualizacion}
-        setError={setError}
-        verInactivos={verInactivos}
-        setVerInactivos={setVerInactivos}
-        handleBuscar={handleBuscarPorId}
-        busquedaId={busquedaId}
-        setBusquedaId={setBusquedaId}
-        puedeReactivar={verInactivos && !form.bhabilitado}
-        reactivarArea={reactivarArea}
-      />
+      form={form}
+      setModo={setModo}
+      resetForm={resetForm}
+      setSoloVisualizacion={setSoloVisualizacion}
+      setError={setError}
+      verInactivos={verInactivos}
+      setVerInactivos={setVerInactivos}
+      handleBuscar={handleBuscarPorId}
+      busquedaId={busquedaId}
+      setBusquedaId={setBusquedaId}
+      puedeReactivar={verInactivos && !form.bhabilitado}
+      reactivarArea={reactivarArea}
+      abrirModalVinculacion={() => setModalVisible(true)} // 👈 esta es la nueva prop
+    />
+
 
       {/* Formulario */}
       <AreasRespFormulario
