@@ -13,6 +13,7 @@ const TITULOS_POR_RUTA: Record<string, string> = {
   '/Roles': 'Cátalogo de roles',
   '/AreasResponsables': 'Catálogo de Áreas Responsables',
   '/ProgramaPresupuestal': 'Catálogo de Programas Presupuestales',
+  '/asignacion-indicadores': 'Asignación de Indicadores a Usuarios',
   // ...
 };
 

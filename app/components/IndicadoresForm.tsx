@@ -198,44 +198,58 @@ export default function IndicadoresForm({
       </h2>
 
       <div style={{ display: 'flex', gap: '1.2rem', marginBottom: 16 }}>
-        <input
-          style={{
-            flex: 1,
-            padding: '0.7rem',
-            backgroundColor: '#f7fafc',
-            color: '#222',
-            border: '1.5px solid #003B5C99',
-            borderRadius: '8px',
-            fontSize: '1rem',
-            fontWeight: 500
-          }}
-          name="cclave_indicador"
-          placeholder="Clave"
-          value={form.cclave_indicador}
-          onChange={handleChange}
-          required
-        />
-        <input
-          style={{
-            flex: 2,
-            padding: '0.7rem',
-            backgroundColor: '#f7fafc',
-            color: '#222',
-            border: '1.5px solid #003B5C99',
-            borderRadius: '8px',
-            fontSize: '1rem',
-            fontWeight: 500
-          }}
-          name="cdesc_indicador"
-          placeholder="Descripción"
-          value={form.cdesc_indicador}
-          onChange={handleChange}
-          required
-        />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <label htmlFor="cclave_indicador" style={{ fontWeight: 600, marginBottom: 4, color: '#003B5C' }}>
+            {modo === 'modificar' ? 'Clave actual' : 'Clave'}
+          </label>
+          <input
+            id="cclave_indicador"
+            style={{
+              padding: '0.7rem',
+              backgroundColor: '#f7fafc',
+              color: '#222',
+              border: '1.5px solid #003B5C99',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              fontWeight: 500
+            }}
+            name="cclave_indicador"
+            placeholder="Clave"
+            value={form.cclave_indicador}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div style={{ flex: 2, display: 'flex', flexDirection: 'column' }}>
+          <label htmlFor="cdesc_indicador" style={{ fontWeight: 600, marginBottom: 4, color: '#003B5C' }}>
+            {modo === 'modificar' ? 'Descripción actual' : 'Descripción'}
+          </label>
+          <input
+            id="cdesc_indicador"
+            style={{
+              padding: '0.7rem',
+              backgroundColor: '#f7fafc',
+              color: '#222',
+              border: '1.5px solid #003B5C99',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              fontWeight: 500
+            }}
+            name="cdesc_indicador"
+            placeholder="Descripción"
+            value={form.cdesc_indicador}
+            onChange={handleChange}
+            required
+          />
+        </div>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column' }}>
+        <label htmlFor="cdefinicion_indicador" style={{ fontWeight: 600, marginBottom: 4, color: '#003B5C' }}>
+          {modo === 'modificar' ? 'Definición actual' : 'Definición'}
+        </label>
         <textarea
+          id="cdefinicion_indicador"
           style={{
             width: '100%',
             minHeight: 50,
@@ -255,149 +269,185 @@ export default function IndicadoresForm({
         />
       </div>
 
-      <select
-        style={{
-          flex: 1,
-          padding: '0.7rem',
-          backgroundColor: '#f7fafc',
-          color: '#222',
-          border: '1.5px solid #003B5C99',
-          borderRadius: '8px',
-          fontSize: '1rem',
-          fontWeight: 500,
-          marginBottom: 16,
-          width: '100%',
-        }}
-        name="nid_clasificacion"
-        value={form.nid_clasificacion ?? ''}
-        onChange={handleChange}
-        required
-      >
-        <option value="">-- Selecciona clasificación --</option>
-        {clasificaciones.map(cl => (
-          <option key={cl.nid_clasificacion} value={cl.nid_clasificacion}>
-            {cl.cnombre_clasificacion}
-          </option>
-        ))}
-      </select>
-<select
-  name="nid_programa_presupuestal"
-  value={form.nid_programa_presupuestal ?? ''}
-  onChange={handleChange}
-  required
-  style={{
-    width: '100%',
-    padding: '0.7rem',
-    backgroundColor: '#f7fafc',
-    color: '#222',
-    border: '1.5px solid #003B5C99',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    fontWeight: 500,
-    marginBottom: 16,
-  }}
->
-  <option value="">-- Selecciona programa presupuestal --</option>
-  {programas.map(p => (
-    <option key={p.nid_programa_presupuestal} value={p.nid_programa_presupuestal}>
-      {p.cprograma_presupuestal}
-    </option>
-  ))}
-</select>
+      <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column' }}>
+        <label htmlFor="nid_clasificacion" style={{ fontWeight: 600, marginBottom: 4, color: '#003B5C' }}>
+          {modo === 'modificar' ? 'Clasificación actual' : 'Clasificación'}
+        </label>
+        <select
+          id="nid_clasificacion"
+          style={{
+            flex: 1,
+            padding: '0.7rem',
+            backgroundColor: '#f7fafc',
+            color: '#222',
+            border: '1.5px solid #003B5C99',
+            borderRadius: '8px',
+            fontSize: '1rem',
+            fontWeight: 500,
+            marginBottom: 0,
+            width: '100%',
+          }}
+          name="nid_clasificacion"
+          value={form.nid_clasificacion ?? ''}
+          onChange={handleChange}
+          required
+        >
+          <option value="">-- Selecciona clasificación --</option>
+          {clasificaciones.map(cl => (
+            <option key={cl.nid_clasificacion} value={cl.nid_clasificacion}>
+              {cl.cnombre_clasificacion}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column' }}>
+        <label htmlFor="nid_programa_presupuestal" style={{ fontWeight: 600, marginBottom: 4, color: '#003B5C' }}>
+          {modo === 'modificar' ? 'Programa presupuestal actual' : 'Programa presupuestal'}
+        </label>
+        <select
+          id="nid_programa_presupuestal"
+          name="nid_programa_presupuestal"
+          value={form.nid_programa_presupuestal ?? ''}
+          onChange={handleChange}
+          required
+          style={{
+            width: '100%',
+            padding: '0.7rem',
+            backgroundColor: '#f7fafc',
+            color: '#222',
+            border: '1.5px solid #003B5C99',
+            borderRadius: '8px',
+            fontSize: '1rem',
+            fontWeight: 500,
+            marginBottom: 0,
+          }}
+        >
+          <option value="">-- Selecciona programa presupuestal --</option>
+          {programas.map(p => (
+            <option key={p.nid_programa_presupuestal} value={p.nid_programa_presupuestal}>
+              {p.cprograma_presupuestal}
+            </option>
+          ))}
+        </select>
+      </div>
 
 
-      <select
-        style={{
-          flex: 1,
-          padding: '0.7rem',
-          backgroundColor: '#f7fafc',
-          color: '#222',
-          border: '1.5px solid #003B5C99',
-          borderRadius: '8px',
-          fontSize: '1rem',
-          fontWeight: 500,
-          marginBottom: 16,
-          width: '100%',
-        }}
-        name="nid_frecuencia"
-        value={form.nid_frecuencia ?? ''}
-        onChange={handleChange}
-        required
-      >
-        <option value="">-- Selecciona frecuencia --</option>
-        {frecuencias.map(f => (
-          <option key={f.nid_frecuencia} value={f.nid_frecuencia}>
-            {f.cfrecuencia}
-          </option>
-        ))}
-      </select>
-<input
-  name="cfuente"
-  placeholder="Fuente"
-  value={form.cfuente || ""}
-  onChange={handleChange}
-  required
-  style={{
-    width: '100%',
-    padding: '0.7rem',
-    backgroundColor: '#f7fafc',
-    color: '#222',
-    border: '1.5px solid #003B5C99',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    fontWeight: 500,
-    marginBottom: 16,
-  }}
-/>
+      <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column' }}>
+        <label htmlFor="nid_frecuencia" style={{ fontWeight: 600, marginBottom: 4, color: '#003B5C' }}>
+          {modo === 'modificar' ? 'Frecuencia actual' : 'Frecuencia'}
+        </label>
+        <select
+          id="nid_frecuencia"
+          style={{
+            flex: 1,
+            padding: '0.7rem',
+            backgroundColor: '#f7fafc',
+            color: '#222',
+            border: '1.5px solid #003B5C99',
+            borderRadius: '8px',
+            fontSize: '1rem',
+            fontWeight: 500,
+            marginBottom: 0,
+            width: '100%',
+          }}
+          name="nid_frecuencia"
+          value={form.nid_frecuencia ?? ''}
+          onChange={handleChange}
+          required
+        >
+          <option value="">-- Selecciona frecuencia --</option>
+          {frecuencias.map(f => (
+            <option key={f.nid_frecuencia} value={f.nid_frecuencia}>
+              {f.cfrecuencia}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column' }}>
+        <label htmlFor="cfuente" style={{ fontWeight: 600, marginBottom: 4, color: '#003B5C' }}>
+          {modo === 'modificar' ? 'Fuente actual' : 'Fuente'}
+        </label>
+        <input
+          id="cfuente"
+          name="cfuente"
+          placeholder="Fuente"
+          value={form.cfuente || ""}
+          onChange={handleChange}
+          required
+          style={{
+            width: '100%',
+            padding: '0.7rem',
+            backgroundColor: '#f7fafc',
+            color: '#222',
+            border: '1.5px solid #003B5C99',
+            borderRadius: '8px',
+            fontSize: '1rem',
+            fontWeight: 500,
+            marginBottom: 0,
+          }}
+        />
+      </div>
 
 
       <div style={{ display: 'flex', gap: '1.2rem', marginBottom: 20 }}>
-        <select
-          style={{
-            flex: 1,
-            padding: '0.7rem',
-            backgroundColor: '#f7fafc',
-            color: '#222',
-            border: '1.5px solid #003B5C99',
-            borderRadius: '8px',
-            fontSize: '1rem',
-            fontWeight: 500
-          }}
-          name="nid_tipo_calculo"
-          value={form.nid_tipo_calculo ?? ''}
-          onChange={handleChange}
-          required
-        >
-          <option value="">-- Selecciona tipo cálculo --</option>
-          {tiposCalculo.map(tc => (
-            <option key={tc.nid_tipo_calculo} value={tc.nid_tipo_calculo}>
-              {tc.ctipo_calculo}
-            </option>
-          ))}
-        </select>
-        <select
-          style={{
-            flex: 1,
-            padding: '0.7rem',
-            backgroundColor: '#f7fafc',
-            color: '#222',
-            border: '1.5px solid #003B5C99',
-            borderRadius: '8px',
-            fontSize: '1rem',
-            fontWeight: 500
-          }}
-          name="nid_tipo_indicador"
-          value={form.nid_tipo_indicador ?? ''}
-          onChange={handleChange}
-          required
-        >
-          <option value="">-- Selecciona tipo indicador --</option>
-          {tiposIndicador.map(ti => (
-            <option key={ti.nid_tipo_indicador} value={ti.nid_tipo_indicador}>
-              {ti.ccolor_indicador}
-            </option>
-          ))}
-        </select>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <label htmlFor="nid_tipo_calculo" style={{ fontWeight: 600, marginBottom: 4, color: '#003B5C' }}>
+            {modo === 'modificar' ? 'Tipo de cálculo actual' : 'Tipo de cálculo'}
+          </label>
+          <select
+            id="nid_tipo_calculo"
+            style={{
+              padding: '0.7rem',
+              backgroundColor: '#f7fafc',
+              color: '#222',
+              border: '1.5px solid #003B5C99',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              fontWeight: 500
+            }}
+            name="nid_tipo_calculo"
+            value={form.nid_tipo_calculo ?? ''}
+            onChange={handleChange}
+            required
+          >
+            <option value="">-- Selecciona tipo cálculo --</option>
+            {tiposCalculo.map(tc => (
+              <option key={tc.nid_tipo_calculo} value={tc.nid_tipo_calculo}>
+                {tc.ctipo_calculo}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <label htmlFor="nid_tipo_indicador" style={{ fontWeight: 600, marginBottom: 4, color: '#003B5C' }}>
+            {modo === 'modificar' ? 'Tipo de indicador actual' : 'Tipo de indicador'}
+          </label>
+          <select
+            id="nid_tipo_indicador"
+            style={{
+              padding: '0.7rem',
+              backgroundColor: '#f7fafc',
+              color: '#222',
+              border: '1.5px solid #003B5C99',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              fontWeight: 500
+            }}
+            name="nid_tipo_indicador"
+            value={form.nid_tipo_indicador ?? ''}
+            onChange={handleChange}
+            required
+          >
+            <option value="">-- Selecciona tipo indicador --</option>
+            {tiposIndicador.map(ti => (
+              <option key={ti.nid_tipo_indicador} value={ti.nid_tipo_indicador}>
+                {ti.ccolor_indicador}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
      <button
