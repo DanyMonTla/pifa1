@@ -221,7 +221,8 @@ export default function IndicadoresTabla({
           borderCollapse: 'collapse', 
           background: '#fff',
           tableLayout: 'fixed',
-          minWidth: '100%'
+          minWidth: '100%',
+           userSelect: 'text',
         }}>
           <thead>
             <tr>
@@ -297,7 +298,8 @@ export default function IndicadoresTabla({
                       key={col.key} 
                       style={{
                         ...thtdStyle,
-                        backgroundColor: 'transparent'
+                        backgroundColor: 'transparent',
+                        userSelect: 'text'
                       }}
                     >
                       {getColValue(ind, col.key)}

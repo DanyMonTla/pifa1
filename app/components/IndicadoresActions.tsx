@@ -142,9 +142,48 @@ const seleccionarIndicador = (ind: any) => {
 
 return (
   <div style={{ padding: '2px' }}>
-    {/* Checkbox para mostrar solo inhabilitados */}
-    <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
-      <label style={{ fontWeight: 600 }}>
+    {/* Botones de acciones centrados, con el checkbox y el botón de asignar a la derecha */}
+    <div
+      style={{
+        display: 'flex',
+        gap: '1rem',
+        justifyContent: 'center',
+        marginBottom: '0',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        width: '100%',
+      }}
+    >
+      <button onClick={exportarAExcel} style={{ ...botonEstilo, backgroundColor: '#2E8B57' }}>
+        Descargar Excel
+      </button>
+
+      <button onClick={mostrarAgregar} style={botonEstilo}>
+        {mostrarFormulario && modo === 'agregar' ? 'Ocultar formulario' : 'Agregar Indicador'}
+      </button>
+
+      <button onClick={modificarIndicador} style={botonEstilo}>
+        Modificar Indicador
+      </button>
+
+      {indicadorSeleccionado?.bhabilitado === 0 ? (
+        <button
+          onClick={reactivarIndicador}
+          style={{ ...botonEstilo, backgroundColor: '#4682B4' }}
+        >
+          Reactivar Indicador
+        </button>
+      ) : (
+        <button
+          onClick={eliminarIndicador}
+          style={{ ...botonEstilo, backgroundColor: '#8B0000' }}
+        >
+          Eliminar Indicador
+        </button>
+      )}
+
+      {/* Checkbox a la derecha de Eliminar */}
+      <label style={{ fontWeight: 600, display: 'flex', alignItems: 'center', marginLeft: 12 }}>
         <input
           type="checkbox"
           checked={mostrarSoloInhabilitados}
@@ -153,45 +192,26 @@ return (
         />
         Mostrar solo inhabilitados
       </label>
+
+      {/* Botón Asignar Indicadores a Usuario */}
+      <button
+        style={{
+          background: '#003B5C',
+          color: '#fff',
+          padding: '0.7rem 1.5rem',
+          border: 'none',
+          borderRadius: 8,
+          fontWeight: 700,
+          fontSize: '1rem',
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px rgba(0,59,92,0.125)',
+          marginLeft: 12
+        }}
+        onClick={() => window.location.href = '/asignacion-indicadores'}
+      >
+        Asignar Indicadores a Usuario
+      </button>
     </div>
-    {/* Botones de acciones */}
-    <div
-  style={{
-    display: 'flex',
-    gap: '1rem',
-    justifyContent: 'center',
-    marginBottom: '0',
-    flexWrap: 'wrap'
-  }}
->
-  <button onClick={exportarAExcel} style={{ ...botonEstilo, backgroundColor: '#2E8B57' }}>
-    Descargar Excel
-  </button>
-
-  <button onClick={mostrarAgregar} style={botonEstilo}>
-    {mostrarFormulario && modo === 'agregar' ? 'Ocultar formulario' : 'Agregar Indicador'}
-  </button>
-
-  <button onClick={modificarIndicador} style={botonEstilo}>
-    Modificar Indicador
-  </button>
-
-  {indicadorSeleccionado?.bhabilitado === 0 ? (
-    <button
-      onClick={reactivarIndicador}
-      style={{ ...botonEstilo, backgroundColor: '#4682B4' }}
-    >
-      Reactivar Indicador
-    </button>
-  ) : (
-    <button
-      onClick={eliminarIndicador}
-      style={{ ...botonEstilo, backgroundColor: '#8B0000' }}
-    >
-      Eliminar Indicador
-    </button>
-  )}
-</div>
 
     {/* Formulario (solo cuando corresponde) */}
     {mostrarFormulario && (

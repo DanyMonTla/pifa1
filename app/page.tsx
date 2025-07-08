@@ -173,6 +173,9 @@ export default function HomePage() {
         <button className="primary-button" onClick={() => router.push('/Ind_seg')}>Ver segmentados</button>
         <button className="primary-button" onClick={() => router.push('/p31-actividades')}>P31 Actividades</button>
         <button className="primary-button" onClick={() => router.push('/proyectos')}>Registrar Proyecto</button>
+        <button className="primary-button" onClick={() => router.push('/indicadores')}>Ver Indicadores</button>
+       
+        
       </div>
     </div>
   )

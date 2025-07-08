@@ -2,6 +2,7 @@
 
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
 import ProgPresNumNomComponent from "../components/ProgPresNumNom";
 import IndicadorCard from "../components/Buton";
 import IndicadoresForm from "../components/IndicadoresForm";
@@ -10,6 +11,7 @@ import IndicadoresTabla from "../components/IndicadoresTabla";
 
 
 export default function IndicadoresPage() {
+  const router = useRouter();
   const [indicadores, setIndicadores] = useState([]);
   const [actualizar, setActualizar] = useState(0);
   const [mostrarSoloInhabilitados, setMostrarSoloInhabilitados] = useState(false);
@@ -49,25 +51,25 @@ export default function IndicadoresPage() {
 
 
   return (
-  <div className="ProgPresNumNom" style={{ paddingTop: 0, marginTop: 0 }}>
-    <IndicadoresActions
+    <div className="ProgPresNumNom" style={{ paddingTop: 0, marginTop: 0 }}>
+      {/* Botón Asignar Indicadores a Usuario eliminado, solo queda el de acciones */}
+      <IndicadoresActions
         indicadores={indicadores}
         indicadorSeleccionado={indicadorSeleccionado}
         setIndicadorSeleccionadoAction={setIndicadorSeleccionado}
         datosExcel={datosExcel}
-        //recargarAction={() => setActualizar(a => a + 1)}
-        recargarAction={recargarAction} // <-- ESTA ES LA BUENA
+        recargarAction={recargarAction}
         mostrarSoloInhabilitados={mostrarSoloInhabilitados}
         setMostrarSoloInhabilitadosAction={setMostrarSoloInhabilitados}
       />
-    <IndicadoresTabla
-      setDatosExcelAction={setDatosExcel}
-      indicadores={indicadores}
-      onSeleccionarAction={seleccionarIndicador} // ✅ usa la función definida arriba
-      indicadorSeleccionado={indicadorSeleccionado}
-      mostrarSoloInhabilitados={mostrarSoloInhabilitados}
-    />
-  </div>
-);
+      <IndicadoresTabla
+        setDatosExcelAction={setDatosExcel}
+        indicadores={indicadores}
+        onSeleccionarAction={seleccionarIndicador}
+        indicadorSeleccionado={indicadorSeleccionado}
+        mostrarSoloInhabilitados={mostrarSoloInhabilitados}
+      />
+    </div>
+  );
 }
 
